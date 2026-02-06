@@ -1,4 +1,7 @@
 package com.project.checkinn.common;
 
-public class BookingStatus {
+public enum BookingStatus {
+    PENDING,
+    CONFIRMED,
+    CANCELLED
 }
