@@ -5,8 +5,9 @@ public class PaymentRequest {
 
     private String reference;
     private Double amount;
-    private String method;
+
     private String status;
+    private String method;
 
     public PaymentRequest() {}
 

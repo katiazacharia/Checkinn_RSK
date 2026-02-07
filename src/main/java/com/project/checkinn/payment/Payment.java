@@ -24,13 +24,13 @@ public class Payment {
     private BigDecimal amount;
 
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private PaymentMethod method;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentMethod method;
 
-//   @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private PaymentStatus status;
+   @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus status;
 
     private LocalDateTime paidAt;
 
@@ -45,11 +45,11 @@ public class Payment {
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-//    public PaymentMethod getMethod() { return method; }
-//    public void setMethod(PaymentMethod method) { this.method = method; }
-//
-//    public PaymentStatus getStatus() { return status; }
-//    public void setStatus(PaymentStatus status) { this.status = status; }
+    public PaymentMethod getMethod() { return method; }
+    public void setMethod(PaymentMethod method) { this.method = method; }
+
+    public PaymentStatus getStatus() { return status; }
+    public void setStatus(PaymentStatus status) { this.status = status; }
 
     public LocalDateTime getPaidAt() { return paidAt; }
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
