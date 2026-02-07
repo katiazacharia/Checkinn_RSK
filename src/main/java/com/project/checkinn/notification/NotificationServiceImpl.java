@@ -1,64 +1,79 @@
 package com.project.checkinn.notification;
 
+import com.project.checkinn.booking.reservation.Booking;
+import com.project.checkinn.common.NotificationStatus;
+import com.project.checkinn.common.NotificationType;
+import com.project.checkinn.user.profile.User;
+
+import jakarta.persistence.EntityManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Transactional
-public class NotificationServiceImpl implements notificationService {
+public class NotificationServiceImpl implements NotificationService {
 
-    private final NotificationRepo repo;
+    private final NotificationRepository notificationRepository;
+    private final EntityManager entityManager;
 
-    public NotificationServiceImpl(NotificationRepo repo) {
-        this.repo = repo;
+    public NotificationServiceImpl(NotificationRepository notificationRepository,
+                                   EntityManager entityManager) {
+        this.notificationRepository = notificationRepository;
+        this.entityManager = entityManager;
     }
 
     @Override
-    public NotificationResponse create(Notification notification) {
-        if (notification.getTitle() == null || notification.getTitle().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
+    public Notification create(
+            Long userId,
+            Long bookingId,
+            NotificationType type,
+            String title,
+            String message
+    ) {
+
+        if (userId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+
+        if (type == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type is required");
+
+        if (title == null || title.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title is required");
+
+        if (message == null || message.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "message is required");
+
+        User userRef = entityManager.getReference(User.class, userId);
+
+        Notification notification = new Notification();
+        notification.setUser(userRef);
+
+        if (bookingId != null) {
+            Booking bookingRef = entityManager.getReference(Booking.class, bookingId);
+            notification.setBooking(bookingRef);
         }
-        Notification saved = repo.save(notification);
-        return NotificationMapper.toResponse(saved);
+
+        notification.setType(type);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        //notification.setStatus(NotificationStatus.UNREAD);
+        notification.setSentAt(LocalDateTime.now());
+
+        return notificationRepository.save(notification);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<NotificationResponse> findAll() {
-        return repo.findAll().stream()
-                .map(NotificationMapper::toResponse)
-                .toList();
+    public Notification getById(Long id) {
+        return notificationRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public NotificationResponse findById(Long id) {
-        Notification n = repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
-        return NotificationMapper.toResponse(n);
-    }
-
-    @Override
-    public NotificationResponse update(Long id, Notification newData) {
-        Notification n = repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
-
-        if (newData.getTitle() != null) n.setTitle(newData.getTitle());
-        if (newData.getMessage() != null) n.setMessage(newData.getMessage());
-        if (newData.getStatus() != null) n.setStatus(newData.getStatus());
-
-        return NotificationMapper.toResponse(repo.save(n));
-    }
-
-    @Override
-    public void delete(Long id) {
-        if (!repo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found");
-        }
-        repo.deleteById(id);
+    public List<Notification> getAll() {
+        return notificationRepository.findAll();
     }
 }
