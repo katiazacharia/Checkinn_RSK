@@ -1,37 +1,38 @@
 package com.project.checkinn.notification;
 
-import java.time.Instant;
+import com.project.checkinn.common.NotificationStatus;
+import com.project.checkinn.common.NotificationType;
+
+import java.time.LocalDateTime;
 
 public class NotificationResponse {
 
     private Long id;
+    private Long userId;
+    private Long bookingId;
+    private NotificationType type;
     private String title;
     private String message;
-    private String status;
-    private Instant createdAt;
+    private NotificationStatus status;
+    private LocalDateTime sentAt;
 
-    public NotificationResponse() {}
-
-    public NotificationResponse(Long id, String title, String message, String status, Instant createdAt) {
-        this.id = id;
-        this.title = title;
-        this.message = message;
-        this.status = status;
-        this.createdAt = createdAt;
+    public NotificationResponse(Notification n) {
+        this.id = n.getId();
+        this.userId = n.getUser() != null ? n.getUser().getId() : null;
+        //this.bookingId = n.getBooking() != null ? n.getBooking().getId() : null;
+        this.type = n.getType();
+        this.title = n.getTitle();
+        this.message = n.getMessage();
+        this.status = n.getStatus();
+        this.sentAt = n.getSentAt();
     }
 
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
+    public Long getUserId() { return userId; }
+    public Long getBookingId() { return bookingId; }
+    public NotificationType getType() { return type; }
     public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
     public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public NotificationStatus getStatus() { return status; }
+    public LocalDateTime getSentAt() { return sentAt; }
 }
