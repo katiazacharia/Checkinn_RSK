@@ -1,4 +1,10 @@
 package com.project.checkinn.promo;
 
-public class PromoCodeRepository {
+
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PromoCodeRepository extends JpaRepository<PromoCode, Long> {
+    Optional<PromoCode> findByCodeIgnoreCase(String code);
+    boolean existsByCodeIgnoreCase(String code);
 }
