@@ -1,4 +1,6 @@
 package com.project.checkinn.payment;
 
-public class PaymentRepo {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface PaymentRepo extends JpaRepository<Payment, Long> {
 }
