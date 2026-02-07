@@ -1,4 +1,7 @@
 package com.project.checkinn.common;
 
-public class PaymentStatus {
+public enum PaymentStatus {
+    PAID,
+    FAILED,
+    REFUNDED
 }

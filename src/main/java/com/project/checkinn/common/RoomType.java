@@ -1,4 +1,8 @@
 package com.project.checkinn.common;
 
-public class RoomType {
+public enum RoomType {
+    SINGLE,
+    DOUBLE,
+    SUITE,
+    CONNECTED
 }

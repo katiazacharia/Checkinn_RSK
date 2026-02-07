@@ -1,4 +1,7 @@
 package com.project.checkinn.common;
 
-public class PaymentMethod {
+public enum PaymentMethod {
+    CARD,
+    CASH,
+    PAYPAL
 }

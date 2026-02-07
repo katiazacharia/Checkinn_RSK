@@ -1,4 +1,7 @@
 package com.project.checkinn.common;
 
-public class NotificationStatus {
+public enum NotificationStatus {
+    PENDING,
+    SENT,
+    FAILED
 }

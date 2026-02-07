@@ -1,4 +1,6 @@
 package com.project.checkinn.common;
 
-public class RoomStatus {
+public enum RoomStatus {
+    AVAILABLE,
+    OUT_OF_SERVICE
 }
