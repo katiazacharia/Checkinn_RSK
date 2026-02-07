@@ -1,4 +1,4 @@
-package com.yourapp.notification;
+package com.project.checkinn.notification;
 
 import jakarta.persistence.*;
 import java.time.Instant;
