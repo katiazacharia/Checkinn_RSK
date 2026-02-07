@@ -1,85 +1,33 @@
 package com.project.checkinn.payment;
 
-import java.time.Instant;
+import com.project.checkinn.common.PaymentMethod;
+import com.project.checkinn.common.PaymentStatus;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class PaymentResponse {
 
+    private Long id;
+    private Long bookingId;
+    private BigDecimal amount;
+    private PaymentMethod method;
+    private PaymentStatus status;
+    private LocalDateTime paidAt;
 
-        private Long id;
-        private String reference;
-        private Double amount;
-        private String method;
-        private String status;
-        private Instant createdAt;
-
-        public PaymentResponse() {}
-
-        public Long getId() {
-
-            return id;
-
-        }
-        public void setId(Long id) {
-
-            this.id = id;
-
-        }
-
-        public String getReference() {
-
-            return reference;
-
-        }
-        public void setReference(String reference) {
-
-            this.reference = reference;
-
-        }
-
-        public Double getAmount() {
-
-            return amount;
-
-        }
-        public void setAmount(Double amount) {
-
-            this.amount = amount;
-
-        }
-
-        public String getMethod() {
-
-            return method;
-
-        }
-        public void setMethod(String method) {
-
-            this.method = method;
-
-        }
-
-        public String getStatus() {
-
-            return status;
-        }
-        public void setStatus(String status) {
-
-            this.status = status;
-
-        }
-
-        public Instant getCreatedAt() {
-
-            return createdAt;
-        }
-
-
-        public void setCreatedAt(Instant createdAt) {
-
-            this.createdAt = createdAt;
-
-        }
+    public PaymentResponse(Payment payment) {
+        this.id = payment.getId();
+        this.bookingId = payment.getBooking().getId();
+        this.amount = payment.getAmount();
+        this.method = payment.getMethod();
+        this.status = payment.getStatus();
+        this.paidAt = payment.getPaidAt();
     }
 
-
-
+    public Long getId() { return id; }
+    public Long getBookingId() { return bookingId; }
+    public BigDecimal getAmount() { return amount; }
+    public PaymentMethod getMethod() { return method; }
+    public PaymentStatus getStatus() { return status; }
+    public LocalDateTime getPaidAt() { return paidAt; }
+}
