@@ -38,7 +38,6 @@ public class PromoCode {
         this.active = active;
     }
 
-    // ===== Getters =====
     public Long getId() {
         return id;
     }
@@ -88,7 +87,6 @@ public class PromoCode {
         this.active = active;
     }
 
-    // (اختياري) مفيد للتصحيح واللوجز
     @Override
     public String toString() {
         return "PromoCode{" +
