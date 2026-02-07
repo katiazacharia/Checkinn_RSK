@@ -1,4 +1,6 @@
 package com.project.checkinn.common;
 
-public class Role {
+public enum Role {
+    ADMIN,
+    GUEST
 }
