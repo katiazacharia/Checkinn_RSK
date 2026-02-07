@@ -1,0 +1,79 @@
+package com.project.checkinn.notification;
+
+import com.project.checkinn.booking.reservation.Booking;
+import com.project.checkinn.common.NotificationStatus;
+import com.project.checkinn.common.NotificationType;
+import com.project.checkinn.user.profile.User;
+
+import jakarta.persistence.EntityManager;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class NotificationServiceImpl implements NotificationService {
+
+    private final NotificationRepository notificationRepository;
+    private final EntityManager entityManager;
+
+    public NotificationServiceImpl(NotificationRepository notificationRepository,
+                                   EntityManager entityManager) {
+        this.notificationRepository = notificationRepository;
+        this.entityManager = entityManager;
+    }
+
+    @Override
+    public Notification create(
+            Long userId,
+            Long bookingId,
+            NotificationType type,
+            String title,
+            String message
+    ) {
+
+        if (userId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+
+        if (type == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type is required");
+
+        if (title == null || title.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title is required");
+
+        if (message == null || message.isBlank())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "message is required");
+
+        User userRef = entityManager.getReference(User.class, userId);
+
+        Notification notification = new Notification();
+        notification.setUser(userRef);
+
+        if (bookingId != null) {
+            Booking bookingRef = entityManager.getReference(Booking.class, bookingId);
+            notification.setBooking(bookingRef);
+        }
+
+        notification.setType(type);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        // notification.setStatus(NotificationStatus.UNREAD);
+        notification.setSentAt(LocalDateTime.now());
+
+        return notificationRepository.save(notification);
+    }
+
+    @Override
+    public Notification getById(Long id) {
+        return notificationRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+    }
+
+    @Override
+    public List<Notification> getAll() {
+        return notificationRepository.findAll();
+    }
+}
