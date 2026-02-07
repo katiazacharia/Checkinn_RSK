@@ -25,9 +25,9 @@ public class Room {
     @Column(nullable = false)
     private String roomNumber;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private RoomType type;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RoomType type;
 
     @Column(nullable = false)
     private BigDecimal pricePerNight;
@@ -35,9 +35,9 @@ public class Room {
     @Column(nullable = false)
     private int capacity;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(nullable = false)
-//    private RoomStatus status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RoomStatus status;
 
     public Room() {}
 
@@ -50,8 +50,8 @@ public class Room {
     public String getRoomNumber() { return roomNumber; }
     public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
 
-//    public RoomType getType() { return type; }
-//    public void setType(RoomType type) { this.type = type; }
+    public RoomType getType() { return type; }
+    public void setType(RoomType type) { this.type = type; }
 
     public BigDecimal getPricePerNight() { return pricePerNight; }
     public void setPricePerNight(BigDecimal pricePerNight) { this.pricePerNight = pricePerNight; }
@@ -59,6 +59,6 @@ public class Room {
     public int getCapacity() { return capacity; }
     public void setCapacity(int capacity) { this.capacity = capacity; }
 
-//    public RoomStatus getStatus() { return status; }
-//    public void setStatus(RoomStatus status) { this.status = status; }
+    public RoomStatus getStatus() { return status; }
+    public void setStatus(RoomStatus status) { this.status = status; }
 }
