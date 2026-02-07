@@ -1,4 +1,7 @@
 package com.project.checkinn.common;
 
-public class Tier {
+public enum Tier {
+    BRONZE,
+    SILVER,
+    GOLD
 }
