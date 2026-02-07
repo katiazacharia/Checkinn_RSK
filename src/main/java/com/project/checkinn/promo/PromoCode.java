@@ -12,10 +12,10 @@ public class PromoCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 50)
     private String code;
 
-    @Column(nullable = false)
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal discountValue;
 
     @Column(nullable = false)
@@ -30,5 +30,72 @@ public class PromoCode {
     public PromoCode() {
     }
 
-    // getters & setters
+    public PromoCode(String code, BigDecimal discountValue, LocalDate validFrom, LocalDate validTo, boolean active) {
+        this.code = code;
+        this.discountValue = discountValue;
+        this.validFrom = validFrom;
+        this.validTo = validTo;
+        this.active = active;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public BigDecimal getDiscountValue() {
+        return discountValue;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public LocalDate getValidTo() {
+        return validTo;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    // ===== Setters =====
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public void setDiscountValue(BigDecimal discountValue) {
+        this.discountValue = discountValue;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public void setValidTo(LocalDate validTo) {
+        this.validTo = validTo;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    @Override
+    public String toString() {
+        return "PromoCode{" +
+                "id=" + id +
+                ", code='" + code + '\'' +
+                ", discountValue=" + discountValue +
+                ", validFrom=" + validFrom +
+                ", validTo=" + validTo +
+                ", active=" + active +
+                '}';
+    }
 }
