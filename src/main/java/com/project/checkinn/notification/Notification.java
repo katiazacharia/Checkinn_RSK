@@ -1,10 +1,8 @@
 package com.project.checkinn.notification;
 
 import jakarta.persistence.*;
-import java.time.Instant;
 
 @Entity
-@Table(name = "notifications")
 public class Notification {
 
     @Id
@@ -13,28 +11,22 @@ public class Notification {
 
     private String title;
     private String message;
+    private boolean readStatus;
 
-    // مثال: PENDING / SENT / FAILED
-    private String status;
+    public Notification() {}
 
-    private Instant createdAt;
-
-    public Notification() {
-        this.createdAt = Instant.now();
-        this.status = "PENDING";
+    public Notification(String title, String message) {
+        this.title = title;
+        this.message = message;
+        this.readStatus = false;
     }
 
     public Long getId() { return id; }
-
     public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
     public String getMessage() { return message; }
+    public boolean isReadStatus() { return readStatus; }
+
+    public void setTitle(String title) { this.title = title; }
     public void setMessage(String message) { this.message = message; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public void setReadStatus(boolean readStatus) { this.readStatus = readStatus; }
 }
