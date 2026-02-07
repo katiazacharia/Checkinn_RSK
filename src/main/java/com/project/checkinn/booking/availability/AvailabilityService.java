@@ -1,4 +1,7 @@
 package com.project.checkinn.booking.availability;
 
-public class AvailabilityService {
+public interface AvailabilityService {
+
+    AvailabilityResponse check(AvailabilityRequest request);
+
 }
