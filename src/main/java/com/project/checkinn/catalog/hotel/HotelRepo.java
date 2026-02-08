@@ -1,4 +1,8 @@
 package com.project.checkinn.catalog.hotel;
 
-public class HotelRepo {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+
+public interface HotelRepo extends JpaRepository<Hotel, Long> {
+
 }

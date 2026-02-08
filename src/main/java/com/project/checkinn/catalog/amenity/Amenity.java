@@ -26,7 +26,7 @@ public class Amenity {
 
     public Amenity() {}
 
-    // getters & setters
+
     public Long getId() { return id; }
 
     public String getName() { return name; }
