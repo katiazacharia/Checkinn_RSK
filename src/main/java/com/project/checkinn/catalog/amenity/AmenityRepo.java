@@ -1,4 +1,7 @@
 package com.project.checkinn.catalog.amenity;
 
-public class AmenityRepo {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AmenityRepo extends JpaRepository<Amenity, Long> {
+    boolean existsByNameIgnoreCase(String name);
 }
