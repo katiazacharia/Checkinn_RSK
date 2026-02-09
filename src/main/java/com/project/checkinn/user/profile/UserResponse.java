@@ -1,24 +1,30 @@
 package com.project.checkinn.user.profile;
 
+import com.project.checkinn.common.Role;
+
 public class UserResponse {
     private Long id;
     private String fullName;
     private String email;
     private String phone;
+    private Role role;
 
 
-    public UserResponse(Long id, String fullName, String email, String phone) {
-        this.id = id;
-        this.fullName = fullName;
-        this.email = email;
-        this.phone = phone;
+    public UserResponse(User user) {
+         this.id = user.getId();
+         this.fullName = user.getFullName();
+         this.email = user.getEmail();
+         this.phone = user.getPhone();
+         this.role = user.getRole();
     }
 
     public Long getId() {
+
         return id;
     }
 
-    public String getFullName() {
+    public String getFullName()
+    {
         return fullName;
     }
 
@@ -27,6 +33,10 @@ public class UserResponse {
     }
 
     public String getPhone() {
+
         return phone;
+    }
+    public String getRole() {
+        return role.name();
     }
 }

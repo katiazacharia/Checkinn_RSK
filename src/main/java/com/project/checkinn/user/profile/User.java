@@ -1,5 +1,6 @@
 package com.project.checkinn.user.profile;
 
+import com.project.checkinn.common.Role;
 import jakarta.persistence.*;
 
 @Entity
@@ -10,21 +11,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String fullName;
 
-    @Column(nullable = false, unique = true)
+
+    @Column(unique = true )
     private String email;
 
     private String phone;
 
-    // optional: admin/guest role later (can be enum)
-    // private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public User() {
     }
-
-    // ===== getters & setters =====
 
     public Long getId() {
         return id;
@@ -52,5 +51,13 @@ public class User {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+       this.role = role;
     }
 }
