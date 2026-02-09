@@ -1,53 +1,44 @@
 package com.project.checkinn.user.profile;
 
+import com.project.checkinn.common.Role;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import com.project.checkinn.common.Role;
+
 import java.util.List;
-import static org.springframework.http.HttpStatus.*;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    @Override
+    public UserResponse getById(Long id) {
+        return null;
+    }
+
     private final UserRepo userRepo;
 
     public UserServiceImpl(UserRepo userRepo) {
         this.userRepo = userRepo;
     }
+
     @Override
     public UserResponse create(UserCreateRequest request) {
 
         if (userRepo.existsByEmail(request.getEmail())) {
-            throw new ResponseStatusException(CONFLICT, "Email already exists");
+            throw new RuntimeException("Email already exists");
         }
         User user = new User();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
+        user.setRole(Role.GUEST);
 
-        User saved = userRepo.save(user);
-
-        return mapToResponse(saved);
+        return new UserResponse(userRepo.save(user));
     }
+
     @Override
     public List<UserResponse> getAll() {
         return userRepo.findAll()
                 .stream()
-                .map(this::mapToResponse)
+                .map(UserResponse::new)
                 .toList();
-    }
-    @Override
-    public UserResponse getById(Long id) {
-        User user = userRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-
-        return mapToResponse(user);
-    }
-
-    private UserResponse mapToResponse(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getFullName(),
-                user.getEmail(),
-                user.getPhone()
-        );
-    }
-    }
+    }}
