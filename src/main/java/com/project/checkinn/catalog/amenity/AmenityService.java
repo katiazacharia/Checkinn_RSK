@@ -29,7 +29,7 @@ public class AmenityService {
         return toResponse(amenity);
     }
 
-    public AmenityResponse create(AmenityCreateRequest req) {
+    public AmenityResponse create(AmenityRequest req) {
         if (req.getName() == null || req.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
         }
@@ -45,7 +45,7 @@ public class AmenityService {
         return toResponse(amenityRepo.save(a));
     }
 
-    public AmenityResponse update(Long id, AmenityCreateRequest req) {
+    public AmenityResponse update(Long id, AmenityRequest req) {
         Amenity a = amenityRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
 

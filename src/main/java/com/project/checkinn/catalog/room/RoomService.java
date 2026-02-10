@@ -38,7 +38,7 @@ public class RoomService {
         return toResponse(r);
     }
 
-    public RoomResponse create(RoomCreateRequest req) {
+    public RoomResponse create(RoomRequest req) {
         if (req.getHotelId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "hotelId is required");
         }
@@ -73,7 +73,7 @@ public class RoomService {
         return toResponse(roomRepo.save(r));
     }
 
-    public RoomResponse update(Long id, RoomCreateRequest req) {
+    public RoomResponse update(Long id, RoomRequest req) {
         Room r = roomRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
 

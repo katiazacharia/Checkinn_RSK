@@ -1,52 +1,65 @@
 package com.project.checkinn.catalog.room;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 import java.util.List;
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @RestController
-@RequestMapping("/api/rooms")
+@RequestMapping("/rooms")
 public class RoomController {
 
     private final RoomService roomService;
+
+
 
     public RoomController(RoomService roomService) {
         this.roomService = roomService;
     }
 
     @GetMapping
-    public List<RoomResponse> getAll() {
+    public List<RoomResponse> all() {
         return roomService.getAll();
     }
 
+
     @GetMapping("/{id}")
-    public RoomResponse getById(@PathVariable Long id) {
+    public RoomResponse one(@PathVariable Long id) {
         return roomService.getById(id);
     }
 
+
     @GetMapping("/hotel/{hotelId}")
-    public List<RoomResponse> getByHotel(@PathVariable Long hotelId) {
+    public List<RoomResponse> byHotel(@PathVariable Long hotelId) {
         return roomService.getByHotel(hotelId);
     }
-
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public RoomResponse create(@RequestBody RoomCreateRequest req) {
-        return roomService.create(req);
+    public ResponseEntity<RoomResponse> create(
+            @Valid @RequestBody RoomRequest request,
+            UriComponentsBuilder uriBuilder
+    ) {
+        RoomResponse saved = roomService.create(request);
+
+        URI location = uriBuilder
+                .path("/rooms/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(saved);
     }
 
     @PutMapping("/{id}")
-    public RoomResponse update(@PathVariable Long id, @RequestBody RoomCreateRequest req) {
-        return roomService.update(id, req);
+    public ResponseEntity<RoomResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody RoomRequest request
+    ) {
+        RoomResponse updated = roomService.update(id, request);
+        return ResponseEntity.ok(updated);
     }
-
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        roomService.delete(id);
-    }
-
     }
 
 

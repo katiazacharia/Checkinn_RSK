@@ -2,7 +2,7 @@ package com.project.checkinn.catalog.hotel;
 
 import java.util.Set;
 
-public class HotelCreateRequest {
+public class HotelRequest {
     private String name;
     private String city;
     private String address;
@@ -11,7 +11,7 @@ public class HotelCreateRequest {
 
     private Set<Long> amenityIds;
 
-    public HotelCreateRequest() {}
+    public HotelRequest() {}
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

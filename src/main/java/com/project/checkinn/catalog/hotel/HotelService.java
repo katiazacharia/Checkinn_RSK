@@ -34,7 +34,7 @@ public class HotelService {
         return toResponse(h);
     }
 
-    public HotelResponse create(HotelCreateRequest req) {
+    public HotelResponse create(HotelRequest req) {
         if (req.getName() == null || req.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
         }
@@ -48,7 +48,7 @@ public class HotelService {
         h.setAddress(req.getAddress());
         h.setDescription(req.getDescription());
 
-        // set amenities if provided
+
         if (req.getAmenityIds() != null && !req.getAmenityIds().isEmpty()) {
             Set<Amenity> amenities = new HashSet<>(amenityRepo.findAllById(req.getAmenityIds()));
             h.setAmenities(amenities);
@@ -57,7 +57,7 @@ public class HotelService {
         return toResponse(hotelRepo.save(h));
     }
 
-    public HotelResponse update(Long id, HotelCreateRequest req) {
+    public HotelResponse update(Long id, HotelRequest req) {
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
