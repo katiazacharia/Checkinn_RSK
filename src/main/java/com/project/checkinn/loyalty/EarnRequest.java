@@ -1,6 +1,6 @@
-package com.project.checkinn.loyalty.dto;
+package com.project.checkinn.loyalty;
 
-public class RedeemRequest {
+public class EarnRequest {
     private Long userId;
     private int points;
     private String note;

@@ -1,7 +1,5 @@
 package com.project.checkinn.loyalty;
 
-import com.project.checkinn.loyalty.dto.EarnRequest;
-import com.project.checkinn.loyalty.dto.RedeemRequest;
 import com.project.checkinn.loyalty.account.LoyaltyAccountResponse;
 import com.project.checkinn.loyalty.transaction.LoyaltyTransactionResponse;
 
