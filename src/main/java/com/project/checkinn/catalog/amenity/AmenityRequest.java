@@ -1,11 +1,11 @@
 package com.project.checkinn.catalog.amenity;
 
-public class AmenityCreateRequest {
+public class AmenityRequest {
     private String name;
     private String icon;
     private String description;
 
-    public AmenityCreateRequest() {}
+    public AmenityRequest() {}
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

@@ -5,7 +5,7 @@ import com.project.checkinn.common.RoomType;
 
 import java.math.BigDecimal;
 
-public class RoomCreateRequest {
+public class RoomRequest {
 
     private Long hotelId;
     private String roomNumber;
@@ -14,7 +14,7 @@ public class RoomCreateRequest {
     private int capacity;
     private RoomStatus status;
 
-    public RoomCreateRequest() {}
+    public RoomRequest() {}
 
     public Long getHotelId() { return hotelId; }
     public void setHotelId(Long hotelId) { this.hotelId = hotelId; }
