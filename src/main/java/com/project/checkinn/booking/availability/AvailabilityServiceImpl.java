@@ -3,10 +3,12 @@ package com.project.checkinn.booking.availability;
 import com.project.checkinn.booking.reservation.BookingRepository;
 import com.project.checkinn.common.BookingStatus;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 
+@Service
 public class AvailabilityServiceImpl  implements AvailabilityService{
 
     private final BookingRepository bookingRepository;
