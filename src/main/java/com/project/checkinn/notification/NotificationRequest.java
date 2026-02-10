@@ -3,7 +3,7 @@ package com.project.checkinn.notification;
 import com.project.checkinn.common.NotificationStatus;
 import com.project.checkinn.common.NotificationType;
 
-public class NotificationCreateRequest {
+public class NotificationRequest {
 
     private Long userId;
     private Long bookingId;
@@ -12,7 +12,7 @@ public class NotificationCreateRequest {
     private String message;
     private NotificationStatus status;
 
-    public NotificationCreateRequest() {}
+    public NotificationRequest() {}
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }

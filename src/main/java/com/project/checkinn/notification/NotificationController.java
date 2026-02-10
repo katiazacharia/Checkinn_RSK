@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/notifications")
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -18,7 +18,7 @@ public class NotificationController {
     }
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public NotificationResponse create(@RequestBody NotificationCreateRequest request) {
+    public NotificationResponse create(@RequestBody NotificationRequest request) {
 
         if (request.getStatus() == null) {
             request.setStatus(NotificationStatus.UNREAD);
