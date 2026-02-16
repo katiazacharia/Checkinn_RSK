@@ -62,15 +62,18 @@ public class BookingServiceImpl implements BookingService {
         if (conflicts > 0)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Dates not available for this room");
 
-        User userRef = entityManager.getReference(User.class, request.getUserId());
+        User userRef = entityManager.find(User.class, request.getUserId());
+        if (userRef == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
 
         PromoCode promoRef = null;
         if (request.getPromoCodeId() != null) {
             promoRef = entityManager.getReference(PromoCode.class, request.getPromoCodeId());
         }
 
-        Room roomRef = entityManager.getReference(Room.class, request.getRoomId());
-
+        Room roomRef = entityManager.find(Room.class, request.getRoomId());
+        if (roomRef == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
         Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
         booking.setStatus(BookingStatus.PENDING);
 
@@ -125,6 +128,27 @@ public class BookingServiceImpl implements BookingService {
 
     return saved;
 //        return bookingRepository.save(booking);
+    }
+
+    @Override
+    public List<Booking> upcoming(Long userId) {
+        LocalDate today = LocalDate.now();
+        List<BookingStatus> statuses = List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED);
+        if (userId == null) {
+            return bookingRepository.findByCheckInDateGreaterThanEqualAndStatusIn(today, statuses);
+        }
+        return bookingRepository.findByUser_IdAndCheckInDateGreaterThanEqualAndStatusIn(userId, today, statuses);
+    }
+
+    @Override
+    public List<Booking> search(BookingStatus status, Long userId, Long roomId, LocalDate from, LocalDate to) {
+        return  bookingRepository.findAll().stream()
+                .filter(b -> status == null || b.getStatus() == status)
+                .filter(b -> userId == null || (b.getUser() != null && b.getUser().getId().equals(userId)))
+                .filter(b -> roomId == null || (b.getRoom() != null && b.getRoom().getId().equals(roomId)))
+                .filter(b -> from == null || !b.getCheckInDate().isBefore(from))
+                .filter(b -> to == null || !b.getCheckOutDate().isAfter(to))
+                .toList();
     }
 
 

@@ -1,5 +1,8 @@
 package com.project.checkinn.booking.reservation;
 
+import com.project.checkinn.common.BookingStatus;
+
+import java.time.LocalDate;
 import java.util.List;
 
 public interface BookingService {
@@ -13,4 +16,7 @@ public interface BookingService {
     List<Booking> getByUser(Long userId);
 
     Booking cancel(Long id);
+    List<Booking> upcoming(Long userId);
+    List<Booking> search(BookingStatus status, Long userId, Long roomId, LocalDate from, LocalDate to);
+
 }

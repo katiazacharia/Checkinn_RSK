@@ -16,5 +16,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             LocalDate outDate,
             LocalDate inDate
     );
+    List<Booking> findByCheckInDateGreaterThanEqualAndStatusIn(LocalDate date, List<BookingStatus> statuses);
+    List<Booking> findByUser_IdAndCheckInDateGreaterThanEqualAndStatusIn(Long userId, LocalDate date, List<BookingStatus> statuses);
+    List<Booking> findByStatus(BookingStatus status);
+    List<Booking> findByRoom_Id(Long roomId);
+    List<Booking> findByCheckInDateGreaterThanEqual(LocalDate from);
+    List<Booking> findByCheckOutDateLessThanEqual(LocalDate to);
 
 }

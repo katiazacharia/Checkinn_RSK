@@ -52,7 +52,23 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (booking == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found");
+
+        if (booking.getStatus() == BookingStatus.CANCELLED)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot pay for a cancelled booking");
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Booking already confirmed");
+
         booking.setStatus(BookingStatus.CONFIRMED);
+
+        Payment payment = new Payment();
+        payment.setBooking(booking);
+        payment.setAmount(amount);
+        payment.setMethod(method);
+        payment.setStatus(PaymentStatus.PAID);
+        payment.setPaidAt(LocalDateTime.now());
+
+        Payment saved = paymentRepository.save(payment);
 
         notificationService.create(
                 booking.getUser().getId(),
@@ -63,14 +79,7 @@ public class PaymentServiceImpl implements PaymentService {
         );
 
 
-        Payment payment = new Payment();
-        payment.setBooking(booking);
-        payment.setAmount(amount);
-        payment.setMethod(method);
-        payment.setStatus(PaymentStatus.PAID);
-        payment.setPaidAt(LocalDateTime.now());
-
-        return paymentRepository.save(payment);
+        return saved;
     }
 
     @Override

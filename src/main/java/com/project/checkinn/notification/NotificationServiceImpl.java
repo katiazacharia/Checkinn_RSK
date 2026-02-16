@@ -59,7 +59,7 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setType(type);
         notification.setTitle(title);
         notification.setMessage(message);
-        // notification.setStatus(NotificationStatus.UNREAD);
+        notification.setStatus(NotificationStatus.UNREAD);
         notification.setSentAt(LocalDateTime.now());
 
         return notificationRepository.save(notification);
