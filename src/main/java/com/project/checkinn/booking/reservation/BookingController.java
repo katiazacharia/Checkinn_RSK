@@ -1,11 +1,14 @@
 package com.project.checkinn.booking.reservation;
 
 
+import com.project.checkinn.common.BookingStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -18,10 +21,15 @@ public class BookingController {
         this.bookingService = bookingService;
     }
 
-
+//list with optional filters: status, userId, roomId, from, to
     @GetMapping
-    public List<BookingResponse> all() {
-        return bookingService.getAll()
+    public List<BookingResponse> all(@RequestParam(required = false) BookingStatus status,
+                                     @RequestParam(required = false) Long userId,
+                                     @RequestParam(required = false) Long roomId,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+    ) {
+        return bookingService.search(status, userId, roomId, from, to)
                 .stream()
                 .map(BookingMapper::toResponse)
                 .toList();
@@ -29,12 +37,23 @@ public class BookingController {
 
     @GetMapping("/{id}")
     public BookingResponse one(@PathVariable Long id) {
+
         return BookingMapper.toResponse(bookingService.getById(id));
     }
 
     @GetMapping("/user/{userId}")
     public List<BookingResponse> byUser(@PathVariable Long userId) {
         return bookingService.getByUser(userId)
+                .stream()
+                .map(BookingMapper::toResponse)
+                .toList();
+    }
+//bashof al upcoming l specific user
+    @GetMapping("/upcoming")
+    public List<BookingResponse> upcoming(
+            @RequestParam(required = false) Long userId
+    ) {
+        return bookingService.upcoming(userId)
                 .stream()
                 .map(BookingMapper::toResponse)
                 .toList();
