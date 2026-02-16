@@ -31,9 +31,13 @@ public class AvailabilityServiceImpl  implements AvailabilityService{
 
         if (!out.isAfter(in))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOutDate must be after checkInDate");
-//هاد عشان تضارب المواعيد بدي اشتغل عليه بعدين
-//        long conflicts = bookingRepository.countOverlappingBookings(in, out, BookingStatus.CANCELLED);
-//        boolean available = (conflicts == 0);
+        long conflicts = bookingRepository
+                .countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
+                        request.getRoomId(),
+                        BookingStatus.CANCELLED,
+                        out,
+                        in
+                );
 
         return new AvailabilityResponse(in, out, true, 0);
 

@@ -1,6 +1,6 @@
 package com.project.checkinn.booking.reservation;
 
-//import com.project.checkinn.catalog.room.entity.Room;
+import com.project.checkinn.catalog.room.Room;
 import com.project.checkinn.common.BookingStatus;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.user.profile.User;
@@ -22,10 +22,10 @@ public class Booking {
     @JoinColumn(name = "user_id")
     private User user;
 
-//    // which room
-//    @ManyToOne(optional = false)
-//    @JoinColumn(name = "room_id")
-//    private Room room;
+    // which room
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "room_id")
+    private Room room;
 
     @Column(nullable = false)
     private LocalDate checkInDate;
@@ -62,13 +62,13 @@ public class Booking {
         this.user = user;
     }
 
-//    public Room getRoom() {
-//        return room;
-//    }
-//
-//    public void setRoom(Room room) {
-//        this.room = room;
-//    }
+   public Room getRoom() {
+     return room;
+    }
+
+    public void setRoom(Room room) {
+        this.room = room;
+  }
 
     public LocalDate getCheckInDate() {
         return checkInDate;
