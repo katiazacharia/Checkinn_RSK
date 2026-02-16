@@ -1,6 +1,8 @@
 package com.project.checkinn.booking.reservation;
 
 import com.project.checkinn.common.BookingStatus;
+import com.project.checkinn.common.NotificationType;
+import com.project.checkinn.notification.NotificationService;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.user.profile.User;
 import jakarta.persistence.EntityManager;
@@ -15,12 +17,16 @@ import java.util.List;
 @Service
 public class BookingServiceImpl implements BookingService {
 
+    private final NotificationService notificationService;
     private final BookingRepository bookingRepository;
     private final EntityManager entityManager;
 
-    public BookingServiceImpl(BookingRepository bookingRepository, EntityManager entityManager) {
+    public BookingServiceImpl(BookingRepository bookingRepository,
+                              EntityManager entityManager,
+                              NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.entityManager = entityManager;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -69,6 +75,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(BookingStatus.PENDING);
 
 
+
         return bookingRepository.save(booking);
     }
 
@@ -104,8 +111,20 @@ public class BookingServiceImpl implements BookingService {
             );
         }
 
+
         booking.setStatus(BookingStatus.CANCELLED);
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        notificationService.create(
+                saved.getUser().getId(),
+                saved.getId(),
+                NotificationType.EMAIL,
+                "Booking Cancelled",
+                "Your booking #" + saved.getId() + " has been cancelled."
+        );
+
+    return saved;
+//        return bookingRepository.save(booking);
     }
 
 
