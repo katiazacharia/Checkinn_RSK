@@ -7,6 +7,7 @@ import jakarta.persistence.EntityManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.project.checkinn.catalog.room.Room;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,6 +31,9 @@ public class BookingServiceImpl implements BookingService {
         if (request.getUserId() == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
 
+        if (request.getRoomId() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "roomId is required");
+
         if (request.getCheckInDate() == null || request.getCheckOutDate() == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkInDate and checkOutDate are required");
 
@@ -42,9 +46,15 @@ public class BookingServiceImpl implements BookingService {
         if (request.getTotalPrice() == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalPrice is required");
 
-        // conflict check لسا مش جاهز حطيتو كومينت
-      //  long conflicts = bookingRepository.countOverlappingBookings(in, out, BookingStatus.CANCELLED);
-        // if (conflicts > 0) throw new ResponseStatusException(HttpStatus.CONFLICT, "Dates not available");
+
+        long conflicts = bookingRepository.countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
+                request.getRoomId(),
+                BookingStatus.CANCELLED,
+                out,
+                in);
+
+        if (conflicts > 0)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Dates not available for this room");
 
         User userRef = entityManager.getReference(User.class, request.getUserId());
 
@@ -53,8 +63,11 @@ public class BookingServiceImpl implements BookingService {
             promoRef = entityManager.getReference(PromoCode.class, request.getPromoCodeId());
         }
 
-        Booking booking = BookingMapper.toEntity(request, userRef, promoRef);
+        Room roomRef = entityManager.getReference(Room.class, request.getRoomId());
+
+        Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
         booking.setStatus(BookingStatus.PENDING);
+
 
         return bookingRepository.save(booking);
     }
@@ -78,7 +91,22 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking cancel(Long id) {
         Booking booking = getById(id);
+
+        if (booking.getStatus() == BookingStatus.CANCELLED)
+            return booking;
+
+        LocalDate today = LocalDate.now();
+
+        if (!booking.getCheckInDate().isAfter(today.plusDays(1))) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cancellation not allowed (too late)"
+            );
+        }
+
         booking.setStatus(BookingStatus.CANCELLED);
         return bookingRepository.save(booking);
     }
+
+
 }

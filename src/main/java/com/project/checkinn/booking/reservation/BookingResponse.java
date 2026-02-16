@@ -14,6 +14,8 @@ public class BookingResponse {
     private BookingStatus status;
     private BigDecimal totalPrice;
     private Long promoCodeId; // optional
+    private Long roomId;
+
 
     public BookingResponse(Booking booking) {
         this.id = booking.getId();
@@ -23,6 +25,8 @@ public class BookingResponse {
         this.status = booking.getStatus();
         this.totalPrice = booking.getTotalPrice();
         this.promoCodeId = booking.getPromoCode() != null ? booking.getPromoCode().getId() : null;
+        this.roomId = booking.getRoom() != null ? booking.getRoom().getId() : null;
+
     }
 
     public Long getId() { return id; }
@@ -32,4 +36,6 @@ public class BookingResponse {
     public BookingStatus getStatus() { return status; }
     public BigDecimal getTotalPrice() { return totalPrice; }
     public Long getPromoCodeId() { return promoCodeId; }
+    public Long getRoomId() { return roomId; }
+
 }
