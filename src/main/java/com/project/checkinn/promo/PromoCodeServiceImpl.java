@@ -64,4 +64,28 @@ public class PromoCodeServiceImpl implements PromoCodeService {
                 && !today.isBefore(promo.getValidFrom())
                 && !today.isAfter(promo.getValidTo());
     }
+
+    @Override
+    public PromoCode update(PromoCode promoCode) {
+
+        if (promoCode.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Promo id is required");
+        }
+
+        PromoCode existing = getById(promoCode.getId());
+
+        if (!existing.getCode().equalsIgnoreCase(promoCode.getCode())
+                && promoCodeRepository.existsByCodeIgnoreCase(promoCode.getCode())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Promo code already exists");
+        }
+
+        existing.setCode(promoCode.getCode());
+        existing.setDiscountValue(promoCode.getDiscountValue());
+        existing.setValidFrom(promoCode.getValidFrom());
+        existing.setValidTo(promoCode.getValidTo());
+        existing.setActive(promoCode.isActive());
+
+        return promoCodeRepository.save(existing);
+    }
+
 }

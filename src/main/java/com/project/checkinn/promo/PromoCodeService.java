@@ -15,4 +15,7 @@ public interface PromoCodeService {
     PromoCode deactivate(Long id);
 
     boolean isValid(String code);
+
+    PromoCode update(PromoCode promoCode);
+
 }
