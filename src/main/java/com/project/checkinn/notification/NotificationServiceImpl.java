@@ -66,14 +66,79 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public Notification createFromRequest(NotificationRequest request) {
+        if (request == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
+
+        Notification n = create(
+                request.getUserId(),
+                request.getBookingId(),
+                request.getType(),
+                request.getTitle(),
+                request.getMessage()
+        );
+
+        if (request.getStatus() != null) {
+            n.setStatus(request.getStatus());
+            return notificationRepository.save(n);
+        }
+
+        return n;
+    }
+
+    @Override
     public Notification getById(Long id) {
         return notificationRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
     }
 
     @Override
     public List<Notification> getAll() {
         return notificationRepository.findAll();
+    }
+
+    @Override
+    public List<Notification> getByUser(Long userId) {
+        return notificationRepository.findByUser_IdOrderBySentAtDesc(userId);
+    }
+
+    @Override
+    public List<Notification> getByUserAndStatus(Long userId, NotificationStatus status) {
+        return notificationRepository.findByUser_IdAndStatusOrderBySentAtDesc(userId, status);
+
+    }
+
+    @Override
+    public Notification updateStatus(Long id, NotificationStatus status) {
+        Notification n = getById(id);
+        n.setStatus(status);
+        return notificationRepository.save(n);
+    }
+
+    @Override
+    public Notification markRead(Long id) {
+        Notification n = getById(id);
+        if (n.getStatus() == NotificationStatus.UNREAD) {
+            n.setStatus(NotificationStatus.SENT);
+            return notificationRepository.save(n);
+        }
+        return n;
+    }
+
+    @Override
+    public void markReadAll(Long userId) {
+        List<Notification> unread = getByUserAndStatus(userId, NotificationStatus.UNREAD);
+        for (Notification n : unread) {
+            n.setStatus(NotificationStatus.SENT);
+        }
+        notificationRepository.saveAll(unread);
+    }
+
+    @Override
+    public void delete(Long id) {
+        if (!notificationRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found");
+        }
+        notificationRepository.deleteById(id);
     }
 }

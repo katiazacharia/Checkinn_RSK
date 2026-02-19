@@ -63,6 +63,8 @@ public class NotificationController {
                     .map(NotificationMapper::toResponse)
                     .toList();
         }
+
+        //ال default من الservice هو UNREAD
     @PutMapping("/{id}/status")
     public NotificationResponse updateStatus(
             @PathVariable Long id,
@@ -70,6 +72,8 @@ public class NotificationController {
     ) {
         return NotificationMapper.toResponse(notificationService.updateStatus(id, status));
     }
+
+    //يعني حتى لو ما قرات النوتوفيكيشن بكون مبعوت ومخلص
     @PutMapping("/{id}/mark-read")
     public NotificationResponse markRead(@PathVariable Long id) {
         return NotificationMapper.toResponse(notificationService.markRead(id));
