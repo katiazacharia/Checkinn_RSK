@@ -5,13 +5,16 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -19,9 +22,12 @@ import java.util.List;
 public class PromoCodeController {
 
      private final PromoCodeService promoCodeService;
+    private final PromoCodeRepository promoCodeRepository;
 
-    public PromoCodeController(PromoCodeService promoCodeService) {
+
+    public PromoCodeController(PromoCodeService promoCodeService, PromoCodeRepository promoCodeRepository) {
         this.promoCodeService = promoCodeService;
+        this.promoCodeRepository = promoCodeRepository;
     }
 
     @PostMapping
@@ -40,16 +46,35 @@ public class PromoCodeController {
                 .body(PromoCodeMapper.toResponse(created));
     }
 
+
+
     @GetMapping
     public Page<PromoCodeResponse> getAll(
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) String code,
+
+            @RequestParam(required = false) BigDecimal minDiscount,
+            @RequestParam(required = false) BigDecimal maxDiscount,
+
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate validFromStart,
+
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate validFromEnd,
+
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate validToStart,
+
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate validToEnd,
+
             @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        return promoCodeService.list(active, code, pageable)
+        return promoCodeService
+                .list(active, code, minDiscount, maxDiscount,
+                        validFromStart, validFromEnd, validToStart, validToEnd, pageable)
                 .map(PromoCodeMapper::toResponse);
     }
-
 
     @GetMapping("/{id}")
     public PromoCodeResponse getById(@PathVariable Long id) {
@@ -121,5 +146,6 @@ public class PromoCodeController {
 
         promoCodeService.delete(id);
     }
+
 
 }

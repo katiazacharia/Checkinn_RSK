@@ -2,10 +2,14 @@ package com.project.checkinn.promo;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.data.jpa.domain.Specification;
 
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -109,18 +113,48 @@ public class PromoCodeServiceImpl implements PromoCodeService {
     }
 
     @Override
-    public Page<PromoCode> list(Boolean active, String code, Pageable pageable) {
+    public Page<PromoCode> list(
+            Boolean active,
+            String code,
+            BigDecimal minDiscount,
+            BigDecimal maxDiscount,
+            LocalDate validFromStart,
+            LocalDate validFromEnd,
+            LocalDate validToStart,
+            LocalDate validToEnd,
+            Pageable pageable
+    ) {
+        Specification<PromoCode> spec = (root, q, cb) -> cb.conjunction();
+        Specification<PromoCode> s;
 
-        if (active != null && code != null && !code.isBlank())
-            return promoCodeRepository.findByActiveAndCodeContainingIgnoreCase(active, code, pageable);
+        s = PromoCodeSpecs.active(active);
+        if (s != null) spec = spec.and(s);
 
-        if (active != null)
-            return promoCodeRepository.findByActive(active, pageable);
+        s = PromoCodeSpecs.codeContains(code);
+        if (s != null) spec = spec.and(s);
 
-        if (code != null && !code.isBlank())
-            return promoCodeRepository.findByCodeContainingIgnoreCase(code, pageable);
+        s = PromoCodeSpecs.discountFrom(minDiscount);
+        if (s != null) spec = spec.and(s);
 
-        return promoCodeRepository.findAll(pageable);
+        s = PromoCodeSpecs.discountTo(maxDiscount);
+        if (s != null) spec = spec.and(s);
+
+        s = PromoCodeSpecs.validFromFrom(validFromStart);
+        if (s != null) spec = spec.and(s);
+
+        s = PromoCodeSpecs.validFromTo(validFromEnd);
+        if (s != null) spec = spec.and(s);
+
+        s = PromoCodeSpecs.validToFrom(validToStart);
+        if (s != null) spec = spec.and(s);
+
+        s = PromoCodeSpecs.validToTo(validToEnd);
+        if (s != null) spec = spec.and(s);
+
+        return promoCodeRepository.findAll(spec, pageable);
     }
+
+
+
 
 }
