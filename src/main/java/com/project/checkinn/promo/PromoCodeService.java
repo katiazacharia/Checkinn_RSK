@@ -25,6 +25,16 @@ public interface PromoCodeService {
 
     List<PromoCode> getActive();
 
-    Page<PromoCode> list(Boolean active, String code, Pageable pageable);
+    Page<PromoCode> list(
+            Boolean active,
+            String code,
+            java.math.BigDecimal minDiscount,
+            java.math.BigDecimal maxDiscount,
+            java.time.LocalDate validFromStart,
+            java.time.LocalDate validFromEnd,
+            java.time.LocalDate validToStart,
+            java.time.LocalDate validToEnd,
+            Pageable pageable
+    );
 
 }
