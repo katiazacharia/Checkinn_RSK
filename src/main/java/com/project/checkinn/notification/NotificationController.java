@@ -2,9 +2,13 @@ package com.project.checkinn.notification;
 
 
 import com.project.checkinn.common.NotificationStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -45,4 +49,40 @@ public class NotificationController {
                 .map(NotificationMapper::toResponse)
                 .toList();
     }
+        @GetMapping("/user/{userId}")
+    public List<NotificationResponse> getByUser(@PathVariable Long userId) {
+            return notificationService.getByUser(userId)
+                    .stream()
+                    .map(NotificationMapper::toResponse)
+                    .toList();
+        }
+        @GetMapping("/User/{userId}/unread")
+    public List<NotificationResponse> getUnreadByUser(@PathVariable Long userId) {
+            return notificationService.getByUserAndStatus(userId, NotificationStatus.UNREAD)
+                    .stream()
+                    .map(NotificationMapper::toResponse)
+                    .toList();
+        }
+    @PutMapping("/{id}/status")
+    public NotificationResponse updateStatus(
+            @PathVariable Long id,
+            @RequestParam("value") NotificationStatus status
+    ) {
+        return NotificationMapper.toResponse(notificationService.updateStatus(id, status));
+    }
+    @PutMapping("/{id}/mark-read")
+    public NotificationResponse markRead(@PathVariable Long id) {
+        return NotificationMapper.toResponse(notificationService.markRead(id));
+    }
+    @PutMapping("/user/{userId}/mark-read-all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void markReadAll(@PathVariable Long userId) {
+        notificationService.markReadAll(userId);
+    }
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        notificationService.delete(id);
+    }
+
 }
