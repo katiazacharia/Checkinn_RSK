@@ -1,5 +1,7 @@
 package com.project.checkinn.promo;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -64,4 +66,61 @@ public class PromoCodeServiceImpl implements PromoCodeService {
                 && !today.isBefore(promo.getValidFrom())
                 && !today.isAfter(promo.getValidTo());
     }
+
+    @Override
+    public PromoCode update(PromoCode promoCode) {
+
+        if (promoCode.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Promo id is required");
+        }
+
+        PromoCode existing = getById(promoCode.getId());
+
+        if (!existing.getCode().equalsIgnoreCase(promoCode.getCode())
+                && promoCodeRepository.existsByCodeIgnoreCase(promoCode.getCode())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Promo code already exists");
+        }
+
+        existing.setCode(promoCode.getCode());
+        existing.setDiscountValue(promoCode.getDiscountValue());
+        existing.setValidFrom(promoCode.getValidFrom());
+        existing.setValidTo(promoCode.getValidTo());
+        existing.setActive(promoCode.isActive());
+
+        return promoCodeRepository.save(existing);
+    }
+
+    @Override
+    public void delete(Long id) {
+
+        if (id == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "id is required");
+
+        PromoCode promo = getById(id);
+        promoCodeRepository.delete(promo);
+    }
+
+    @Override
+    public List<PromoCode> getActive() {
+        return promoCodeRepository.findAll()
+                .stream()
+                .filter(PromoCode::isActive)
+                .toList();
+    }
+
+    @Override
+    public Page<PromoCode> list(Boolean active, String code, Pageable pageable) {
+
+        if (active != null && code != null && !code.isBlank())
+            return promoCodeRepository.findByActiveAndCodeContainingIgnoreCase(active, code, pageable);
+
+        if (active != null)
+            return promoCodeRepository.findByActive(active, pageable);
+
+        if (code != null && !code.isBlank())
+            return promoCodeRepository.findByCodeContainingIgnoreCase(code, pageable);
+
+        return promoCodeRepository.findAll(pageable);
+    }
+
 }
