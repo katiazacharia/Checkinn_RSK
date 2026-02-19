@@ -6,6 +6,9 @@ import com.project.checkinn.common.NotificationType;
 import com.project.checkinn.user.profile.User;
 
 import jakarta.persistence.EntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -15,6 +18,29 @@ import java.util.List;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
+
+    @Override
+    public Page<Notification> search(
+            Long userId,
+            Long bookingId,
+            NotificationType type,
+            NotificationStatus status,
+            LocalDateTime from,
+            LocalDateTime to,
+            String q,
+            Pageable pageable
+    ) {
+        Specification<Notification> spec = Specification.where(NotificationSpecifications.userId(userId))
+                .and(NotificationSpecifications.bookingId(bookingId))
+                .and(NotificationSpecifications.type(type))
+                .and(NotificationSpecifications.status(status))
+                .and(NotificationSpecifications.sentFrom(from))
+                .and(NotificationSpecifications.sentTo(to))
+                .and(NotificationSpecifications.q(q));
+
+        return notificationRepository.findAll(spec, pageable);
+    }
+
 
     private final NotificationRepository notificationRepository;
     private final EntityManager entityManager;
