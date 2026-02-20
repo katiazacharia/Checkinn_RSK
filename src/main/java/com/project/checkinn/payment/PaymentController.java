@@ -1,7 +1,11 @@
 package com.project.checkinn.payment;
 
+import com.project.checkinn.common.PaymentMethod;
+import com.project.checkinn.common.PaymentStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -38,12 +42,28 @@ public class PaymentController {
 
 
         @GetMapping
-        public List<PaymentResponse> getAll() {
-            return paymentService.getAll()
+        public List<PaymentResponse> search(@RequestParam(required = false) Long bookingId,
+                                            @RequestParam(required = false) PaymentStatus status,
+                                            @RequestParam(required = false) PaymentMethod method) {
+
+
+            return paymentService.search(bookingId, status, method)
                     .stream()
                     .map(PaymentMapper::toResponse)
                     .toList();
         }
+    @PatchMapping("/{id}/status")
+    public PaymentResponse updateStatus(
+            @PathVariable Long id,
+            @RequestParam PaymentStatus status
+    ) {
+        return PaymentMapper.toResponse(paymentService.updateStatus(id, status));
+    }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public void delete(@PathVariable Long id) {
+        throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED, "Deleting payments is not allowed");
+    }
 
     }

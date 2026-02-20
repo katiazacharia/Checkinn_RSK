@@ -23,7 +23,10 @@ public class AmenityController {
         return amenityService.getAll();
     }
 
-
+    @GetMapping("/{id}")
+    public AmenityResponse getById(@PathVariable Long id) {
+        return amenityService.getById(id);
+    }
     @PostMapping
     public ResponseEntity<AmenityResponse> create(
             @Valid @RequestBody AmenityRequest request,
@@ -37,10 +40,6 @@ public class AmenityController {
                 .toUri();
 
         return ResponseEntity.created(location).body(saved);
-    }
-    @GetMapping("/{id}")
-    public AmenityResponse one(@PathVariable Long id) {
-        return amenityService.getById(id);
     }
 
 
@@ -58,5 +57,25 @@ public class AmenityController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         amenityService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/hotel/{hotelId}")
+    public List<AmenityResponse> getAmenitiesForHotel(@PathVariable Long hotelId) {
+        return amenityService.getAmenitiesForHotel(hotelId);
+    }
+
+
+    @PostMapping("/{amenityId}/hotel/{hotelId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addAmenityToHotel(@PathVariable Long amenityId, @PathVariable Long hotelId) {
+        amenityService.addAmenityToHotel(hotelId, amenityId);
+    }
+
+
+    @DeleteMapping("/{amenityId}/hotel/{hotelId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeAmenityFromHotel(@PathVariable Long amenityId, @PathVariable Long hotelId) {
+        amenityService.removeAmenityFromHotel(hotelId, amenityId);
     }
 }

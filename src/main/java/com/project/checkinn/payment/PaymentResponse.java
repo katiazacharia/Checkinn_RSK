@@ -15,6 +15,9 @@ public class PaymentResponse {
     private PaymentStatus status;
     private LocalDateTime paidAt;
 
+    public PaymentResponse() {}
+
+
     public PaymentResponse(Payment payment) {
         this.id = payment.getId();
         this.bookingId = payment.getBooking().getId();
