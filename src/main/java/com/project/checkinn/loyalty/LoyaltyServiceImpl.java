@@ -17,6 +17,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.project.checkinn.loyalty.transaction.LoyaltyTransactionSpecs;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+
 @Service
 public class LoyaltyServiceImpl implements LoyaltyService {
 
@@ -130,4 +136,30 @@ public class LoyaltyServiceImpl implements LoyaltyService {
                 .map(LoyaltyTransactionResponse::new)
                 .toList();
     }
+    @Override
+    public Page<LoyaltyTransactionResponse> historyPaged(
+            Long userId,
+            LoyaltyTransactionType type,
+            LocalDateTime from,
+            LocalDateTime to,
+            Integer minPoints,
+            Integer maxPoints,
+            String noteQ,
+            Pageable pageable
+    ) {
+        if (userId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+
+        Specification<LoyaltyTransaction> spec =
+                Specification.where(LoyaltyTransactionSpecs.byUserId(userId))
+                        .and(LoyaltyTransactionSpecs.type(type))
+                        .and(LoyaltyTransactionSpecs.createdFrom(from))
+                        .and(LoyaltyTransactionSpecs.createdTo(to))
+                        .and(LoyaltyTransactionSpecs.pointsBetween(minPoints, maxPoints))
+                        .and(LoyaltyTransactionSpecs.noteContains(noteQ));
+
+        return transactionRepo.findAll(spec, pageable)
+                .map(LoyaltyTransactionResponse::new);
+    }
+
 }
