@@ -7,15 +7,10 @@ public class PaymentMapper {
     private PaymentMapper() {
     }
 
-    // Entity -> Response
     public static PaymentResponse toResponse(Payment payment) {
-        if (payment == null) {
-            return null;
-        }
-        return new PaymentResponse(payment);
+        return payment == null ? null : new PaymentResponse(payment);
     }
 
-    // Request -> Entity
     public static Payment toEntity(PaymentRequest request, Booking booking) {
         if (request == null || booking == null) {
             return null;

@@ -101,4 +101,57 @@ public class HotelService {
                 amenityIds
         );
     }
+
+    public List<HotelResponse> search(String city, String name, Long amenityId) {
+        List<Hotel> hotels = hotelRepo.findAll();
+
+        return hotels.stream()
+                .filter(h -> city == null || (h.getCity() != null && h.getCity().equalsIgnoreCase(city)))
+                .filter(h -> name == null || (h.getName() != null && h.getName().toLowerCase().contains(name.toLowerCase())))
+                .filter(h -> amenityId == null || h.getAmenities().stream().anyMatch(a -> a.getId().equals(amenityId)))
+                .map(this::toResponse)
+                .toList();
+    }
+
+
+    public HotelResponse addAmenity(Long hotelId, Long amenityId) {
+        Hotel h = hotelRepo.findById(hotelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
+
+        Amenity a = amenityRepo.findById(amenityId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
+
+        h.addAmenity(a);
+        return toResponse(hotelRepo.save(h));
+    }
+
+
+    public HotelResponse removeAmenity(Long hotelId, Long amenityId) {
+        Hotel h = hotelRepo.findById(hotelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
+
+        Amenity a = amenityRepo.findById(amenityId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
+
+        h.removeAmenity(a);
+        return toResponse(hotelRepo.save(h));
+    }
+
+    public HotelResponse replaceAmenities(Long hotelId, Set<Long> amenityIds) {
+        Hotel h = hotelRepo.findById(hotelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
+
+        Set<Long> ids = (amenityIds == null) ? Set.of() : amenityIds;
+
+
+        h.clearAmenities();
+
+
+        Set<Amenity> newAmenities = new HashSet<>(amenityRepo.findAllById(ids));
+        for (Amenity a : newAmenities) {
+            h.addAmenity(a);
+        }
+
+        return toResponse(hotelRepo.save(h));
+    }
 }

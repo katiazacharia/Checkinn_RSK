@@ -60,6 +60,12 @@ public class RoomController {
         RoomResponse updated = roomService.update(id, request);
         return ResponseEntity.ok(updated);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        roomService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
     }
 
 

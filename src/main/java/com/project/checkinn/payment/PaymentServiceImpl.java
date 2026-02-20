@@ -43,6 +43,10 @@ public class PaymentServiceImpl implements PaymentService {
         if (amount == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amount is required");
 
+        if (amount.signum() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amount must be > 0");
+
+
         if (method == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "payment method is required");
 
@@ -93,4 +97,49 @@ public class PaymentServiceImpl implements PaymentService {
     public List<Payment> getAll() {
         return paymentRepository.findAll();
     }
+
+    @Override
+    public Payment getByBookingId(Long bookingId) {
+        return paymentRepository.findByBooking_Id(bookingId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found for this booking"));
+    }
+
+    @Override
+    public List<Payment> search(Long bookingId, PaymentStatus status, PaymentMethod method) {
+
+        if (bookingId != null && status != null) {
+            return paymentRepository.findByBooking_IdAndStatus(bookingId, status);
+        }
+        if (status != null) {
+            return paymentRepository.findByStatus(status);
+        }
+        if (method != null) {
+            return paymentRepository.findByMethod(method);
+        }
+        if (bookingId != null) {
+            return List.of(getByBookingId(bookingId));
+        }
+
+        return paymentRepository.findAll();
+    }
+
+    @Transactional
+    @Override
+    public Payment updateStatus(Long id, PaymentStatus status) {
+
+        if (status == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status is required");
+
+        Payment payment = getById(id);
+        payment.setStatus(status);
+
+        if (status == PaymentStatus.PAID && payment.getPaidAt() == null) {
+            payment.setPaidAt(LocalDateTime.now());
+        }
+
+        return paymentRepository.save(payment);
+    }
 }
+
+
