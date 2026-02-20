@@ -1,11 +1,16 @@
 package com.project.checkinn.review;
 
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,13 +23,21 @@ public class ReviewController {
         this.reviewService = reviewService;
     }
 
-    // GET /reviews
+
     @GetMapping
-    public List<ReviewResponse> all() {
-        return reviewService.getAll()
-                .stream()
-                .map(ReviewMapper::toResponse)
-                .toList();
+    public Page<ReviewResponse> search(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long bookingId,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(required = false) Integer minRating,
+            @RequestParam(required = false) Integer maxRating,
+            @RequestParam(required = false) Boolean hasComment,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
+    ) {
+        return reviewService.search(userId, bookingId, rating, minRating, maxRating, hasComment, from, to, pageable)
+                .map(ReviewMapper::toResponse);
     }
 
     // GET /reviews/{id}
@@ -33,10 +46,10 @@ public class ReviewController {
         return ReviewMapper.toResponse(reviewService.getById(id));
     }
 
-    // POST /reviews -> 201 Created + Location
+    // POST /reviews
     @PostMapping
     public ResponseEntity<ReviewResponse> create(
-            @RequestBody ReviewRequest request,
+          @Valid @RequestBody ReviewRequest request,
             UriComponentsBuilder uriBuilder
     ) {
         Review saved = reviewService.create(request);
@@ -48,6 +61,15 @@ public class ReviewController {
                 .toUri();
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    // PUT /reviews/{id}
+    @PutMapping("/{id}")
+    public ReviewResponse update(
+            @PathVariable Long id,
+            @Valid @RequestBody ReviewRequest request
+    ) {
+        return ReviewMapper.toResponse(reviewService.update(id, request));
     }
 
     // GET /reviews/user/{userId}
@@ -66,5 +88,10 @@ public class ReviewController {
                 .stream()
                 .map(ReviewMapper::toResponse)
                 .toList();
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        reviewService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
