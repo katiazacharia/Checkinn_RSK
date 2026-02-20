@@ -36,3 +36,4 @@ public class NotificationResponse {
     public NotificationStatus getStatus() { return status; }
     public LocalDateTime getSentAt() { return sentAt; }
 }
+

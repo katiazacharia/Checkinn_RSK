@@ -8,3 +8,4 @@ public interface LoyaltyAccountRepo extends JpaRepository<LoyaltyAccount, Long> 
     Optional<LoyaltyAccount> findByUser_Id(Long userId);
     boolean existsByUser_Id(Long userId);
 }
+
