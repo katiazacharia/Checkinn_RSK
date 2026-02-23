@@ -17,103 +17,149 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.project.checkinn.loyalty.transaction.LoyaltyTransactionSpecs;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+
 @Service
 public class LoyaltyServiceImpl implements LoyaltyService {
 
     private final LoyaltyAccountRepo accountRepo;
-    private final LoyaltyTransactionRepo txRepo;
+    private final LoyaltyTransactionRepo transactionRepo;
     private final EntityManager entityManager;
 
     public LoyaltyServiceImpl(LoyaltyAccountRepo accountRepo,
-                              LoyaltyTransactionRepo txRepo,
+                              LoyaltyTransactionRepo transactionRepo,
                               EntityManager entityManager) {
         this.accountRepo = accountRepo;
-        this.txRepo = txRepo;
+        this.transactionRepo = transactionRepo;
         this.entityManager = entityManager;
     }
 
     @Override
-    public LoyaltyAccountResponse getOrCreate(Long userId) {
-        if (userId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+    public LoyaltyAccountResponse getAccount(Long userId) {
+        if (userId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
 
-        LoyaltyAccount acc = accountRepo.findByUser_Id(userId).orElseGet(() -> {
-            User userRef = entityManager.getReference(User.class, userId);
-            LoyaltyAccount a = new LoyaltyAccount();
-            a.setUser(userRef);
-            a.setPoints(0);
-            a.setUpdatedAt(LocalDateTime.now());
-            return accountRepo.save(a);
-        });
+        LoyaltyAccount acc = accountRepo.findByUser_Id(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
         return new LoyaltyAccountResponse(acc);
     }
 
     @Override
     public LoyaltyAccountResponse earn(EarnRequest request) {
-        if (request == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        if (request.getUserId() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
-        if (request.getPoints() <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
-
-        LoyaltyAccount acc = accountRepo.findByUser_Id(request.getUserId()).orElseGet(() -> {
-            User userRef = entityManager.getReference(User.class, request.getUserId());
-            LoyaltyAccount a = new LoyaltyAccount();
-            a.setUser(userRef);
-            a.setPoints(0);
-            a.setUpdatedAt(LocalDateTime.now());
-            return accountRepo.save(a);
-        });
+        if (request == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
+        if (request.getUserId() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+        if (request.getPoints() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
+        LoyaltyAccount acc = accountRepo.findByUser_Id(request.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
         acc.setPoints(acc.getPoints() + request.getPoints());
         acc.setUpdatedAt(LocalDateTime.now());
         accountRepo.save(acc);
 
-        User userRef = entityManager.getReference(User.class, request.getUserId());
         LoyaltyTransaction tx = new LoyaltyTransaction();
-        tx.setUser(userRef);
+        tx.setUser(entityManager.getReference(User.class, request.getUserId()));
         tx.setType(LoyaltyTransactionType.EARN);
-        tx.setPoints(request.getPoints());
+        tx.setPoints(request.getPoints()); // + earn
         tx.setNote(request.getNote());
         tx.setCreatedAt(LocalDateTime.now());
-        txRepo.save(tx);
+        transactionRepo.save(tx);
 
         return new LoyaltyAccountResponse(acc);
     }
 
     @Override
     public LoyaltyAccountResponse redeem(RedeemRequest request) {
-        if (request == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        if (request.getUserId() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
-        if (request.getPoints() <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
+        if (request == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
+        if (request.getUserId() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+        if (request.getPoints() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
 
         LoyaltyAccount acc = accountRepo.findByUser_Id(request.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Loyalty account not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
-        if (acc.getPoints() < request.getPoints())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough points");
+        int after = acc.getPoints() - request.getPoints();
+        if (after < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "not enough points");
 
-        acc.setPoints(acc.getPoints() - request.getPoints());
+        acc.setPoints(after);
         acc.setUpdatedAt(LocalDateTime.now());
         accountRepo.save(acc);
 
-        User userRef = entityManager.getReference(User.class, request.getUserId());
         LoyaltyTransaction tx = new LoyaltyTransaction();
-        tx.setUser(userRef);
+        tx.setUser(entityManager.getReference(User.class, request.getUserId()));
         tx.setType(LoyaltyTransactionType.REDEEM);
-        tx.setPoints(-request.getPoints());
+        tx.setPoints(-request.getPoints()); // - redeem (حسب تعليقك بالـ entity)
         tx.setNote(request.getNote());
         tx.setCreatedAt(LocalDateTime.now());
-        txRepo.save(tx);
+        transactionRepo.save(tx);
 
         return new LoyaltyAccountResponse(acc);
     }
 
     @Override
-    public List<LoyaltyTransactionResponse> history(Long userId) {
-        if (userId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+    public LoyaltyAccountResponse previewRedeem(RedeemRequest request) {
+        if (request == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
+        if (request.getUserId() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+        if (request.getPoints() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
 
-        return txRepo.findByUser_IdOrderByCreatedAtDesc(userId)
+        LoyaltyAccount acc = accountRepo.findByUser_Id(request.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
+
+        int after = acc.getPoints() - request.getPoints();
+        if (after < 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "not enough points");
+
+        // بدون حفظ، وبنفس Response class (بعد ما تضيفي constructor الإضافي)
+        return new LoyaltyAccountResponse(acc.getId(), acc.getUser().getId(), after, acc.getUpdatedAt());
+    }
+
+    @Override
+    public List<LoyaltyTransactionResponse> history(Long userId) {
+        if (userId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+
+        return transactionRepo.findByUser_IdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(LoyaltyTransactionResponse::new)
                 .toList();
     }
+    @Override
+    public Page<LoyaltyTransactionResponse> historyPaged(
+            Long userId,
+            LoyaltyTransactionType type,
+            LocalDateTime from,
+            LocalDateTime to,
+            Integer minPoints,
+            Integer maxPoints,
+            String noteQ,
+            Pageable pageable
+    ) {
+        if (userId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+
+        Specification<LoyaltyTransaction> spec =
+                Specification.where(LoyaltyTransactionSpecs.byUserId(userId))
+                        .and(LoyaltyTransactionSpecs.type(type))
+                        .and(LoyaltyTransactionSpecs.createdFrom(from))
+                        .and(LoyaltyTransactionSpecs.createdTo(to))
+                        .and(LoyaltyTransactionSpecs.pointsBetween(minPoints, maxPoints))
+                        .and(LoyaltyTransactionSpecs.noteContains(noteQ));
+
+        return transactionRepo.findAll(spec, pageable)
+                .map(LoyaltyTransactionResponse::new);
+    }
+
 }

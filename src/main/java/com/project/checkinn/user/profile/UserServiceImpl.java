@@ -2,20 +2,26 @@ package com.project.checkinn.user.profile;
 
 
 import com.project.checkinn.security.Role;
+import com.project.checkinn.loyalty.account.LoyaltyAccount;
+import com.project.checkinn.loyalty.account.LoyaltyAccountRepo;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepo userRepo;
+    private final LoyaltyAccountRepo loyaltyAccountRepo;
 
-    public UserServiceImpl(UserRepo userRepo) {
+    public UserServiceImpl(UserRepo userRepo, LoyaltyAccountRepo loyaltyAccountRepo) {
         this.userRepo = userRepo;
+        this.loyaltyAccountRepo = loyaltyAccountRepo;
     }
+
     @Override
     public UserResponse create(UserCreateRequest request) {
 
@@ -34,7 +40,18 @@ public class UserServiceImpl implements UserService {
         user.setPhone(request.getPhone());
         user.setRole(Role.CUSTOMER);
 
-        return new UserResponse(userRepo.save(user));
+        User savedUser = userRepo.save(user);
+
+        // Create loyalty account automatically for this user
+        if (!loyaltyAccountRepo.existsByUser_Id(savedUser.getId())) {
+            LoyaltyAccount acc = new LoyaltyAccount();
+            acc.setUser(savedUser);
+            acc.setPoints(0);
+            acc.setUpdatedAt(LocalDateTime.now());
+            loyaltyAccountRepo.save(acc);
+        }
+
+        return new UserResponse(savedUser);
     }
     @Override
     public List<UserResponse> getAll() {
@@ -48,4 +65,5 @@ public class UserServiceImpl implements UserService {
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         return new UserResponse(user);
-    }}
+    }
+}
