@@ -89,18 +89,17 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Payment getById(Long id) {
-        return paymentRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
-    }
-
-
-    @Override
     public Payment getByBookingId(Long bookingId) {
         return paymentRepository.findByBooking_Id(bookingId)
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found for this booking"));
+    }
+
+    @Override
+    public Payment getById(Long id) {
+        return paymentRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
     }
 
     @Override

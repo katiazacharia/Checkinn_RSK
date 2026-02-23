@@ -2,6 +2,7 @@ package com.project.checkinn.payment;
 
 import com.project.checkinn.common.PaymentMethod;
 import com.project.checkinn.common.PaymentStatus;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -25,7 +26,7 @@ public class PaymentController {
 
         @PostMapping
         @ResponseStatus(HttpStatus.CREATED)
-        public PaymentResponse create(@RequestBody PaymentRequest request) {
+        public PaymentResponse create(@Valid @RequestBody PaymentRequest request) {
 
             Payment payment = paymentService.create(
                     request.getBookingId(),
@@ -41,6 +42,10 @@ public class PaymentController {
             return PaymentMapper.toResponse(paymentService.getById(id));
         }
 
+    @GetMapping("/booking/{bookingId}")
+    public PaymentResponse getByBookingId(@PathVariable Long bookingId) {
+        return PaymentMapper.toResponse(paymentService.getByBookingId(bookingId));
+    }
 
     @GetMapping
     public Page<PaymentResponse> search(

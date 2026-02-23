@@ -18,7 +18,7 @@ public interface PaymentService {
 
     Payment getById(Long id);
 
-
+    Payment getByBookingId(Long bookingId);
 
     Page<Payment> search(
             Long bookingId,
