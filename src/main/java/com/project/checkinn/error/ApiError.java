@@ -3,7 +3,7 @@ package com.project.checkinn.error;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class ErrorResponseDto {
+public class ApiError {
 
     private int status;
     private String message;
@@ -11,8 +11,8 @@ public class ErrorResponseDto {
     private LocalDateTime timestamp;
     private List<FieldErrorDto> errors;
 
-    public ErrorResponseDto(int status, String message, String path,
-                            LocalDateTime timestamp, List<FieldErrorDto> errors) {
+    public ApiError(int status, String message, String path,
+                    LocalDateTime timestamp, List<FieldErrorDto> errors) {
         this.status = status;
         this.message = message;
         this.path = path;

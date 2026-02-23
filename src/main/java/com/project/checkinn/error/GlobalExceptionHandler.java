@@ -16,10 +16,10 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorResponseDto> handleResponseStatus(ResponseStatusException ex, HttpServletRequest req) {
+    public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex, HttpServletRequest req) {
         int status = ex.getStatusCode().value();
 
-        ErrorResponseDto body = new ErrorResponseDto(
+        ApiError body = new ApiError(
                 status,
                 ex.getReason(),
                 req.getRequestURI(),
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDto> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
 
         List<FieldErrorDto> errors = ex.getBindingResult()
                 .getFieldErrors()
@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
                 .map(e -> new FieldErrorDto(e.getField(), e.getDefaultMessage()))
                 .toList();
 
-        ErrorResponseDto body = new ErrorResponseDto(
+        ApiError body = new ApiError(
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation failed",
                 req.getRequestURI(),
@@ -51,9 +51,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDto> handleAny(Exception ex, HttpServletRequest req) {
+    public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest req) {
 
-        ErrorResponseDto body = new ErrorResponseDto(
+        ApiError body = new ApiError(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Unexpected error",
                 req.getRequestURI(),
@@ -65,8 +65,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponseDto> handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
-        ErrorResponseDto body = new ErrorResponseDto(
+    public ResponseEntity<ApiError> handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        ApiError body = new ApiError(
                 HttpStatus.BAD_REQUEST.value(),
                 "Malformed JSON or invalid value format",
                 req.getRequestURI(),
