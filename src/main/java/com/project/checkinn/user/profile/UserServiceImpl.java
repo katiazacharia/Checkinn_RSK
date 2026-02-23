@@ -1,7 +1,7 @@
 package com.project.checkinn.user.profile;
 
 
-import com.project.checkinn.common.Role;
+import com.project.checkinn.security.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
-        user.setRole(Role.GUEST);
+        user.setRole(Role.CUSTOMER);
 
         return new UserResponse(userRepo.save(user));
     }

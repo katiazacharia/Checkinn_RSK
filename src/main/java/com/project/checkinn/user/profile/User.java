@@ -1,6 +1,6 @@
 package com.project.checkinn.user.profile;
 
-import com.project.checkinn.common.Role;
+import com.project.checkinn.security.Role;
 import jakarta.persistence.*;
 
 @Entity
@@ -20,7 +20,8 @@ public class User {
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(nullable = false)
+    private Role role = Role.CUSTOMER;
 
     public User() {
     }
