@@ -1,7 +1,7 @@
 package com.project.checkinn.user.profile;
 
 
-import com.project.checkinn.common.Role;
+import com.project.checkinn.security.Role;
 import com.project.checkinn.loyalty.account.LoyaltyAccount;
 import com.project.checkinn.loyalty.account.LoyaltyAccountRepo;
 import org.springframework.http.HttpStatus;
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
-        user.setRole(Role.GUEST);
+        user.setRole(Role.CUSTOMER);
 
         User savedUser = userRepo.save(user);
 

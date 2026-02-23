@@ -1,6 +1,6 @@
 package com.project.checkinn.user.profile;
 
-import com.project.checkinn.common.Role;
+import com.project.checkinn.security.Role;
 
 public class UserResponse {
     private Long id;
