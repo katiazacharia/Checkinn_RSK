@@ -1,9 +1,20 @@
 package com.project.checkinn.review;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public class ReviewRequest {
+
+    @NotNull(message = "userId is required")
     private Long userId;
+    @NotNull(message = "bookingId is required")
     private Long bookingId;
+    @Min(value = 1, message = "rating must be between 1 and 5")
+    @Max(value = 5, message = "rating must be between 1 and 5")
     private int rating;
+    @Size(max = 1000, message = "comment max length is 1000")
     private String comment;
 
     public Long getUserId() {
@@ -11,7 +22,6 @@ public class ReviewRequest {
         return userId;
 
     }
-
 
     public void setUserId(Long userId) {
 

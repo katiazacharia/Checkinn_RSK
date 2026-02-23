@@ -59,4 +59,22 @@ public class Hotel {
 
     public Set<Amenity> getAmenities() { return amenities; }
     public void setAmenities(Set<Amenity> amenities) { this.amenities = amenities; }
+
+    public void addAmenity(Amenity amenity) {
+        if (amenity == null) return;
+        this.amenities.add(amenity);
+        amenity.getHotels().add(this);
+    }
+
+    public void removeAmenity(Amenity amenity) {
+        if (amenity == null) return;
+        this.amenities.remove(amenity);
+        amenity.getHotels().remove(this);
+    }
+
+    public void clearAmenities() {
+        for (Amenity a : new HashSet<>(this.amenities)) {
+            removeAmenity(a);
+        }
+    }
 }

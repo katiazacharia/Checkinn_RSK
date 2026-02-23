@@ -11,6 +11,8 @@ public class PromoCodeResponse {
     private LocalDate validTo;
     private boolean active;
 
+    public PromoCodeResponse() { }
+
     public PromoCodeResponse(PromoCode promo) {
         this.id = promo.getId();
         this.code = promo.getCode();

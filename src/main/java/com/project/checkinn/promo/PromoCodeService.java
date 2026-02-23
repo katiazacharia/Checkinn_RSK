@@ -1,5 +1,8 @@
 package com.project.checkinn.promo;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 public interface PromoCodeService {
@@ -15,4 +18,23 @@ public interface PromoCodeService {
     PromoCode deactivate(Long id);
 
     boolean isValid(String code);
+
+    PromoCode update(PromoCode promoCode);
+
+    void delete(Long id);
+
+    List<PromoCode> getActive();
+
+    Page<PromoCode> list(
+            Boolean active,
+            String code,
+            java.math.BigDecimal minDiscount,
+            java.math.BigDecimal maxDiscount,
+            java.time.LocalDate validFromStart,
+            java.time.LocalDate validFromEnd,
+            java.time.LocalDate validToStart,
+            java.time.LocalDate validToEnd,
+            Pageable pageable
+    );
+
 }
