@@ -2,6 +2,8 @@ package com.project.checkinn.catalog.hotel;
 
 import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.amenity.AmenityRepo;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,16 +24,14 @@ public class HotelService {
         this.amenityRepo = amenityRepo;
     }
 
-    public List<HotelResponse> getAll() {
-        return hotelRepo.findAll().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public Page<HotelResponse> getAll(Pageable pageable) {
+        return hotelRepo.findAll(pageable).map(HotelMapper::toResponse);
     }
 
     public HotelResponse getById(Long id) {
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-        return toResponse(h);
+        return HotelMapper.toResponse(h);
     }
 
     public HotelResponse create(HotelRequest req) {
@@ -102,15 +102,36 @@ public class HotelService {
         );
     }
 
-    public List<HotelResponse> search(String city, String name, Long amenityId) {
-        List<Hotel> hotels = hotelRepo.findAll();
+    public Page<HotelResponse> search(String city, String name, Long amenityId, Pageable pageable) {
 
-        return hotels.stream()
-                .filter(h -> city == null || (h.getCity() != null && h.getCity().equalsIgnoreCase(city)))
-                .filter(h -> name == null || (h.getName() != null && h.getName().toLowerCase().contains(name.toLowerCase())))
-                .filter(h -> amenityId == null || h.getAmenities().stream().anyMatch(a -> a.getId().equals(amenityId)))
-                .map(this::toResponse)
-                .toList();
+        boolean hasCity = city != null && !city.isBlank();
+        boolean hasName = name != null && !name.isBlank();
+        boolean hasAmenity = amenityId != null;
+
+        if (hasCity) city = city.trim();
+        if (hasName) name = name.trim();
+
+        Page<Hotel> page;
+
+        if (hasCity && hasName && hasAmenity) {
+            page = hotelRepo.findDistinctByCityIgnoreCaseAndNameContainingIgnoreCaseAndAmenities_Id(city, name, amenityId, pageable);
+        } else if (hasCity && hasName) {
+            page = hotelRepo.findByCityIgnoreCaseAndNameContainingIgnoreCase(city, name, pageable);
+        } else if (hasCity && hasAmenity) {
+            page = hotelRepo.findDistinctByCityIgnoreCaseAndAmenities_Id(city, amenityId, pageable);
+        } else if (hasName && hasAmenity) {
+            page = hotelRepo.findDistinctByNameContainingIgnoreCaseAndAmenities_Id(name, amenityId, pageable);
+        } else if (hasCity) {
+            page = hotelRepo.findByCityIgnoreCase(city, pageable);
+        } else if (hasName) {
+            page = hotelRepo.findByNameContainingIgnoreCase(name, pageable);
+        } else if (hasAmenity) {
+            page = hotelRepo.findDistinctByAmenities_Id(amenityId, pageable);
+        } else {
+            page = hotelRepo.findAll(pageable);
+        }
+
+        return page.map(HotelMapper::toResponse);
     }
 
 

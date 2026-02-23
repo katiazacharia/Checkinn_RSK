@@ -2,12 +2,20 @@ package com.project.checkinn.catalog.room;
 
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
+import com.project.checkinn.common.RoomStatus;
+import com.project.checkinn.common.RoomType;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class RoomService {
@@ -20,24 +28,52 @@ public class RoomService {
         this.hotelRepo = hotelRepo;
     }
 
-    public List<RoomResponse> getAll() {
-        return roomRepo.findAll().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getAll(
+            Long hotelId,
+            RoomType type,
+            RoomStatus status,
+            Integer minCapacity,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Pageable pageable
+    ) {
+        Specification<Room> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (hotelId != null) {
+                predicates.add(cb.equal(root.get("hotel").get("id"), hotelId));
+            }
+            if (type != null) {
+                predicates.add(cb.equal(root.get("type"), type));
+            }
+            if (status != null) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (minCapacity != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("capacity"), minCapacity));
+            }
+            if (minPrice != null) {
+                predicates.add(cb.greaterThanOrEqualTo(root.get("pricePerNight"), minPrice));
+            }
+            if (maxPrice != null) {
+                predicates.add(cb.lessThanOrEqualTo(root.get("pricePerNight"), maxPrice));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return roomRepo.findAll(spec, pageable).map(RoomMapper::toResponse);
     }
 
-    public List<RoomResponse> getByHotel(Long hotelId) {
-        return roomRepo.findByHotelId(hotelId).stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
+    @Transactional(readOnly = true)
     public RoomResponse getById(Long id) {
         Room r = roomRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
-        return toResponse(r);
+        return RoomMapper.toResponse(r);
     }
 
+    @Transactional
     public RoomResponse create(RoomRequest req) {
         if (req.getHotelId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "hotelId is required");
@@ -58,26 +94,22 @@ public class RoomService {
         Hotel hotel = hotelRepo.findById(req.getHotelId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
-        if (roomRepo.existsByHotelIdAndRoomNumber(req.getHotelId(), req.getRoomNumber())) {
+        String roomNumber = req.getRoomNumber().trim();
+        if (roomRepo.existsByHotelIdAndRoomNumber(req.getHotelId(), roomNumber)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Room number already exists in this hotel");
         }
 
-        Room r = new Room();
-        r.setHotel(hotel);
-        r.setRoomNumber(req.getRoomNumber().trim());
-        r.setType(req.getType());
-        r.setPricePerNight(req.getPricePerNight());
-        r.setCapacity(req.getCapacity());
-        r.setStatus(req.getStatus());
+        Room r = RoomMapper.toEntity(req, hotel);
+        r.setRoomNumber(roomNumber);
 
-        return toResponse(roomRepo.save(r));
+        return RoomMapper.toResponse(roomRepo.save(r));
     }
 
+    @Transactional
     public RoomResponse update(Long id, RoomRequest req) {
         Room r = roomRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
 
-        // if user wants to change hotel
         if (req.getHotelId() != null && !req.getHotelId().equals(r.getHotel().getId())) {
             Hotel newHotel = hotelRepo.findById(req.getHotelId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
@@ -96,28 +128,17 @@ public class RoomService {
 
         if (req.getType() != null) r.setType(req.getType());
         if (req.getPricePerNight() != null) r.setPricePerNight(req.getPricePerNight());
-        if (req.getCapacity() > 0) r.setCapacity(req.getCapacity());
+        if (req.getCapacity() >= 0) r.setCapacity(req.getCapacity());
         if (req.getStatus() != null) r.setStatus(req.getStatus());
 
-        return toResponse(roomRepo.save(r));
+        return RoomMapper.toResponse(roomRepo.save(r));
     }
 
+    @Transactional
     public void delete(Long id) {
         if (!roomRepo.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
         }
         roomRepo.deleteById(id);
-    }
-
-    private RoomResponse toResponse(Room r) {
-        return new RoomResponse(
-                r.getId(),
-                r.getHotel().getId(),
-                r.getRoomNumber(),
-                r.getType(),
-                r.getPricePerNight(),
-                r.getCapacity(),
-                r.getStatus()
-        );
     }
 }

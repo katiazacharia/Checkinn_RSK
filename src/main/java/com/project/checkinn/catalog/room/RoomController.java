@@ -1,11 +1,18 @@
 package com.project.checkinn.catalog.room;
 
+import com.project.checkinn.common.RoomStatus;
+import com.project.checkinn.common.RoomType;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.util.List;
 
@@ -22,21 +29,24 @@ public class RoomController {
     }
 
     @GetMapping
-    public List<RoomResponse> all() {
-        return roomService.getAll();
+    public Page<RoomResponse> all(
+            @RequestParam(required = false) Long hotelId,
+            @RequestParam(required = false) RoomType type,
+            @RequestParam(required = false) RoomStatus status,
+            @RequestParam(required = false) Integer minCapacity,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return roomService.getAll(hotelId, type, status, minCapacity, minPrice, maxPrice, pageable);
     }
-
 
     @GetMapping("/{id}")
     public RoomResponse one(@PathVariable Long id) {
         return roomService.getById(id);
     }
 
-
-    @GetMapping("/hotel/{hotelId}")
-    public List<RoomResponse> byHotel(@PathVariable Long hotelId) {
-        return roomService.getByHotel(hotelId);
-    }
     @PostMapping
     public ResponseEntity<RoomResponse> create(
             @Valid @RequestBody RoomRequest request,
@@ -66,8 +76,4 @@ public class RoomController {
         roomService.delete(id);
         return ResponseEntity.noContent().build();
     }
-    }
-
-
-
-
+}
