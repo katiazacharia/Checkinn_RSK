@@ -1,10 +1,12 @@
 package com.project.checkinn.notification;
 
 import com.project.checkinn.booking.reservation.Booking;
+import com.project.checkinn.booking.reservation.BookingRepository;
 import com.project.checkinn.common.NotificationStatus;
 import com.project.checkinn.common.NotificationType;
 import com.project.checkinn.user.profile.User;
 
+import com.project.checkinn.user.profile.UserRepo;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +20,9 @@ import java.util.List;
 
 @Service
 public class NotificationServiceImpl implements NotificationService {
+
+    private final UserRepo userRepository;
+    private final BookingRepository bookingRepository;
 
     @Override
     public Page<Notification> search(
@@ -46,9 +51,13 @@ public class NotificationServiceImpl implements NotificationService {
     private final EntityManager entityManager;
 
     public NotificationServiceImpl(NotificationRepository notificationRepository,
-                                   EntityManager entityManager) {
+                                   EntityManager entityManager,
+                                   UserRepo userRepository,
+                                   BookingRepository bookingRepository) {
         this.notificationRepository = notificationRepository;
         this.entityManager = entityManager;
+        this.userRepository = userRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     @Override
@@ -72,15 +81,21 @@ public class NotificationServiceImpl implements NotificationService {
         if (message == null || message.isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "message is required");
 
-        User userRef = entityManager.getReference(User.class, userId);
 
         Notification notification = new Notification();
-        notification.setUser(userRef);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "User with id " + userId + " not found"));
 
-        if (bookingId != null) {
-            Booking bookingRef = entityManager.getReference(Booking.class, bookingId);
-            notification.setBooking(bookingRef);
-        }
+        notification.setUser(user);
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                "Booking with id " + bookingId + " not found"));
+
+        notification.setBooking(booking);
 
         notification.setType(type);
         notification.setTitle(title);
@@ -167,4 +182,6 @@ public class NotificationServiceImpl implements NotificationService {
         }
         notificationRepository.deleteById(id);
     }
+
+
 }
