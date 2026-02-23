@@ -1,5 +1,9 @@
 package com.project.checkinn.catalog.amenity;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +23,12 @@ public class AmenityController {
     }
 
     @GetMapping
-    public List<AmenityResponse> all() {
-        return amenityService.getAll();
+    public Page<AmenityResponse> all(
+            @RequestParam(required = false) String name,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return amenityService.getAll(name, pageable);
     }
 
     @GetMapping("/{id}")
@@ -59,10 +67,12 @@ public class AmenityController {
         return ResponseEntity.noContent().build();
     }
 
-
     @GetMapping("/hotel/{hotelId}")
-    public List<AmenityResponse> getAmenitiesForHotel(@PathVariable Long hotelId) {
-        return amenityService.getAmenitiesForHotel(hotelId);
+    public Page<AmenityResponse> getAmenitiesForHotel(
+            @PathVariable Long hotelId,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        return amenityService.getAmenitiesForHotel(hotelId, pageable);
     }
 
 

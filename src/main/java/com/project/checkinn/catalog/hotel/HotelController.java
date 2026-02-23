@@ -4,6 +4,10 @@ import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.amenity.AmenityRepo;
 import com.project.checkinn.catalog.amenity.AmenityRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,14 +35,18 @@ public class HotelController {
     }
 
     @GetMapping
-    public List<HotelResponse> all() {
-        return hotelService.getAll();
+    public Page<HotelResponse> all(
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return hotelService.getAll(pageable);
     }
 
     @GetMapping("/{id}")
     public HotelResponse one(@PathVariable Long id) {
         return hotelService.getById(id);
     }
+
     @PostMapping
     public ResponseEntity<HotelResponse> create(
             @Valid @RequestBody HotelRequest request,
@@ -62,34 +70,26 @@ public class HotelController {
         HotelResponse updated = hotelService.update(id, request);
         return ResponseEntity.ok(updated);
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         hotelService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
-
     @GetMapping("/search")
-    public List<HotelResponse> search(
+    public Page<HotelResponse> search(
             @RequestParam(required = false) String city,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long amenityId
+            @RequestParam(required = false) Long amenityId,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
     ) {
-        List<Hotel> hotels = hotelRepo.findAll();
-
-        return hotels.stream()
-                .filter(h -> city == null || (h.getCity() != null && h.getCity().equalsIgnoreCase(city)))
-                .filter(h -> name == null || (h.getName() != null && h.getName().toLowerCase().contains(name.toLowerCase())))
-                .filter(h -> {
-                    if (amenityId == null) return true;
-                    return h.getAmenities().stream().anyMatch(a -> a.getId().equals(amenityId));
-                })
-                .map(this::toResponse)
-                .toList();
+        return hotelService.search(city, name, amenityId, pageable);
     }
 
-
-   @PostMapping("/{id}/amenities/{amenityId}")
+    // ✅ هاي endpoints خليتهم شغالين زي ما عندك، بس استبدلت toResponse بـ HotelMapper
+    @PostMapping("/{id}/amenities/{amenityId}")
     public ResponseEntity<HotelResponse> addAmenity(@PathVariable Long id, @PathVariable Long amenityId) {
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
@@ -100,8 +100,9 @@ public class HotelController {
         h.getAmenities().add(a);
         Hotel saved = hotelRepo.save(h);
 
-        return ResponseEntity.ok(toResponse(saved));
+        return ResponseEntity.ok(HotelMapper.toResponse(saved));
     }
+
     @DeleteMapping("/{id}/amenities/{amenityId}")
     public ResponseEntity<HotelResponse> removeAmenity(@PathVariable Long id, @PathVariable Long amenityId) {
         Hotel h = hotelRepo.findById(id)
@@ -110,9 +111,8 @@ public class HotelController {
         h.getAmenities().removeIf(am -> am.getId().equals(amenityId));
         Hotel saved = hotelRepo.save(h);
 
-        return ResponseEntity.ok(toResponse(saved));
+        return ResponseEntity.ok(HotelMapper.toResponse(saved));
     }
-
 
     @PutMapping("/{id}/amenities")
     public ResponseEntity<HotelResponse> replaceAmenities(
@@ -120,37 +120,14 @@ public class HotelController {
             @RequestBody HotelRequest req
     ) {
         Hotel h = hotelRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Hotel not found"
-                ));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
-        Set<Long> ids = (req.getAmenityIds() == null)
-                ? Set.of()
-                : req.getAmenityIds();
+        Set<Long> ids = (req.getAmenityIds() == null) ? Set.of() : req.getAmenityIds();
 
-        Set<Amenity> amenities = new HashSet<>(
-                amenityRepo.findAllById(ids)
-        );
-
+        Set<Amenity> amenities = new HashSet<>(amenityRepo.findAllById(ids));
         h.setAmenities(amenities);
 
-        return ResponseEntity.ok(toResponse(hotelRepo.save(h)));
-    }
-
-
-    private HotelResponse toResponse(Hotel h) {
-        Set<Long> roomIds = h.getRooms().stream().map(r -> r.getId()).collect(Collectors.toSet());
-        Set<Long> amenityIds = h.getAmenities().stream().map(a -> a.getId()).collect(Collectors.toSet());
-
-        return new HotelResponse(
-                h.getId(),
-                h.getName(),
-                h.getCity(),
-                h.getAddress(),
-                h.getDescription(),
-                roomIds,
-                amenityIds
-        );
+        return ResponseEntity.ok(HotelMapper.toResponse(hotelRepo.save(h)));
     }
 
 }

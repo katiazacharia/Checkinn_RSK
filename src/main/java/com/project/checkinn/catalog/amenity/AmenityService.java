@@ -2,6 +2,10 @@ package com.project.checkinn.catalog.amenity;
 
 import com.project.checkinn.catalog.hotel.Hotel;
 import jakarta.persistence.EntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +25,23 @@ public class AmenityService {
         this.amenityRepo = amenityRepo;
         this.entityManager = entityManager;
     }
+    public Page<AmenityResponse> getAll(String name, Pageable pageable) {
+
+        Page<Amenity> page;
+
+        if (name != null && !name.isBlank()) {
+            page = amenityRepo.findByNameContainingIgnoreCase(name.trim(), pageable);
+        } else {
+            page = amenityRepo.findAll(pageable);
+        }
+
+        return page.map(this::toResponse);
+    }
+
 
     public List<AmenityResponse> getAll() {
-        return amenityRepo.findAll().stream().map(this::toResponse).toList();
+        Pageable defaultPageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.DESC, "id"));
+        return getAll(null, defaultPageable).getContent();
     }
 
     public AmenityResponse getById(Long id) {
@@ -72,7 +90,6 @@ public class AmenityService {
         amenityRepo.deleteById(id);
     }
 
-
     @Transactional
     public void addAmenityToHotel(Long hotelId, Long amenityId) {
         Hotel hotel = entityManager.find(Hotel.class, hotelId);
@@ -84,9 +101,7 @@ public class AmenityService {
 
         hotel.getAmenities().add(amenity);
         amenity.getHotels().add(hotel);
-
     }
-
 
     @Transactional
     public void removeAmenityFromHotel(Long hotelId, Long amenityId) {
@@ -101,19 +116,28 @@ public class AmenityService {
         amenity.getHotels().remove(hotel);
     }
 
-    public List<AmenityResponse> getAmenitiesForHotel(Long hotelId) {
+
+    public Page<AmenityResponse> getAmenitiesForHotel(Long hotelId, Pageable pageable) {
+
         Hotel hotel = entityManager.find(Hotel.class, hotelId);
         if (hotel == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
 
-        return hotel.getAmenities().stream().map(this::toResponse).toList();
+        return amenityRepo.findByHotels_Id(hotelId, pageable)
+                .map(this::toResponse);
+    }
+
+
+    public List<AmenityResponse> getAmenitiesForHotel(Long hotelId) {
+        Pageable defaultPageable = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Direction.DESC, "id"));
+        return getAmenitiesForHotel(hotelId, defaultPageable).getContent();
     }
 
     private AmenityResponse toResponse(Amenity a) {
         Set<Long> hotelIds = a.getHotels().stream()
-                .map(h -> h.getId())
+                .map(Hotel::getId)
                 .collect(Collectors.toSet());
 
         return new AmenityResponse(a.getId(), a.getName(), a.getIcon(), a.getDescription(), hotelIds);
     }
-}
+   }
