@@ -36,7 +36,6 @@ public class    Payment {
 
     public Payment() {}
 
-    // getters & setters
     public Long getId() { return id; }
 
     public Booking getBooking() { return booking; }

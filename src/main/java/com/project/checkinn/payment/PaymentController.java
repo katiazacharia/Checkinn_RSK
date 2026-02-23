@@ -2,11 +2,13 @@ package com.project.checkinn.payment;
 
 import com.project.checkinn.common.PaymentMethod;
 import com.project.checkinn.common.PaymentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/payments")
@@ -40,23 +42,16 @@ public class PaymentController {
         }
 
 
-        @GetMapping
-        public List<PaymentResponse> getAll() {
-            return paymentService.getAll()
-                    .stream()
-                    .map(PaymentMapper::toResponse)
-                    .toList();
-        }
     @GetMapping
-    public List<PaymentResponse> search(
+    public Page<PaymentResponse> search(
             @RequestParam(required = false) Long bookingId,
             @RequestParam(required = false) PaymentStatus status,
-            @RequestParam(required = false) PaymentMethod method
+            @RequestParam(required = false) PaymentMethod method,
+            @PageableDefault(size = 10) Pageable pageable
+
     ) {
-        return paymentService.search(bookingId, status, method)
-                .stream()
-                .map(PaymentMapper::toResponse)
-                .toList();
+        return paymentService.search(bookingId, status, method,pageable)
+                .map(PaymentMapper::toResponse);
     }
     @PatchMapping("/{id}/status")
     public PaymentResponse updateStatus(

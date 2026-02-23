@@ -2,6 +2,8 @@ package com.project.checkinn.payment;
 
 import com.project.checkinn.common.PaymentMethod;
 import com.project.checkinn.common.PaymentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,11 +18,13 @@ public interface PaymentService {
 
     Payment getById(Long id);
 
-    List<Payment> getAll();
 
-    Payment getByBookingId(Long bookingId);
 
-    List<Payment> search(Long bookingId, PaymentStatus status, PaymentMethod method);
-
+    Page<Payment> search(
+            Long bookingId,
+            PaymentStatus status,
+            PaymentMethod method,
+            Pageable pageable
+    );
     Payment updateStatus(Long id, PaymentStatus status);
 }
