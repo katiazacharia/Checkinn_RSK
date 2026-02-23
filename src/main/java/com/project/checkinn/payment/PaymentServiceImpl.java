@@ -7,13 +7,15 @@ import com.project.checkinn.common.PaymentMethod;
 import com.project.checkinn.common.PaymentStatus;
 import com.project.checkinn.notification.NotificationService;
 import jakarta.persistence.EntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -87,18 +89,6 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Payment getById(Long id) {
-        return paymentRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
-    }
-
-    @Override
-    public List<Payment> getAll() {
-        return paymentRepository.findAll();
-    }
-
-    @Override
     public Payment getByBookingId(Long bookingId) {
         return paymentRepository.findByBooking_Id(bookingId)
                 .orElseThrow(() ->
@@ -106,22 +96,31 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<Payment> search(Long bookingId, PaymentStatus status, PaymentMethod method) {
+    public Payment getById(Long id) {
+        return paymentRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
+    }
 
-        if (bookingId != null && status != null) {
-            return paymentRepository.findByBooking_IdAndStatus(bookingId, status);
+    @Override
+    public Page<Payment> search(Long bookingId, PaymentStatus status, PaymentMethod method, Pageable pageable) {
+
+        Specification<Payment> spec = (root, query, cb) -> cb.conjunction();
+
+        if (bookingId != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("booking").get("id"), bookingId));
         }
         if (status != null) {
-            return paymentRepository.findByStatus(status);
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("status"),status));
         }
         if (method != null) {
-            return paymentRepository.findByMethod(method);
-        }
-        if (bookingId != null) {
-            return List.of(getByBookingId(bookingId));
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("method"),method));
         }
 
-        return paymentRepository.findAll();
+        return paymentRepository.findAll(spec, pageable);
     }
 
     @Transactional

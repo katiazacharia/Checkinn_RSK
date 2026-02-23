@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payments")
-public class    Payment {
+public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +36,6 @@ public class    Payment {
 
     public Payment() {}
 
-    // getters & setters
     public Long getId() { return id; }
 
     public Booking getBooking() { return booking; }
