@@ -2,6 +2,7 @@ package com.project.checkinn.booking.reservation;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public class BookingRequest {
 
@@ -11,7 +12,6 @@ public class BookingRequest {
     private BigDecimal totalPrice;
     private Long promoCodeId; // optional
     private Long roomId;
-
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }

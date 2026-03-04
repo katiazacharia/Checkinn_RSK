@@ -1,9 +1,12 @@
 package com.project.checkinn.booking.reservation;
 
 import com.project.checkinn.common.BookingStatus;
+import com.project.checkinn.experienceplus.ExperienceExtra;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class BookingResponse {
 
@@ -15,6 +18,7 @@ public class BookingResponse {
     private BigDecimal totalPrice;
     private Long promoCodeId; // optional
     private Long roomId;
+    private List<String> extras;
 
 
     public BookingResponse(Booking booking) {
@@ -26,7 +30,12 @@ public class BookingResponse {
         this.totalPrice = booking.getTotalPrice();
         this.promoCodeId = booking.getPromoCode() != null ? booking.getPromoCode().getId() : null;
         this.roomId = booking.getRoom() != null ? booking.getRoom().getId() : null;
-
+        if (booking.getExtras() != null) {
+            this.extras = booking.getExtras()
+                    .stream()
+                    .map(ExperienceExtra::getName)
+                    .collect(Collectors.toList());
+        }
     }
 
     public Long getId() { return id; }
@@ -37,5 +46,7 @@ public class BookingResponse {
     public BigDecimal getTotalPrice() { return totalPrice; }
     public Long getPromoCodeId() { return promoCodeId; }
     public Long getRoomId() { return roomId; }
-
+    public List<String> getExtras() {
+        return extras;
+    }
 }

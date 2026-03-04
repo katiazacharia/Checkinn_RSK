@@ -5,6 +5,8 @@ import com.project.checkinn.common.BookingStatus;
 import com.project.checkinn.common.NotificationType;
 import com.project.checkinn.common.PaymentMethod;
 import com.project.checkinn.common.PaymentStatus;
+import com.project.checkinn.experienceplus.ExperienceExtra;
+import com.project.checkinn.experienceplus.ExperiencePlusService;
 import com.project.checkinn.notification.NotificationService;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -23,12 +26,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepo paymentRepository;
     private final EntityManager entityManager;
     private final NotificationService notificationService;
+    private final ExperiencePlusService experiencePlusService;
 
     public PaymentServiceImpl(PaymentRepo paymentRepository, EntityManager entityManager,
-                              NotificationService notificationService) {
+                              NotificationService notificationService, ExperiencePlusService experiencePlusService) {
         this.paymentRepository = paymentRepository;
         this.entityManager = entityManager;
         this.notificationService = notificationService;
+        this.experiencePlusService = experiencePlusService;
     }
     @Transactional
     @Override
@@ -65,6 +70,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (booking.getStatus() == BookingStatus.CONFIRMED)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Booking already confirmed");
 
+
         booking.setStatus(BookingStatus.CONFIRMED);
 
         Payment payment = new Payment();
@@ -76,12 +82,23 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment saved = paymentRepository.save(payment);
 
+        List<ExperienceExtra> extras = experiencePlusService.assignExtras(booking);
+        String message = "Your booking #" + booking.getId() + " has been confirmed.";
+
+        if (!extras.isEmpty()) {
+
+            String extrasText = extras.stream()
+                    .map(e -> "- " + e.getName())
+                    .reduce("", (a, b) -> a + "\n" + b);
+
+            message += "\n\n🎁 ExperiencePlus Rewards:\n" + extrasText;
+        }
         notificationService.create(
                 booking.getUser().getId(),
                 booking.getId(),
                 NotificationType.EMAIL,
                 "Booking Confirmed",
-                "Your booking #" + booking.getId() + " has been confirmed."
+                message
         );
 
 
