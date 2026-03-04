@@ -2,12 +2,15 @@ package com.project.checkinn.booking.reservation;
 
 import com.project.checkinn.catalog.room.Room;
 import com.project.checkinn.common.BookingStatus;
+import com.project.checkinn.experienceplus.ExperienceExtra;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.user.profile.User;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "bookings")
@@ -40,10 +43,21 @@ public class Booking {
     @Column(nullable = false)
     private BigDecimal totalPrice;
 
+    @Column(nullable = false)
+    private int guests;
+
     // optional promo code
     @ManyToOne
     @JoinColumn(name = "promo_code_id")
     private PromoCode promoCode;
+
+    @ManyToMany
+    @JoinTable(
+            name = "booking_extras",
+            joinColumns = @JoinColumn(name = "booking_id"),
+            inverseJoinColumns = @JoinColumn(name = "extra_id")
+    )
+    private Set<ExperienceExtra> extras = new HashSet<>();
 
     public Booking() {
     }
@@ -109,4 +123,13 @@ public class Booking {
     public void setPromoCode(PromoCode promoCode) {
         this.promoCode = promoCode;
     }
+
+    public int getGuests() { return guests; }
+
+    public void setGuests(int guests) { this.guests = guests; }
+
+    public Set<ExperienceExtra> getExtras() { return extras; }
+
+    public void setExtras(Set<ExperienceExtra> extras) { this.extras = extras; }
+
 }

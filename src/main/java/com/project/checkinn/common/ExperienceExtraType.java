@@ -1,0 +1,23 @@
+package com.project.checkinn.common;
+
+public enum ExperienceExtraType {
+
+    FREE_CAR_RENTAL_DAY,
+    FREE_AIRPORT_TRANSFER,
+    FREE_CITY_SHUTTLE,
+
+    FREE_THEME_PARK_TICKET,
+    FREE_MUSEUM_TICKET,
+    FREE_CINEMA_TICKET,
+
+    FREE_BREAKFAST,
+    FREE_DINNER,
+    FREE_DRINK,
+
+    ROOM_UPGRADE,
+    LATE_CHECKOUT,
+    EARLY_CHECKIN,
+
+    FREE_SPA_ACCESS,
+    FREE_GYM_ACCESS,
+}
