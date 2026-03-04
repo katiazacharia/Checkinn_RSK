@@ -1,9 +1,6 @@
 package com.project.checkinn.security;
 
-
 import jakarta.persistence.*;
-
-import java.util.Set;
 
 @Entity
 @Table(name = "app_users")
@@ -23,7 +20,7 @@ public class AppUser {
     private boolean enabled = true;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 30)
     private Role role;
 
     public AppUser() {}
@@ -34,6 +31,7 @@ public class AppUser {
         this.enabled = enabled;
         this.role = role;
     }
+
     public Long getId() { return id; }
 
     public String getUsername() { return username; }
@@ -47,5 +45,4 @@ public class AppUser {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
-
 }
