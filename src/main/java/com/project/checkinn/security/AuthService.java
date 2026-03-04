@@ -30,8 +30,11 @@ public class AuthService {
 
         List<String> roles = List.of(user.getRole().name());
 
-        String token = tokenService.generateAccessToken(user.getUsername(), roles);
-
+        String token = tokenService.generateAccessToken(
+                user.getUsername(),
+                roles,
+                user.getId()
+        );
         return new LoginResponse(token, "Bearer", tokenService.getAccessTokenExpiresInSeconds());
     }
 }

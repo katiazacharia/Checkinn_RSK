@@ -4,6 +4,7 @@ package com.project.checkinn.booking.reservation;
 import com.project.checkinn.common.BookingStatus;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -23,6 +24,7 @@ public class BookingController {
 
 //list with optional filters: status, userId, roomId, from, to
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<BookingResponse> all(@RequestParam(required = false) BookingStatus status,
                                      @RequestParam(required = false) Long userId,
                                      @RequestParam(required = false) Long roomId,
@@ -36,12 +38,14 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public BookingResponse one(@PathVariable Long id) {
 
         return BookingMapper.toResponse(bookingService.getById(id));
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<BookingResponse> byUser(@PathVariable Long userId) {
         return bookingService.getByUser(userId)
                 .stream()
@@ -50,6 +54,7 @@ public class BookingController {
     }
 //bashof al upcoming l specific user
     @GetMapping("/upcoming")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<BookingResponse> upcoming(
             @RequestParam(required = false) Long userId
     ) {
@@ -60,6 +65,7 @@ public class BookingController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<BookingResponse> create(
             @RequestBody BookingRequest request,
             UriComponentsBuilder uriBuilder
@@ -75,7 +81,8 @@ public class BookingController {
         return ResponseEntity.created(location).body(response);
     }
 
-    @PutMapping("/{id}/cancel")
+    @PatchMapping("/{id}/cancel")
+    @PreAuthorize("(hasRole('CUSTOMER') and @authz.isBookingOwner(#id, authentication)) or hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<BookingResponse> cancel(@PathVariable Long id) {
         Booking cancelled = bookingService.cancel(id);
         return ResponseEntity.ok(BookingMapper.toResponse(cancelled));
