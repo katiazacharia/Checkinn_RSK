@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,19 +39,11 @@ public class PaymentServiceImpl implements PaymentService {
 
     public Payment create(
             Long bookingId,
-            BigDecimal amount,
             PaymentMethod method
     ) {
 
         if (bookingId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "bookingId is required");
-
-        if (amount == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amount is required");
-
-        if (amount.signum() <= 0)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amount must be > 0");
-
 
         if (method == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "payment method is required");
@@ -70,12 +61,14 @@ public class PaymentServiceImpl implements PaymentService {
         if (booking.getStatus() == BookingStatus.CONFIRMED)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Booking already confirmed");
 
+        if (booking.getTotalPrice() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking total price is invalid");
 
         booking.setStatus(BookingStatus.CONFIRMED);
 
         Payment payment = new Payment();
         payment.setBooking(booking);
-        payment.setAmount(amount);
+        payment.setAmount(booking.getTotalPrice());
         payment.setMethod(method);
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaidAt(LocalDateTime.now());

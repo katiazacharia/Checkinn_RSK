@@ -1,17 +1,23 @@
 package com.project.checkinn.booking.reservation;
 
-import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
-import java.util.List;
 
 public class BookingRequest {
 
+    @NotNull
     private Long userId;
+    @NotNull
     private LocalDate checkInDate;
+    @NotNull
     private LocalDate checkOutDate;
-    private BigDecimal totalPrice;
-    private Long promoCodeId; // optional
+    private Long promoCodeId;
+    @NotNull
     private Long roomId;
+    @NotNull
+    private int guests;
+
 
     public Long getUserId() { return userId; }
     public void setUserId(Long userId) { this.userId = userId; }
@@ -22,13 +28,12 @@ public class BookingRequest {
     public LocalDate getCheckOutDate() { return checkOutDate; }
     public void setCheckOutDate(LocalDate checkOutDate) { this.checkOutDate = checkOutDate; }
 
-    public BigDecimal getTotalPrice() { return totalPrice; }
-    public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
-
     public Long getPromoCodeId() { return promoCodeId; }
     public void setPromoCodeId(Long promoCodeId) { this.promoCodeId = promoCodeId; }
 
     public Long getRoomId() { return roomId; }
     public void setRoomId(Long roomId) { this.roomId = roomId; }
 
+    public int getGuests() { return guests; }
+    public void setGuests(int guests) { this.guests = guests; }
 }

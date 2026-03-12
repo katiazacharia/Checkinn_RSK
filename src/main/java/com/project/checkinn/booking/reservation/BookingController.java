@@ -2,6 +2,7 @@ package com.project.checkinn.booking.reservation;
 
 
 import com.project.checkinn.common.BookingStatus;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -61,7 +62,7 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<BookingResponse> create(
-            @RequestBody BookingRequest request,
+           @Valid @RequestBody BookingRequest request,
             UriComponentsBuilder uriBuilder
     ) {
         Booking saved = bookingService.create(request);

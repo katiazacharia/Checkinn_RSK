@@ -30,7 +30,6 @@ public class PaymentController {
 
             Payment payment = paymentService.create(
                     request.getBookingId(),
-                    request.getAmount(),
                     request.getMethod()
             );
 

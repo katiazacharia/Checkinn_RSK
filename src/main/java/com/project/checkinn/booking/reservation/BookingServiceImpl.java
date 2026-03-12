@@ -1,7 +1,9 @@
 package com.project.checkinn.booking.reservation;
 
+import com.project.checkinn.booking.pricing.PricingService;
 import com.project.checkinn.common.BookingStatus;
 import com.project.checkinn.common.NotificationType;
+import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.notification.NotificationService;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.user.profile.User;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import com.project.checkinn.catalog.room.Room;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,13 +23,15 @@ public class BookingServiceImpl implements BookingService {
     private final NotificationService notificationService;
     private final BookingRepository bookingRepository;
     private final EntityManager entityManager;
+    private final PricingService pricingService;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               EntityManager entityManager,
-                              NotificationService notificationService) {
+                              NotificationService notificationService, PricingService pricingService) {
         this.bookingRepository = bookingRepository;
         this.entityManager = entityManager;
         this.notificationService = notificationService;
+        this.pricingService = pricingService;
     }
 
     @Override
@@ -48,9 +53,6 @@ public class BookingServiceImpl implements BookingService {
 
         if (!out.isAfter(in))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOutDate must be after checkInDate");
-
-        if (request.getTotalPrice() == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "totalPrice is required");
 
 
         long conflicts = bookingRepository.countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
@@ -74,7 +76,16 @@ public class BookingServiceImpl implements BookingService {
         Room roomRef = entityManager.find(Room.class, request.getRoomId());
         if (roomRef == null)
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
+        if (roomRef.getStatus() != RoomStatus.AVAILABLE)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room is not available");
+        if (request.getGuests() > roomRef.getCapacity())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Guests exceed room capacity");
+
+        BigDecimal calculatedPrice =
+                pricingService.calculateTotalPrice(roomRef, in, out);
+
         Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
+        booking.setTotalPrice(calculatedPrice);
         booking.setStatus(BookingStatus.PENDING);
 
 
