@@ -25,24 +25,21 @@ public class JwtTokenService {
         this.accessTokenMinutes = accessTokenMinutes;
     }
 
-    public String generateAccessToken(String username, List<String> roles, Long userId) {
+    public String generateAccessToken(String username,
+                                      List<String> roles,
+                                      Long userId) {
 
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessTokenMinutes * 60);
 
-        JwtClaimsSet.Builder builder = JwtClaimsSet.builder()
+        JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .issuedAt(now)
                 .expiresAt(exp)
                 .subject(username)
-                .claim("roles", roles);
-
-        // إضافة userId فقط إذا موجود
-        if (userId != null) {
-            builder.claim("userId", userId);
-        }
-
-        JwtClaimsSet claims = builder.build();
+                .claim("roles", roles)
+                .claim("userId", userId)
+                .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256)
                 .type("JWT")
