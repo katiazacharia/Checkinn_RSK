@@ -1,11 +1,13 @@
 package com.project.checkinn.booking.pricing;
 
 import com.project.checkinn.catalog.room.Room;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
+@Service
 public class PricingServiceImpl implements PricingService{
 
     private static final BigDecimal WEEKEND_MULTIPLIER = BigDecimal.valueOf(1.20);
