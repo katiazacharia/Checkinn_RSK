@@ -1,5 +1,7 @@
 package com.project.checkinn.booking.reservation;
 
+import com.project.checkinn.booking.preview.BookingPreviewRequest;
+import com.project.checkinn.booking.preview.BookingPreviewResponse;
 import com.project.checkinn.booking.pricing.PricingService;
 import com.project.checkinn.common.BookingStatus;
 import com.project.checkinn.common.NotificationType;
@@ -160,6 +162,55 @@ public class BookingServiceImpl implements BookingService {
                 .filter(b -> from == null || !b.getCheckInDate().isBefore(from))
                 .filter(b -> to == null || !b.getCheckOutDate().isAfter(to))
                 .toList();
+    }
+
+    @Override
+    public BookingPreviewResponse preview(BookingPreviewRequest request) {
+        if (request == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
+
+        if (request.getRoomId() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "roomId is required");
+
+        if (request.getCheckInDate() == null || request.getCheckOutDate() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkInDate and checkOutDate are required");
+        if (request.getGuests() <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "guests must be greater than 0");
+
+        LocalDate in = request.getCheckInDate();
+        LocalDate out = request.getCheckOutDate();
+
+        if (!out.isAfter(in))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOutDate must be after checkInDate");
+
+
+        Room roomRef = entityManager.find(Room.class, request.getRoomId());
+        if (roomRef == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
+
+
+        if (roomRef.getStatus() != RoomStatus.AVAILABLE) {
+            return new BookingPreviewResponse(false, true, null, "Room is not available");
+        }
+
+        if (request.getGuests() > roomRef.getCapacity()) {
+            return new BookingPreviewResponse(false, false, null, "Guests exceed room capacity");
+        }
+
+        long conflicts = bookingRepository.countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
+                request.getRoomId(),
+                BookingStatus.CANCELLED,
+                out,
+                in
+        );
+
+        if (conflicts > 0) {
+            return new BookingPreviewResponse(false, true, null, "Dates not available for this room");
+        }
+
+        BigDecimal calculatedPrice = pricingService.calculateTotalPrice(roomRef, in, out);
+
+        return new BookingPreviewResponse(true, true, calculatedPrice, "Room is available");
     }
 
 
