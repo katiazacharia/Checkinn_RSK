@@ -1,6 +1,8 @@
 package com.project.checkinn.booking.reservation;
 
 
+import com.project.checkinn.booking.preview.BookingPreviewRequest;
+import com.project.checkinn.booking.preview.BookingPreviewResponse;
 import com.project.checkinn.common.BookingStatus;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -87,6 +89,14 @@ public class BookingController {
     public ResponseEntity<BookingResponse> cancel(@PathVariable Long id) {
         Booking cancelled = bookingService.cancel(id);
         return ResponseEntity.ok(BookingMapper.toResponse(cancelled));
+    }
+
+    @PostMapping("/preview")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<BookingPreviewResponse> preview(
+            @Valid @RequestBody BookingPreviewRequest request
+    ) {
+        return ResponseEntity.ok(bookingService.preview(request));
     }
 
 
