@@ -19,10 +19,6 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.Collections;
-import java.util.Collection;
-import java.util.List;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Configuration
 @EnableWebSecurity
@@ -30,7 +26,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
-    private final PasswordEncoder passwordEncoder; // injected from PasswordConfig
+    private final PasswordEncoder passwordEncoder;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
@@ -39,7 +35,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -55,24 +50,24 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // Hotels
-                        .requestMatchers(HttpMethod.GET, "/api/hotels/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/hotels/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers(HttpMethod.PUT, "/api/hotels/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/hotels/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/hotels/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/hotels/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/hotels/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.DELETE, "/hotels/**").hasRole("ADMIN")
 
                         // Rooms
-                        .requestMatchers(HttpMethod.GET, "/api/rooms/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/rooms/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers(HttpMethod.PUT, "/api/rooms/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/rooms/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/rooms/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/rooms/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/rooms/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.DELETE, "/rooms/**").hasRole("ADMIN")
 
                         // Bookings
-                        .requestMatchers(HttpMethod.GET, "/api/bookings/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/bookings/**").hasRole("CUSTOMER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/bookings/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/bookings/**").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
 
                         // Payments
-                        .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.POST, "/payments/**").hasRole("CUSTOMER")
 
                         // Amenities
                         .requestMatchers(HttpMethod.GET, "/amenities/**").permitAll()
@@ -106,9 +101,9 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
-
-        // OAuth login/logout removed (مش مطلوبة في مشروع JWT stateless)
-        ;
+                .oauth2ResourceServer(oauth ->
+                        oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()))
+                );
 
         return http.build();
     }
@@ -127,7 +122,6 @@ public class SecurityConfig {
 
     @Bean
     public Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthConverter() {
-
         JwtGrantedAuthoritiesConverter conv = new JwtGrantedAuthoritiesConverter();
         conv.setAuthoritiesClaimName("roles");
         conv.setAuthorityPrefix("ROLE_");
