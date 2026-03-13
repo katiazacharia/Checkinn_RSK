@@ -18,7 +18,7 @@ public class PaymentMapper {
 
         Payment payment = new Payment();
         payment.setBooking(booking);
-        payment.setAmount(request.getAmount());
+        payment.setAmount(booking.getTotalPrice());
         payment.setMethod(request.getMethod());
 
         return payment;

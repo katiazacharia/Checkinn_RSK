@@ -21,8 +21,8 @@ public class BookingMapper {
         booking.setRoom(room);
         booking.setCheckInDate(request.getCheckInDate());
         booking.setCheckOutDate(request.getCheckOutDate());
-        booking.setTotalPrice(request.getTotalPrice());
         booking.setPromoCode(promoCode);
+        booking.setGuests(request.getGuests());
         return booking;
     }
 }
