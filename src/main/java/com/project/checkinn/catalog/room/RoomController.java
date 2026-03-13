@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -29,6 +30,7 @@ public class RoomController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public Page<RoomResponse> all(
             @RequestParam(required = false) Long hotelId,
             @RequestParam(required = false) RoomType type,
@@ -43,11 +45,13 @@ public class RoomController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public RoomResponse one(@PathVariable Long id) {
         return roomService.getById(id);
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<RoomResponse> create(
             @Valid @RequestBody RoomRequest request,
             UriComponentsBuilder uriBuilder
@@ -63,6 +67,7 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<RoomResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody RoomRequest request
@@ -72,6 +77,7 @@ public class RoomController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         roomService.delete(id);
         return ResponseEntity.noContent().build();

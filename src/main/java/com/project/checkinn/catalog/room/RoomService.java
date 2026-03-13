@@ -17,19 +17,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
-public class RoomService {
 
-    private final RoomRepo roomRepo;
-    private final HotelRepo hotelRepo;
+public interface RoomService {
 
-    public RoomService(RoomRepo roomRepo, HotelRepo hotelRepo) {
-        this.roomRepo = roomRepo;
-        this.hotelRepo = hotelRepo;
-    }
-
-    @Transactional(readOnly = true)
-    public Page<RoomResponse> getAll(
+    Page<RoomResponse> getAll(
             Long hotelId,
             RoomType type,
             RoomStatus status,
@@ -37,108 +28,14 @@ public class RoomService {
             BigDecimal minPrice,
             BigDecimal maxPrice,
             Pageable pageable
-    ) {
-        Specification<Room> spec = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
+    );
 
-            if (hotelId != null) {
-                predicates.add(cb.equal(root.get("hotel").get("id"), hotelId));
-            }
-            if (type != null) {
-                predicates.add(cb.equal(root.get("type"), type));
-            }
-            if (status != null) {
-                predicates.add(cb.equal(root.get("status"), status));
-            }
-            if (minCapacity != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("capacity"), minCapacity));
-            }
-            if (minPrice != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("pricePerNight"), minPrice));
-            }
-            if (maxPrice != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("pricePerNight"), maxPrice));
-            }
+    RoomResponse getById(Long id);
 
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
+    RoomResponse create(RoomRequest req);
 
-        return roomRepo.findAll(spec, pageable).map(RoomMapper::toResponse);
-    }
+    RoomResponse update(Long id, RoomRequest req);
 
-    @Transactional(readOnly = true)
-    public RoomResponse getById(Long id) {
-        Room r = roomRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
-        return RoomMapper.toResponse(r);
-    }
+    void delete(Long id);
 
-    @Transactional
-    public RoomResponse create(RoomRequest req) {
-        if (req.getHotelId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "hotelId is required");
-        }
-        if (req.getRoomNumber() == null || req.getRoomNumber().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "roomNumber is required");
-        }
-        if (req.getType() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type is required");
-        }
-        if (req.getPricePerNight() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pricePerNight is required");
-        }
-        if (req.getStatus() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status is required");
-        }
-
-        Hotel hotel = hotelRepo.findById(req.getHotelId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-
-        String roomNumber = req.getRoomNumber().trim();
-        if (roomRepo.existsByHotelIdAndRoomNumber(req.getHotelId(), roomNumber)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Room number already exists in this hotel");
-        }
-
-        Room r = RoomMapper.toEntity(req, hotel);
-        r.setRoomNumber(roomNumber);
-
-        return RoomMapper.toResponse(roomRepo.save(r));
-    }
-
-    @Transactional
-    public RoomResponse update(Long id, RoomRequest req) {
-        Room r = roomRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
-
-        if (req.getHotelId() != null && !req.getHotelId().equals(r.getHotel().getId())) {
-            Hotel newHotel = hotelRepo.findById(req.getHotelId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-            r.setHotel(newHotel);
-        }
-
-        if (req.getRoomNumber() != null && !req.getRoomNumber().isBlank()) {
-            String newNum = req.getRoomNumber().trim();
-            Long hotelId = r.getHotel().getId();
-            if (!newNum.equalsIgnoreCase(r.getRoomNumber())
-                    && roomRepo.existsByHotelIdAndRoomNumber(hotelId, newNum)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Room number already exists in this hotel");
-            }
-            r.setRoomNumber(newNum);
-        }
-
-        if (req.getType() != null) r.setType(req.getType());
-        if (req.getPricePerNight() != null) r.setPricePerNight(req.getPricePerNight());
-        if (req.getCapacity() >= 0) r.setCapacity(req.getCapacity());
-        if (req.getStatus() != null) r.setStatus(req.getStatus());
-
-        return RoomMapper.toResponse(roomRepo.save(r));
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        if (!roomRepo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
-        }
-        roomRepo.deleteById(id);
-    }
 }

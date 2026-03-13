@@ -1,13 +1,12 @@
 package com.project.checkinn.security;
 
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
+
 import java.time.Instant;
 import java.util.List;
-
 
 @Service
 public class JwtTokenService {
@@ -27,8 +26,8 @@ public class JwtTokenService {
     }
 
     public String generateAccessToken(String username,
-                                      List<String> roles
-                                      ) {
+                                      List<String> roles,
+                                      Long userId) {
 
         Instant now = Instant.now();
         Instant exp = now.plusSeconds(accessTokenMinutes * 60);
@@ -39,16 +38,18 @@ public class JwtTokenService {
                 .expiresAt(exp)
                 .subject(username)
                 .claim("roles", roles)
-
+                .claim("userId", userId)
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256)
                 .type("JWT")
                 .build();
 
-        return jwtEncoder.encode(JwtEncoderParameters.from(header, claims))
+        return jwtEncoder
+                .encode(JwtEncoderParameters.from(header, claims))
                 .getTokenValue();
     }
+
     public long getAccessTokenExpiresInSeconds() {
         return accessTokenMinutes * 60;
     }
