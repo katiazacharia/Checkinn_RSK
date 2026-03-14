@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/users")
-public class UserController {
+@RequestMapping("/swagger-demo/users")public class UserController {
 
     private final Map<Long, String> users = new HashMap<>();
 
