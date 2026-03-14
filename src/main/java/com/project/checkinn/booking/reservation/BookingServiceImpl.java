@@ -3,12 +3,16 @@ package com.project.checkinn.booking.reservation;
 import com.project.checkinn.booking.preview.BookingPreviewRequest;
 import com.project.checkinn.booking.preview.BookingPreviewResponse;
 import com.project.checkinn.booking.pricing.PricingService;
+import com.project.checkinn.catalog.room.RoomRepo;
 import com.project.checkinn.common.BookingStatus;
 import com.project.checkinn.common.NotificationType;
 import com.project.checkinn.common.RoomStatus;
+import com.project.checkinn.experienceplus.ExperiencePlusService;
 import com.project.checkinn.notification.NotificationService;
 import com.project.checkinn.promo.PromoCode;
+import com.project.checkinn.promo.PromoCodeRepository;
 import com.project.checkinn.user.profile.User;
+import com.project.checkinn.user.profile.UserRepo;
 import jakarta.persistence.EntityManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,16 +28,27 @@ public class BookingServiceImpl implements BookingService {
 
     private final NotificationService notificationService;
     private final BookingRepository bookingRepository;
-    private final EntityManager entityManager;
     private final PricingService pricingService;
+    private final UserRepo userRepository;
+    private final RoomRepo roomRepository;
+    private final PromoCodeRepository promoCodeRepository;
+    private final ExperiencePlusService experiencePlusService;
+
 
     public BookingServiceImpl(BookingRepository bookingRepository,
-                              EntityManager entityManager,
-                              NotificationService notificationService, PricingService pricingService) {
+                              UserRepo userRepository,
+                              RoomRepo roomRepository,
+                              PromoCodeRepository promoCodeRepository,
+                              NotificationService notificationService,
+                              PricingService pricingService,
+                              ExperiencePlusService experiencePlusService) {
         this.bookingRepository = bookingRepository;
-        this.entityManager = entityManager;
+        this.userRepository = userRepository;
+        this.roomRepository = roomRepository;
+        this.promoCodeRepository = promoCodeRepository;
         this.notificationService = notificationService;
         this.pricingService = pricingService;
+        this.experiencePlusService = experiencePlusService;
     }
 
     @Override
@@ -66,20 +81,21 @@ public class BookingServiceImpl implements BookingService {
         if (conflicts > 0)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Dates not available for this room");
 
-        User userRef = entityManager.find(User.class, request.getUserId());
-        if (userRef == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        User userRef = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         PromoCode promoRef = null;
         if (request.getPromoCodeId() != null) {
-            promoRef = entityManager.getReference(PromoCode.class, request.getPromoCodeId());
+            promoRef = promoCodeRepository.findById(request.getPromoCodeId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Promo code not found"));
         }
 
-        Room roomRef = entityManager.find(Room.class, request.getRoomId());
-        if (roomRef == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
+        Room roomRef = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
+
         if (roomRef.getStatus() != RoomStatus.AVAILABLE)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room is not available");
+
         if (request.getGuests() > roomRef.getCapacity())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Guests exceed room capacity");
 
@@ -89,7 +105,7 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
         booking.setTotalPrice(calculatedPrice);
         booking.setStatus(BookingStatus.PENDING);
-
+        experiencePlusService.assignExtras(booking);
 
 
         return bookingRepository.save(booking);
@@ -184,9 +200,8 @@ public class BookingServiceImpl implements BookingService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOutDate must be after checkInDate");
 
 
-        Room roomRef = entityManager.find(Room.class, request.getRoomId());
-        if (roomRef == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found");
+        Room roomRef = roomRepository.findById(request.getRoomId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
 
 
         if (roomRef.getStatus() != RoomStatus.AVAILABLE) {

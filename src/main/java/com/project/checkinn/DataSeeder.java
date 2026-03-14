@@ -220,7 +220,7 @@ public class DataSeeder {
         ExperienceExtra e1 = new ExperienceExtra();
         e1.setName("Free Airport Transfer");
         e1.setType(ExperienceExtraType.FREE_AIRPORT_TRANSFER);
-        e1.setMinAmount(new BigDecimal("50.00"));
+        e1.setMinAmount(new BigDecimal("250.00"));
         e1.setMinNights(1);
         e1.setMinGuests(1);
         e1.setActive(true);
@@ -228,7 +228,7 @@ public class DataSeeder {
         ExperienceExtra e2 = new ExperienceExtra();
         e2.setName("Room Upgrade");
         e2.setType(ExperienceExtraType.ROOM_UPGRADE);
-        e2.setMinAmount(new BigDecimal("100.00"));
+        e2.setMinAmount(new BigDecimal("400.00"));
         e2.setMinNights(1);
         e2.setMinGuests(1);
         e2.setActive(true);
@@ -236,7 +236,7 @@ public class DataSeeder {
         ExperienceExtra e3 = new ExperienceExtra();
         e3.setName("Free Spa Access");
         e3.setType(ExperienceExtraType.FREE_SPA_ACCESS);
-        e3.setMinAmount(new BigDecimal("120.00"));
+        e3.setMinAmount(new BigDecimal("50.00"));
         e3.setMinNights(2);
         e3.setMinGuests(1);
         e3.setActive(true);
