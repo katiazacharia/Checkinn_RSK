@@ -149,6 +149,32 @@ public class PaymentServiceImpl implements PaymentService {
 
         return paymentRepository.save(payment);
     }
+
+    @Override
+    public Payment refund(Long bookingId) {
+
+        Payment payment = paymentRepository.findByBooking_Id(bookingId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
+
+        if (payment.getStatus() != PaymentStatus.PAID) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only successful payments can be refunded"
+            );
+        }
+
+        if (payment.getStatus() == PaymentStatus.REFUNDED) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Payment already refunded"
+            );
+        }
+
+        payment.setStatus(PaymentStatus.REFUNDED);
+
+        return paymentRepository.save(payment);
+    }
 }
 
 

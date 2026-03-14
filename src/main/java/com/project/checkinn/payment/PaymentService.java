@@ -21,4 +21,5 @@ public interface PaymentService {
             Pageable pageable
     );
     Payment updateStatus(Long id, PaymentStatus status);
+    Payment refund(Long bookingId);
 }
