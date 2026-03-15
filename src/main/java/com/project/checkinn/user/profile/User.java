@@ -1,5 +1,6 @@
 package com.project.checkinn.user.profile;
 
+import com.project.checkinn.security.AppUser;
 import com.project.checkinn.security.Role;
 import jakarta.persistence.*;
 
@@ -8,7 +9,6 @@ import jakarta.persistence.*;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String fullName;
@@ -22,6 +22,11 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.CUSTOMER;
+
+    @OneToOne(optional = false)
+    @MapsId
+    @JoinColumn(name = "id")
+    private AppUser appUser;
 
     public User() {
     }
@@ -44,6 +49,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public AppUser getAppUser() {
+        return appUser;
+    }
+
+    public void setAppUser(AppUser appUser) {
+        this.appUser = appUser;
     }
 
     public String getPhone() {

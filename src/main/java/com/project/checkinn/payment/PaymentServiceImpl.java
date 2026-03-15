@@ -172,6 +172,10 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         payment.setStatus(PaymentStatus.REFUNDED);
+        Booking booking = payment.getBooking();
+        if (booking != null && booking.getStatus() != BookingStatus.CANCELLED) {
+            booking.setStatus(BookingStatus.CANCELLED);
+        }
 
         return paymentRepository.save(payment);
     }

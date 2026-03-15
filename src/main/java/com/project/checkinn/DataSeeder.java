@@ -16,6 +16,8 @@ import com.project.checkinn.promo.PromoCodeRepository;
 import com.project.checkinn.security.AppUser;
 import com.project.checkinn.security.AppUserRepository;
 import com.project.checkinn.security.Role;
+import com.project.checkinn.user.profile.User;
+import com.project.checkinn.user.profile.UserRepo;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +33,7 @@ public class DataSeeder {
     @Bean
     CommandLineRunner seedData(
             AppUserRepository appUserRepository,
+            UserRepo userRepo,
             AmenityRepo amenityRepo,
             HotelRepo hotelRepo,
             RoomRepo roomRepo,
@@ -39,7 +42,7 @@ public class DataSeeder {
             PasswordEncoder passwordEncoder
     ) {
         return args -> {
-            seedUsers(appUserRepository, passwordEncoder);
+            seedUsers(appUserRepository, userRepo, passwordEncoder);
             seedAmenities(amenityRepo);
             seedHotels(hotelRepo, amenityRepo);
             seedRooms(hotelRepo, roomRepo);
@@ -48,25 +51,55 @@ public class DataSeeder {
         };
     }
 
-    private void seedUsers(AppUserRepository repo, PasswordEncoder encoder) {
-        seedUser(repo, encoder, "admin", "Admin@123", Role.ADMIN);
-        seedUser(repo, encoder, "manager", "Manager@123", Role.MANAGER);
-        seedUser(repo, encoder, "customer1", "Cust@123", Role.CUSTOMER);
-        seedUser(repo, encoder, "customer2", "Cust@123", Role.CUSTOMER);
+    private void seedUsers(AppUserRepository appUserRepo, UserRepo userRepo, PasswordEncoder encoder) {
+        seedUser(appUserRepo, userRepo, encoder,
+                "admin", "Admin@123", Role.ADMIN,
+                "System Admin", "admin@test.com", "0590000001");
+
+        seedUser(appUserRepo, userRepo, encoder,
+                "manager", "Manager@123", Role.MANAGER,
+                "Hotel Manager", "manager@test.com", "0590000002");
+
+        seedUser(appUserRepo, userRepo, encoder,
+                "customer1", "Cust@123", Role.CUSTOMER,
+                "Customer One", "customer1@test.com", "0590000003");
+
+        seedUser(appUserRepo, userRepo, encoder,
+                "customer2", "Cust@123", Role.CUSTOMER,
+                "Customer Two", "customer2@test.com", "0590000004");
     }
 
-    private void seedUser(AppUserRepository repo, PasswordEncoder encoder,
-                          String username, String rawPassword, Role role) {
-        if (repo.existsByUsername(username)) {
-            return;
+    private void seedUser(
+            AppUserRepository appUserRepo,
+            UserRepo userRepo,
+            PasswordEncoder encoder,
+            String username,
+            String rawPassword,
+            Role role,
+            String fullName,
+            String email,
+            String phone
+    ) {
+        AppUser appUser = appUserRepo.findByUsername(username).orElse(null);
+
+        if (appUser == null) {
+            appUser = new AppUser();
+            appUser.setUsername(username);
+            appUser.setPasswordHash(encoder.encode(rawPassword));
+            appUser.setEnabled(true);
+            appUser.setRole(role);
+            appUser = appUserRepo.save(appUser);
         }
 
-        AppUser user = new AppUser();
-        user.setUsername(username);
-        user.setPasswordHash(encoder.encode(rawPassword));
-        user.setEnabled(true);
-        user.setRole(role);
-        repo.save(user);
+        if (userRepo.findById(appUser.getId()).isEmpty()) {
+            User profile = new User();
+            profile.setAppUser(appUser);
+            profile.setFullName(fullName);
+            profile.setEmail(email);
+            profile.setPhone(phone);
+            profile.setRole(role);
+            userRepo.save(profile);
+        }
     }
 
     private void seedAmenities(AmenityRepo repo) {

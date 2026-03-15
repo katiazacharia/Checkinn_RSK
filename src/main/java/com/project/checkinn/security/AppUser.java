@@ -1,5 +1,6 @@
 package com.project.checkinn.security;
 
+import com.project.checkinn.user.profile.User;
 import jakarta.persistence.*;
 
 @Entity
@@ -23,6 +24,9 @@ public class AppUser {
     @Column(nullable = false, length = 30)
     private Role role;
 
+    @OneToOne(mappedBy = "appUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private User user;
+
     public AppUser() {}
 
     public AppUser(String username, String passwordHash, boolean enabled, Role role) {
@@ -42,6 +46,14 @@ public class AppUser {
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
