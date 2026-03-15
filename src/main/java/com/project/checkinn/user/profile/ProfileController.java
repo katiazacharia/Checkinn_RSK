@@ -1,6 +1,7 @@
 package com.project.checkinn.user.profile;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,10 +15,11 @@ import java.util.List;
         public ProfileController(UserService userService) {
             this.userService = userService;
         }
-        @PostMapping
+
+        @PutMapping("/me")
         @ResponseStatus(HttpStatus.CREATED)
-        public UserResponse create(@RequestBody UserCreateRequest request) {
-            return userService.create(request);
+        public UserResponse updateMyProfile(@RequestBody UserCreateRequest request, Authentication authentication) {
+            return userService.create(request,authentication);
         }
         @GetMapping
         public List<UserResponse> getAll() {

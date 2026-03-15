@@ -74,4 +74,11 @@ public class PaymentController {
         );
     }
 
+    @PostMapping("/{bookingId}/refund")
+    public PaymentResponse refund(@PathVariable Long bookingId) {
+
+        Payment payment = paymentService.refund(bookingId);
+
+        return PaymentMapper.toResponse(payment);
+    }
     }

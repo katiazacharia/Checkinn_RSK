@@ -2,6 +2,8 @@ package com.project.checkinn.security;
 
 
 
+import com.project.checkinn.user.profile.User;
+import com.project.checkinn.user.profile.UserRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,19 +21,21 @@ public class AuthService {
     private final JwtTokenService tokenService;
     private final RefreshTokenRepository refreshTokenRepo;
     private final long refreshTokenDays;
+    private final UserRepo profileRepo;
 
     public AuthService(
             AppUserRepository userRepo,
             PasswordEncoder encoder,
             JwtTokenService tokenService,
             RefreshTokenRepository refreshTokenRepo,
-            @Value("${security.jwt.secret.refresh-token-days}") long refreshTokenDays
+            @Value("${security.jwt.secret.refresh-token-days}") long refreshTokenDays, UserRepo profileRepo
     ) {
         this.userRepo = userRepo;
         this.encoder = encoder;
         this.tokenService = tokenService;
         this.refreshTokenRepo = refreshTokenRepo;
         this.refreshTokenDays = refreshTokenDays;
+        this.profileRepo = profileRepo;
     }
 
     @Transactional
@@ -39,24 +43,36 @@ public class AuthService {
         if (userRepo.existsByUsername(req.username())) {
             throw new RuntimeException("Username already exists");
         }
+        if (profileRepo.existsByEmail(req.email())) {
+            throw new RuntimeException("Email already exists");
+        }
+        AppUser appuser = new AppUser();
+        appuser.setUsername(req.username());
+        appuser.setPasswordHash(encoder.encode(req.password()));
+        appuser.setEnabled(true);
+        appuser.setRole(Role.CUSTOMER);
 
-        AppUser user = new AppUser();
-        user.setUsername(req.username());
-        user.setPasswordHash(encoder.encode(req.password()));
-        user.setEnabled(true);
-        user.setRole(Role.CUSTOMER);
+        AppUser savedAppUser = userRepo.save(appuser);
 
-        AppUser savedUser = userRepo.save(user);
+        User profile = new User();
+        profile.setAppUser(savedAppUser);
+        profile.setFullName(req.fullName());
+        profile.setEmail(req.email());
+        profile.setPhone(req.phone());
+        profile.setRole(Role.CUSTOMER);
+
+        profileRepo.save(profile);
 
         return new RegisterResponse(
-                savedUser.getId(),
-                savedUser.getUsername(),
-                savedUser.getRole().name()
+                savedAppUser.getId(),
+                savedAppUser.getUsername(),
+                savedAppUser.getRole().name()
         );
     }
 
     @Transactional
     public LoginResponse login(String username, String password) {
+
         AppUser user = userRepo.findByUsername(username)
                 .filter(AppUser::isEnabled)
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
@@ -64,6 +80,9 @@ public class AuthService {
         if (!encoder.matches(password, user.getPasswordHash())) {
             throw new RuntimeException("Invalid credentials");
         }
+
+        User profile = profileRepo.findByAppUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("User profile not found"));
 
         List<String> roles = List.of(user.getRole().name());
 

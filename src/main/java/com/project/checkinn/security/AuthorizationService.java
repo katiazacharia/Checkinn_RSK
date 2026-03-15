@@ -23,7 +23,8 @@ public class AuthorizationService {
         if (tokenUserId == null) return false;
 
         return bookingRepository.findById(bookingId)
-                .map(b -> b.getUser() != null && tokenUserId.equals(b.getUser().getId()))
+                .map(b -> b.getUser() != null
+                        && tokenUserId.equals(b.getUser().getId()))
                 .orElse(false);
     }
 
