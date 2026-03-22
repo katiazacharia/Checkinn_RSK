@@ -1,10 +1,10 @@
-package com.project.checkinn.ExchangeRate;
+package com.project.checkinn.exchangerate;
 
 import com.project.checkinn.common.CurrencyCode;
 import java.math.BigDecimal;
 
 
-public class ExchangeRateService {
+public interface ExchangeRateService {
 
         BigDecimal getRate(CurrencyCode from, CurrencyCode to);
 

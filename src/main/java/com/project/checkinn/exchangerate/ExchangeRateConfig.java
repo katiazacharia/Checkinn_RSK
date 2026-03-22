@@ -1,4 +1,4 @@
-package com.project.checkinn.ExchangeRate;
+package com.project.checkinn.exchangerate;
 
 import com.project.checkinn.common.CurrencyCode;
 import org.springframework.beans.factory.annotation.Value;

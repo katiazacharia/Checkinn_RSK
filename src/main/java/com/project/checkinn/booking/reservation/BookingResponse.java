@@ -16,6 +16,9 @@ public class BookingResponse {
     private LocalDate checkOutDate;
     private BookingStatus status;
     private BigDecimal totalPrice;
+    private String currency;
+    private BigDecimal originalTotalPrice;
+    private BigDecimal exchangeRate;
     private Long promoCodeId; // optional
     private Long roomId;
     private List<String> extras;
@@ -45,6 +48,35 @@ public class BookingResponse {
     public BookingStatus getStatus() { return status; }
     public BigDecimal getTotalPrice() { return totalPrice; }
     public Long getPromoCodeId() { return promoCodeId; }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public BigDecimal getOriginalTotalPrice() {
+        return originalTotalPrice;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setTotalPrice(BigDecimal totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
+    public void setOriginalTotalPrice(BigDecimal originalTotalPrice) {
+        this.originalTotalPrice = originalTotalPrice;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
     public Long getRoomId() { return roomId; }
     public List<String> getExtras() {
         return extras;

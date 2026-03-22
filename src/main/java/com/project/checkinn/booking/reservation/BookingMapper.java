@@ -4,6 +4,8 @@ import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.user.profile.User;
 import com.project.checkinn.catalog.room.Room;
 
+import java.math.BigDecimal;
+
 
 public class BookingMapper {
 
@@ -24,5 +26,17 @@ public class BookingMapper {
         booking.setPromoCode(promoCode);
         booking.setGuests(request.getGuests());
         return booking;
+    }
+
+    public static BookingResponse toResponse(Booking booking, BigDecimal displayTotalPrice,
+                                             String currency,
+                                             BigDecimal originalTotalPrice,
+                                             BigDecimal exchangeRate){
+        BookingResponse response = new BookingResponse(booking);
+        response.setTotalPrice(displayTotalPrice);
+        response.setCurrency(currency);
+        response.setOriginalTotalPrice(originalTotalPrice);
+        response.setExchangeRate(exchangeRate);
+        return response;
     }
 }

@@ -1,5 +1,7 @@
 package com.project.checkinn.booking.preview;
 
+import com.project.checkinn.common.CurrencyCode;
+
 import java.time.LocalDate;
 
 public class BookingPreviewRequest {
@@ -8,6 +10,7 @@ public class BookingPreviewRequest {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private int guests;
+    private CurrencyCode currency;
 
     public Long getRoomId() {
         return roomId;
@@ -39,5 +42,13 @@ public class BookingPreviewRequest {
 
     public void setGuests(int guests) {
         this.guests = guests;
+    }
+
+    public CurrencyCode getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(CurrencyCode currency) {
+        this.currency = currency;
     }
 }

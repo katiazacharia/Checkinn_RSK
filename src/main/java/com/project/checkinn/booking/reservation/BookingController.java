@@ -8,6 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -71,9 +73,10 @@ public class BookingController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<BookingResponse> create(
            @Valid @RequestBody BookingRequest request,
-            UriComponentsBuilder uriBuilder
+            UriComponentsBuilder uriBuilder, Authentication authentication
+
     ) {
-        Booking saved = bookingService.create(request);
+        Booking saved = bookingService.create(request,authentication);
         BookingResponse response = BookingMapper.toResponse(saved);
 
         URI location = uriBuilder
@@ -99,5 +102,38 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.preview(request));
     }
 
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public List<BookingResponse> myBookings(Authentication authentication) {
+        Long userId = getUserId(authentication);
+
+        return bookingService.getByUser(userId)
+                .stream()
+                .map(BookingMapper::toResponse)
+                .toList();
+    }
+
+    private Long getUserId(Authentication authentication) {
+        if (authentication == null) return null;
+
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof Jwt jwt)) return null;
+
+        Object claim = jwt.getClaim("userId");
+        if (claim == null) return null;
+
+        if (claim instanceof Integer i) return i.longValue();
+        if (claim instanceof Long l) return l;
+
+        if (claim instanceof String s) {
+            try {
+                return Long.valueOf(s);
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
 
 }

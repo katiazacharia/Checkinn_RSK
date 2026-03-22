@@ -1,13 +1,13 @@
 package com.project.checkinn.booking.reservation;
 
+import com.project.checkinn.common.CurrencyCode;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
 public class BookingRequest {
 
-    @NotNull
-    private Long userId;
+
     @NotNull
     private LocalDate checkInDate;
     @NotNull
@@ -17,10 +17,15 @@ public class BookingRequest {
     private Long roomId;
     @NotNull
     private int guests;
+    private CurrencyCode currency;
 
+    public CurrencyCode getCurrency() {
+        return currency;
+    }
 
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
+    public void setCurrency(CurrencyCode currency) {
+        this.currency = currency;
+    }
 
     public LocalDate getCheckInDate() { return checkInDate; }
     public void setCheckInDate(LocalDate checkInDate) { this.checkInDate = checkInDate; }

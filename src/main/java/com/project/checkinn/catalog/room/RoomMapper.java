@@ -2,21 +2,29 @@ package com.project.checkinn.catalog.room;
 
 import com.project.checkinn.catalog.hotel.Hotel;
 
+import java.math.BigDecimal;
+
 public class RoomMapper {
 
 
     private RoomMapper() {}
 
     public static RoomResponse toResponse(Room r) {
-        return new RoomResponse(
-                r.getId(),
-                r.getHotel().getId(),
-                r.getRoomNumber(),
-                r.getType(),
-                r.getPricePerNight(),
-                r.getCapacity(),
-                r.getStatus()
-        );
+       RoomResponse response = new RoomResponse(
+               r.getId(),
+               r.getHotel().getId(),
+               r.getRoomNumber(),
+               r.getType(),
+               r.getPricePerNight(),
+               r.getCapacity(),
+               r.getStatus()
+
+       );
+       response.setCurrency("ILS");
+       response.setOriginalPricePerNight(r.getPricePerNight());
+       response.setExchangeRate(BigDecimal.ONE);
+
+        return response;
     }
 
     public static Room toEntity(RoomRequest req, Hotel hotel) {

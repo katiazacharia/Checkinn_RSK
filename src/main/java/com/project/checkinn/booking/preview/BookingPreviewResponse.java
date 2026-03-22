@@ -7,14 +7,20 @@ public class BookingPreviewResponse {
     private boolean available;
     private boolean capacityOk;
     private BigDecimal totalPrice;
+    private String currency;
+    private BigDecimal originalTotalPrice;
+    private BigDecimal exchangeRate;
     private String message;
     public BookingPreviewResponse() {
     }
 
-    public BookingPreviewResponse(boolean available, boolean capacityOk, BigDecimal totalPrice, String message) {
+    public BookingPreviewResponse(boolean available, boolean capacityOk, BigDecimal totalPrice, String currency, BigDecimal originalTotalPrice, BigDecimal exchangeRate, String message) {
         this.available = available;
         this.capacityOk = capacityOk;
         this.totalPrice = totalPrice;
+        this.currency = currency;
+        this.originalTotalPrice = originalTotalPrice;
+        this.exchangeRate = exchangeRate;
         this.message = message;
     }
 
@@ -42,6 +48,30 @@ public class BookingPreviewResponse {
         this.totalPrice = totalPrice;
     }
 
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public BigDecimal getOriginalTotalPrice() {
+        return originalTotalPrice;
+    }
+
+    public void setOriginalTotalPrice(BigDecimal originalTotalPrice) {
+        this.originalTotalPrice = originalTotalPrice;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
     public String getMessage() {
         return message;
     }
@@ -49,4 +79,6 @@ public class BookingPreviewResponse {
     public void setMessage(String message) {
         this.message = message;
     }
+
+
 }
