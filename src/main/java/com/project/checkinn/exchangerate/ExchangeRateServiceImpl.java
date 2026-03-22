@@ -1,4 +1,4 @@
-package com.project.checkinn.ExchangeRate;
+package com.project.checkinn.exchangerate;
 
 
 import com.project.checkinn.common.CurrencyCode;
@@ -18,8 +18,8 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
         private final RestClient restClient;
 
-        public ExchangeRateServiceImpl(RestClient.Builder builder) {
-            this.restClient = builder
+        public ExchangeRateServiceImpl() {
+            this.restClient = RestClient.builder()
                     .baseUrl(BASE_URL)
                     .build();
         }

@@ -10,6 +10,9 @@ public class RoomResponse {
     private String roomNumber;
     private RoomType type;
     private BigDecimal pricePerNight;
+    private String currency;
+    private BigDecimal originalPricePerNight;
+    private BigDecimal exchangeRate;
     private int capacity;
     private RoomStatus status;
 
@@ -33,6 +36,30 @@ public class RoomResponse {
     public BigDecimal getPricePerNight() { return pricePerNight; }
     public int getCapacity() { return capacity; }
     public RoomStatus getStatus() { return status; }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public BigDecimal getOriginalPricePerNight() {
+        return originalPricePerNight;
+    }
+
+    public void setOriginalPricePerNight(BigDecimal originalPricePerNight) {
+        this.originalPricePerNight = originalPricePerNight;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
 
     public void setId(Long id) { this.id = id; }
     public void setHotelId(Long hotelId) { this.hotelId = hotelId; }

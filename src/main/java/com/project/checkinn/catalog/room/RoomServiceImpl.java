@@ -2,8 +2,11 @@ package com.project.checkinn.catalog.room;
 
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
+import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
+import com.project.checkinn.exchangerate.ExchangeRateConfig;
+import com.project.checkinn.exchangerate.ExchangeRateService;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,10 +26,14 @@ public class RoomServiceImpl implements RoomService{
 
     private final RoomRepo roomRepo;
     private final HotelRepo hotelRepo;
+    private final ExchangeRateService exchangeRateService;
+    private final ExchangeRateConfig exchangeRateConfig;
 
-    public RoomServiceImpl(RoomRepo roomRepo, HotelRepo hotelRepo) {
+    public RoomServiceImpl(RoomRepo roomRepo, HotelRepo hotelRepo, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig) {
         this.roomRepo = roomRepo;
         this.hotelRepo = hotelRepo;
+        this.exchangeRateService = exchangeRateService;
+        this.exchangeRateConfig = exchangeRateConfig;
     }
 
     @Override
@@ -69,14 +76,40 @@ public class RoomServiceImpl implements RoomService{
         return roomRepo.findAll(spec, pageable).map(RoomMapper::toResponse);
     }
 
+
     @Override
     @Transactional(readOnly = true)
-    public RoomResponse getById(Long id) {
+    public RoomResponse getById(Long id,CurrencyCode currency) {
 
         Room r = roomRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
 
-        return RoomMapper.toResponse(r);
+        RoomResponse response= RoomMapper.toResponse(r);
+
+        CurrencyCode requestedCurrency = currency != null ? currency : exchangeRateConfig.getBaseCurrency();
+        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
+
+
+        if(requestedCurrency != baseCurrency){
+            BigDecimal rate = exchangeRateService.getRate(baseCurrency,requestedCurrency);
+            BigDecimal convertedPrice = exchangeRateService.convert(
+                r.getPricePerNight(),
+                    baseCurrency,
+                    requestedCurrency
+            );
+
+            response.setPricePerNight(convertedPrice);
+            response.setCurrency(requestedCurrency.name());
+            response.setOriginalPricePerNight(r.getPricePerNight());
+            response.setExchangeRate(rate);
+
+        }else{
+            response.setPricePerNight(r.getPricePerNight());
+            response.setCurrency(baseCurrency.name());
+            response.setOriginalPricePerNight(r.getPricePerNight());
+            response.setExchangeRate(BigDecimal.ONE);
+        }
+        return response;
     }
 
     @Override

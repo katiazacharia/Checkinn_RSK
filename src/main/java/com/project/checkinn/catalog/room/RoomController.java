@@ -1,5 +1,6 @@
 package com.project.checkinn.catalog.room;
 
+import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
 import jakarta.validation.Valid;
@@ -46,8 +47,8 @@ public class RoomController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public RoomResponse one(@PathVariable Long id) {
-        return roomService.getById(id);
+    public RoomResponse one(@PathVariable Long id,@RequestParam(required = false) CurrencyCode currency) {
+        return roomService.getById(id,currency);
     }
 
     @PostMapping

@@ -2,6 +2,7 @@ package com.project.checkinn.catalog.room;
 
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
+import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
 import jakarta.persistence.criteria.Predicate;
@@ -30,7 +31,7 @@ public interface RoomService {
             Pageable pageable
     );
 
-    RoomResponse getById(Long id);
+    RoomResponse getById(Long id, CurrencyCode currency);
 
     RoomResponse create(RoomRequest req);
 
