@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface BookingService {
 
-    Booking create(BookingRequest request, Authentication authentication);
+    Booking createMyBooking(BookingRequest request, Authentication authentication);
 
     Booking getById(Long id);
 
@@ -19,6 +19,7 @@ public interface BookingService {
 
     List<Booking> getByUser(Long userId);
 
+    List<Booking> getMyBookings(Authentication authentication);
     Booking cancel(Long id);
     List<Booking> upcoming(Long userId);
     List<Booking> search(BookingStatus status, Long userId, Long roomId, LocalDate from, LocalDate to);

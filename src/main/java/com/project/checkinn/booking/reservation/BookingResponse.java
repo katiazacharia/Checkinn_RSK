@@ -1,6 +1,7 @@
 package com.project.checkinn.booking.reservation;
 
 import com.project.checkinn.common.BookingStatus;
+import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.experienceplus.ExperienceExtra;
 
 import java.math.BigDecimal;
@@ -16,7 +17,7 @@ public class BookingResponse {
     private LocalDate checkOutDate;
     private BookingStatus status;
     private BigDecimal totalPrice;
-    private String currency;
+    private CurrencyCode currency;
     private BigDecimal originalTotalPrice;
     private BigDecimal exchangeRate;
     private Long promoCodeId; // optional
@@ -49,7 +50,7 @@ public class BookingResponse {
     public BigDecimal getTotalPrice() { return totalPrice; }
     public Long getPromoCodeId() { return promoCodeId; }
 
-    public String getCurrency() {
+    public CurrencyCode getCurrency() {
         return currency;
     }
 
@@ -73,7 +74,7 @@ public class BookingResponse {
         this.originalTotalPrice = originalTotalPrice;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(CurrencyCode currency) {
         this.currency = currency;
     }
 

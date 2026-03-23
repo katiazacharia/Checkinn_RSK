@@ -22,6 +22,8 @@ public class AvailabilityServiceImpl  implements AvailabilityService{
         if(request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
+        if (request.getRoomId() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "roomId is required");
 
         LocalDate in = request.getCheckInDate();
         LocalDate out = request.getCheckOutDate();
@@ -39,7 +41,8 @@ public class AvailabilityServiceImpl  implements AvailabilityService{
                         in
                 );
 
-        return new AvailabilityResponse(in, out, true, 0);
+        boolean available = conflicts==0;
+        return new AvailabilityResponse(in, out, available, conflicts);
 
     }
 }

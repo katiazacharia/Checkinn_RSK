@@ -7,14 +7,14 @@ public class BookingPreviewResponse {
     private boolean available;
     private boolean capacityOk;
     private BigDecimal totalPrice;
-    private String currency;
+    private Enum currency;
     private BigDecimal originalTotalPrice;
     private BigDecimal exchangeRate;
     private String message;
     public BookingPreviewResponse() {
     }
 
-    public BookingPreviewResponse(boolean available, boolean capacityOk, BigDecimal totalPrice, String currency, BigDecimal originalTotalPrice, BigDecimal exchangeRate, String message) {
+    public BookingPreviewResponse(boolean available, boolean capacityOk, BigDecimal totalPrice, Enum currency, BigDecimal originalTotalPrice, BigDecimal exchangeRate, String message) {
         this.available = available;
         this.capacityOk = capacityOk;
         this.totalPrice = totalPrice;
@@ -48,11 +48,11 @@ public class BookingPreviewResponse {
         this.totalPrice = totalPrice;
     }
 
-    public String getCurrency() {
+    public Enum getCurrency() {
         return currency;
     }
 
-    public void setCurrency(String currency) {
+    public void setCurrency(Enum currency) {
         this.currency = currency;
     }
 

@@ -1,14 +1,20 @@
 package com.project.checkinn.booking.preview;
 
 import com.project.checkinn.common.CurrencyCode;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
 public class BookingPreviewRequest {
 
+    @NotNull
     private Long roomId;
+    @NotNull
     private LocalDate checkInDate;
+    @NotNull
     private LocalDate checkOutDate;
+    @Min(1)
     private int guests;
     private CurrencyCode currency;
 

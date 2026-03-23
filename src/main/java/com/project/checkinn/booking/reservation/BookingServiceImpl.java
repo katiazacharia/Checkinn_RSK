@@ -14,6 +14,7 @@ import com.project.checkinn.experienceplus.ExperiencePlusService;
 import com.project.checkinn.notification.NotificationService;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.promo.PromoCodeRepository;
+import com.project.checkinn.security.CurrentUserService;
 import com.project.checkinn.user.profile.User;
 import com.project.checkinn.user.profile.UserRepo;
 import jakarta.persistence.EntityManager;
@@ -42,6 +43,7 @@ public class BookingServiceImpl implements BookingService {
     private final ExperiencePlusService experiencePlusService;
     private final ExchangeRateService exchangeRateService;
     private final ExchangeRateConfig exchangeRateConfig;
+    private final CurrentUserService currentUserService;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               UserRepo userRepository,
@@ -49,7 +51,7 @@ public class BookingServiceImpl implements BookingService {
                               PromoCodeRepository promoCodeRepository,
                               NotificationService notificationService,
                               PricingService pricingService,
-                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig) {
+                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig, CurrentUserService currentUserService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -59,10 +61,11 @@ public class BookingServiceImpl implements BookingService {
         this.experiencePlusService = experiencePlusService;
         this.exchangeRateService = exchangeRateService;
         this.exchangeRateConfig = exchangeRateConfig;
+        this.currentUserService = currentUserService;
     }
 
     @Override
-    public Booking create(BookingRequest request, Authentication authentication) {
+    public Booking createMyBooking(BookingRequest request, Authentication authentication) {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
@@ -78,10 +81,7 @@ public class BookingServiceImpl implements BookingService {
         if (!out.isAfter(in))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOutDate must be after checkInDate");
 
-        Long userId = getUserId(authentication);
-        if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-        }
+        Long userId = currentUserService.getCurrentUserId(authentication);
 
         long conflicts = bookingRepository.countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
                 request.getRoomId(),
@@ -104,11 +104,6 @@ public class BookingServiceImpl implements BookingService {
 
         Room roomRef = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
-
-        CurrencyCode requestedCurrency =
-                request.getCurrency() != null ? request.getCurrency() : exchangeRateConfig.getBaseCurrency();
-
-        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
 
         if (roomRef.getStatus() != RoomStatus.AVAILABLE)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room is not available");
@@ -226,11 +221,11 @@ public class BookingServiceImpl implements BookingService {
         CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
 
         if (roomRef.getStatus() != RoomStatus.AVAILABLE) {
-            return new BookingPreviewResponse(false, true, null,requestedCurrency.name(),null,null, "Room is not available");
+            return new BookingPreviewResponse(false, true, null,requestedCurrency,null,null, "Room is not available");
         }
 
         if (request.getGuests() > roomRef.getCapacity()) {
-            return new BookingPreviewResponse(false, false, null,requestedCurrency.name(),null,null, "Guests exceed room capacity");
+            return new BookingPreviewResponse(false, false, null,requestedCurrency,null,null, "Guests exceed room capacity");
         }
 
         long conflicts = bookingRepository.countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
@@ -241,7 +236,7 @@ public class BookingServiceImpl implements BookingService {
         );
 
         if (conflicts > 0) {
-            return new BookingPreviewResponse(false, true, null,requestedCurrency.name(),null,null, "Dates not available for this room");
+            return new BookingPreviewResponse(false, true, null,requestedCurrency,null,null, "Dates not available for this room");
         }
 
         BigDecimal basePrice = pricingService.calculateTotalPrice(roomRef, in, out);
@@ -256,31 +251,14 @@ public class BookingServiceImpl implements BookingService {
             exchangeRate = exchangeRateService.getRate(baseCurrency, requestedCurrency);
             finalPrice = exchangeRateService.convert(basePrice, baseCurrency, requestedCurrency);
         }
-        return new BookingPreviewResponse(true, true,finalPrice,requestedCurrency.name(),basePrice,exchangeRate, "Room is available");
+        return new BookingPreviewResponse(true, true,finalPrice,requestedCurrency,basePrice,exchangeRate, "Room is available");
     }
 
 
-    private Long getUserId(Authentication authentication) {
-        if (authentication == null) return null;
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) return null;
-
-        Object claim = jwt.getClaim("userId");
-        if (claim == null) return null;
-
-        if (claim instanceof Integer i) return i.longValue();
-        if (claim instanceof Long l) return l;
-
-        if (claim instanceof String s) {
-            try {
-                return Long.valueOf(s);
-            } catch (NumberFormatException e) {
-                return null;
-            }
-        }
-
-        return null;
+    @Override
+    public List<Booking> getMyBookings(Authentication authentication) {
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        return bookingRepository.findByUser_Id(currentUserId);
     }
 
 }
