@@ -11,6 +11,9 @@ import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.exchangerate.ExchangeRateConfig;
 import com.project.checkinn.exchangerate.ExchangeRateService;
 import com.project.checkinn.experienceplus.ExperiencePlusService;
+import com.project.checkinn.loyalty.EarnRequest;
+import com.project.checkinn.loyalty.LoyaltyService;
+import com.project.checkinn.loyalty.RedeemRequest;
 import com.project.checkinn.notification.NotificationService;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.promo.PromoCodeRepository;
@@ -42,6 +45,8 @@ public class BookingServiceImpl implements BookingService {
     private final ExperiencePlusService experiencePlusService;
     private final ExchangeRateService exchangeRateService;
     private final ExchangeRateConfig exchangeRateConfig;
+    private final LoyaltyService loyaltyService;
+
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               UserRepo userRepository,
@@ -49,7 +54,7 @@ public class BookingServiceImpl implements BookingService {
                               PromoCodeRepository promoCodeRepository,
                               NotificationService notificationService,
                               PricingService pricingService,
-                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig) {
+                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig ,LoyaltyService loyaltyService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -59,6 +64,7 @@ public class BookingServiceImpl implements BookingService {
         this.experiencePlusService = experiencePlusService;
         this.exchangeRateService = exchangeRateService;
         this.exchangeRateConfig = exchangeRateConfig;
+        this.loyaltyService = loyaltyService;
     }
 
     @Override
@@ -121,8 +127,39 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
         booking.setTotalPrice(basePrice);
+
+        if (request.getPointsToRedeem() != null && request.getPointsToRedeem() > 0) {
+
+            RedeemRequest redeemRequest = new RedeemRequest();
+            redeemRequest.setUserId(userId);
+            redeemRequest.setPoints(request.getPointsToRedeem());
+            redeemRequest.setNote("Redeemed in booking");
+
+            loyaltyService.redeem(redeemRequest);
+
+            BigDecimal discount = BigDecimal.valueOf(request.getPointsToRedeem() * 0.05);
+
+            BigDecimal maxDiscount = basePrice.multiply(BigDecimal.valueOf(0.2));
+
+            if (discount.compareTo(maxDiscount) > 0) {
+                discount = maxDiscount;
+            }
+
+            booking.setTotalPrice(basePrice.subtract(discount));
+        }
+
         booking.setStatus(BookingStatus.PENDING);
         experiencePlusService.assignExtras(booking);
+
+
+        int earnedPoints = booking.getTotalPrice().intValue();
+
+        EarnRequest earnRequest = new EarnRequest();
+        earnRequest.setUserId(userId);
+        earnRequest.setPoints(earnedPoints);
+        earnRequest.setNote("Earned from booking");
+
+        loyaltyService.earn(earnRequest);
 
 
         return bookingRepository.save(booking);
