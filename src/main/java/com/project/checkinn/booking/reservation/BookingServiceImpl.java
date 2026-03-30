@@ -152,14 +152,7 @@ public class BookingServiceImpl implements BookingService {
         experiencePlusService.assignExtras(booking);
 
 
-        int earnedPoints = booking.getTotalPrice().intValue();
 
-        EarnRequest earnRequest = new EarnRequest();
-        earnRequest.setUserId(userId);
-        earnRequest.setPoints(earnedPoints);
-        earnRequest.setNote("Earned from booking");
-
-        loyaltyService.earn(earnRequest);
 
 
         return bookingRepository.save(booking);
