@@ -18,8 +18,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import com.project.checkinn.loyalty.EarnRequest;
+import com.project.checkinn.loyalty.LoyaltyService;
+import com.project.checkinn.loyalty.RedeemRequest;
+import java.math.RoundingMode;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
@@ -28,15 +34,15 @@ public class PaymentServiceImpl implements PaymentService {
     private final EntityManager entityManager;
     private final NotificationService notificationService;
     private final ExperiencePlusService experiencePlusService;
-    private final CurrentUserService currentUserService;
+    private final LoyaltyService loyaltyService;
 
     public PaymentServiceImpl(PaymentRepo paymentRepository, EntityManager entityManager,
-                              NotificationService notificationService, ExperiencePlusService experiencePlusService, CurrentUserService currentUserService) {
+                              NotificationService notificationService, ExperiencePlusService experiencePlusService, LoyaltyService loyaltyService) {
         this.paymentRepository = paymentRepository;
         this.entityManager = entityManager;
         this.notificationService = notificationService;
         this.experiencePlusService = experiencePlusService;
-        this.currentUserService = currentUserService;
+        this.loyaltyService = loyaltyService;
     }
     @Transactional
     @Override
@@ -74,6 +80,18 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaidAt(LocalDateTime.now());
         Payment saved = paymentRepository.save(payment);
+
+        int earnedPoints = booking.getTotalPrice()
+                .divide(BigDecimal.TEN, RoundingMode.FLOOR)
+                .intValue();
+
+        if (earnedPoints > 0) {
+            EarnRequest earnRequest = new EarnRequest();
+            earnRequest.setUserId(booking.getUser().getId());
+            earnRequest.setPoints(earnedPoints);
+            earnRequest.setNote("Earned from booking #" + booking.getId());
+            loyaltyService.earn(earnRequest);
+        }
 
         List<ExperienceExtra> extras = experiencePlusService.assignExtras(booking);
         String message = "Your booking #" + booking.getId() + " has been confirmed.";
@@ -195,6 +213,20 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         payment.setStatus(PaymentStatus.REFUNDED);
+
+        int pointsToDeduct = payment.getAmount()
+                .divide(BigDecimal.TEN, RoundingMode.FLOOR)
+                .intValue();
+
+        if (pointsToDeduct > 0) {
+            try {
+                RedeemRequest deductRequest = new RedeemRequest();
+                deductRequest.setUserId(payment.getBooking().getUser().getId());
+                deductRequest.setPoints(pointsToDeduct);
+                deductRequest.setNote("Points reversed for refund on booking #" + payment.getBooking().getId());
+                loyaltyService.redeem(deductRequest);
+            } catch (Exception ignored) {}
+        }
         Booking booking = payment.getBooking();
         if (booking != null && booking.getStatus() != BookingStatus.CANCELLED) {
             booking.setStatus(BookingStatus.CANCELLED);

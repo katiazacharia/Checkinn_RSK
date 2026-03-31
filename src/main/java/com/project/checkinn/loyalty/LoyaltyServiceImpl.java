@@ -71,6 +71,7 @@ public class LoyaltyServiceImpl implements LoyaltyService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
         acc.setPoints(acc.getPoints() + request.getPoints());
+        acc.recalculateTier();
         acc.setUpdatedAt(LocalDateTime.now());
         accountRepo.save(acc);
 
@@ -97,19 +98,26 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         LoyaltyAccount acc = accountRepo.findByUser_Id(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
-        int after = acc.getPoints() - request.getPoints();
-        if (after < 0)
+        if (acc.getPoints() < request.getPoints())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "not enough points");
 
-        acc.setPoints(after);
+        double pointValue = acc.getTier().getPointValue();
+        double discount = request.getPoints() * pointValue;
+
+        double maxDiscount = request.getTotalPrice() * acc.getTier().getMaxDiscount();
+
+        double finalDiscount = Math.min(discount, maxDiscount);
+
+        acc.setPoints(acc.getPoints() - request.getPoints());
+        acc.recalculateTier();
         acc.setUpdatedAt(LocalDateTime.now());
         accountRepo.save(acc);
 
         LoyaltyTransaction tx = new LoyaltyTransaction();
         tx.setUser(entityManager.getReference(User.class,userId));
         tx.setType(LoyaltyTransactionType.REDEEM);
-        tx.setPoints(-request.getPoints()); // - redeem (حسب تعليقك بالـ entity)
-        tx.setNote(request.getNote());
+        tx.setPoints(-request.getPoints());
+        tx.setNote("Discount: $" + finalDiscount);
         tx.setCreatedAt(LocalDateTime.now());
         transactionRepo.save(tx);
 
@@ -138,9 +146,7 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         if (after < 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "not enough points");
 
-        // بدون حفظ، وبنفس Response class (بعد ما تضيفي constructor الإضافي)
-        return new LoyaltyAccountResponse(acc.getId(), acc.getUser().getId(), after, acc.getUpdatedAt());
-    }
+        return new LoyaltyAccountResponse(acc.getId(), acc.getUser().getId(), after, acc.getUpdatedAt(), acc.getTier());    }
 
     @Override
     public LoyaltyAccountResponse previewMyRedeem(RedeemRequest request, Authentication authentication) {

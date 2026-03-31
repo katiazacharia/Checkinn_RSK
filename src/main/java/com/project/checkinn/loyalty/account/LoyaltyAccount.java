@@ -1,5 +1,6 @@
 package com.project.checkinn.loyalty.account;
 
+import com.project.checkinn.common.Tier;
 import com.project.checkinn.user.profile.User;
 import jakarta.persistence.*;
 
@@ -20,6 +21,10 @@ public class LoyaltyAccount {
     @Column(nullable = false)
     private int points;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Tier tier = Tier.BRONZE;
+
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
@@ -35,5 +40,16 @@ public class LoyaltyAccount {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+
+//    public enum Tier { BRONZE, SILVER, GOLD }
+
+    public void recalculateTier() {
+        if (this.points >= 1500)     this.tier = Tier.GOLD;
+        else if (this.points >= 500) this.tier = Tier.SILVER;
+        else                         this.tier = Tier.BRONZE;
+    }
+
+    public Tier getTier() { return tier; }
 }
 

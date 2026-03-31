@@ -19,7 +19,7 @@ public class BookingRequest {
     @Min(1)
     private int guests;
     private CurrencyCode currency;
-
+    private Integer pointsToRedeem;
     public CurrencyCode getCurrency() {
         return currency;
     }
@@ -42,4 +42,12 @@ public class BookingRequest {
 
     public int getGuests() { return guests; }
     public void setGuests(int guests) { this.guests = guests; }
+
+    public Integer getPointsToRedeem() {
+        return pointsToRedeem;
+    }
+
+    public void setPointsToRedeem(Integer pointsToRedeem) {
+        this.pointsToRedeem = pointsToRedeem;
+    }
 }
