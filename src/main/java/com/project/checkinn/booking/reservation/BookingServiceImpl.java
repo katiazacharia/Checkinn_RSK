@@ -47,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
     private final ExchangeRateService exchangeRateService;
     private final ExchangeRateConfig exchangeRateConfig;
     private final LoyaltyService loyaltyService;
-
+    private final CurrentUserService currentUserService;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               UserRepo userRepository,
@@ -55,7 +55,7 @@ public class BookingServiceImpl implements BookingService {
                               PromoCodeRepository promoCodeRepository,
                               NotificationService notificationService,
                               PricingService pricingService,
-                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig ,LoyaltyService loyaltyService) {
+                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig , LoyaltyService loyaltyService, CurrentUserService currentUserService) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -66,6 +66,7 @@ public class BookingServiceImpl implements BookingService {
         this.exchangeRateService = exchangeRateService;
         this.exchangeRateConfig = exchangeRateConfig;
         this.loyaltyService = loyaltyService;
+        this.currentUserService = currentUserService;
     }
 
     @Override
@@ -139,11 +140,10 @@ public class BookingServiceImpl implements BookingService {
         if (request.getPointsToRedeem() != null && request.getPointsToRedeem() > 0) {
 
             RedeemRequest redeemRequest = new RedeemRequest();
-            redeemRequest.setUserId(userId);
             redeemRequest.setPoints(request.getPointsToRedeem());
             redeemRequest.setNote("Redeemed in booking");
 
-            loyaltyService.redeem(redeemRequest);
+            loyaltyService.redeem(userId, redeemRequest);
 
             BigDecimal discount = BigDecimal.valueOf(request.getPointsToRedeem() * 0.05);
 
