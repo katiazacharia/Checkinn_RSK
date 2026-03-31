@@ -2,12 +2,13 @@ package com.project.checkinn.review;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
 public interface ReviewService {
 
-    Review create(ReviewRequest request);
+    Review create(ReviewRequest request, Authentication authentication);
     Review update(Long id, ReviewRequest request);
     void delete(Long id);
     Review getById(Long id);

@@ -1,5 +1,6 @@
 package com.project.checkinn.booking.reservation;
 
+import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.user.profile.User;
 import com.project.checkinn.catalog.room.Room;
@@ -29,7 +30,7 @@ public class BookingMapper {
     }
 
     public static BookingResponse toResponse(Booking booking, BigDecimal displayTotalPrice,
-                                             String currency,
+                                             CurrencyCode currency,
                                              BigDecimal originalTotalPrice,
                                              BigDecimal exchangeRate){
         BookingResponse response = new BookingResponse(booking);

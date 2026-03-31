@@ -1,6 +1,7 @@
 package com.project.checkinn.payment;
 
 import com.project.checkinn.booking.reservation.Booking;
+import com.project.checkinn.common.PaymentMethod;
 
 public class PaymentMapper {
 
@@ -11,15 +12,20 @@ public class PaymentMapper {
         return payment == null ? null : new PaymentResponse(payment);
     }
 
-    public static Payment toEntity(PaymentRequest request, Booking booking) {
-        if (request == null || booking == null) {
-            return null;
+    public static Payment toEntity(Booking booking, PaymentMethod method) {
+        if (booking == null) {
+            throw new IllegalArgumentException("booking is required");
         }
+        if(method == null){
+            throw new IllegalArgumentException("payment method is required");
+
+        }
+
 
         Payment payment = new Payment();
         payment.setBooking(booking);
         payment.setAmount(booking.getTotalPrice());
-        payment.setMethod(request.getMethod());
+        payment.setMethod(method);
 
         return payment;
     }

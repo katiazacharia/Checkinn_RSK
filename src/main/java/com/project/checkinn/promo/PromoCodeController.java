@@ -8,6 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -22,14 +23,13 @@ import java.util.List;
 public class PromoCodeController {
 
      private final PromoCodeService promoCodeService;
-    private final PromoCodeRepository promoCodeRepository;
 
 
-    public PromoCodeController(PromoCodeService promoCodeService, PromoCodeRepository promoCodeRepository) {
+    public PromoCodeController(PromoCodeService promoCodeService) {
         this.promoCodeService = promoCodeService;
-        this.promoCodeRepository = promoCodeRepository;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PostMapping
     public ResponseEntity<PromoCodeResponse> create(
             @Valid @RequestBody PromoCodeRequest request,
@@ -47,7 +47,7 @@ public class PromoCodeController {
     }
 
 
-
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping
     public Page<PromoCodeResponse> getAll(
             @RequestParam(required = false) Boolean active,
@@ -76,6 +76,7 @@ public class PromoCodeController {
                 .map(PromoCodeMapper::toResponse);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping("/{id}")
     public PromoCodeResponse getById(@PathVariable Long id) {
         if (id == null)
@@ -84,6 +85,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(promoCodeService.getById(id));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping("/code/{code}")
     public PromoCodeResponse getByCode(@PathVariable String code) {
         if (code == null || code.isBlank())
@@ -92,6 +94,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(promoCodeService.getByCode(code));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PatchMapping("/{id}/deactivate")
     public PromoCodeResponse deactivate(@PathVariable Long id) {
         if (id == null)
@@ -100,6 +103,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(promoCodeService.deactivate(id));
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/validate/{code}")
     public boolean validate(@PathVariable String code) {
         if (code == null || code.isBlank())
@@ -109,6 +113,7 @@ public class PromoCodeController {
 
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PutMapping("/{id}")
     public PromoCodeResponse update(@PathVariable Long id, @Valid @RequestBody PromoCodeRequest request) {
         if (id == null)
@@ -129,6 +134,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(saved);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/active")
     public List<PromoCodeResponse> getActive() {
         return promoCodeService.getActive()
@@ -137,6 +143,7 @@ public class PromoCodeController {
                 .toList();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

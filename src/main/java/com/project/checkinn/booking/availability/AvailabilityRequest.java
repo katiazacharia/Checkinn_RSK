@@ -1,10 +1,15 @@
 package com.project.checkinn.booking.availability;
 
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 
 public class AvailabilityRequest {
+    @NotNull
     private LocalDate checkInDate;
+    @NotNull
     private LocalDate checkOutDate;
+    @NotNull
     private Long roomId;
 
 

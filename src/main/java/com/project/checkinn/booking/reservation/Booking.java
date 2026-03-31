@@ -2,6 +2,7 @@ package com.project.checkinn.booking.reservation;
 
 import com.project.checkinn.catalog.room.Room;
 import com.project.checkinn.common.BookingStatus;
+import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.experienceplus.ExperienceExtra;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.user.profile.User;
@@ -42,6 +43,15 @@ public class Booking {
 
     @Column(nullable = false)
     private BigDecimal totalPrice;
+
+    @Enumerated(EnumType.STRING)
+    private CurrencyCode currency;
+
+    @Column(precision = 19, scale = 4)
+    private BigDecimal originalTotalPrice;
+
+    @Column(precision = 19, scale = 8)
+    private BigDecimal exchangeRate;
 
     @Column(nullable = false)
     private int guests;
@@ -114,6 +124,30 @@ public class Booking {
 
     public void setTotalPrice(BigDecimal totalPrice) {
         this.totalPrice = totalPrice;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
+    public BigDecimal getOriginalTotalPrice() {
+        return originalTotalPrice;
+    }
+
+    public void setOriginalTotalPrice(BigDecimal originalTotalPrice) {
+        this.originalTotalPrice = originalTotalPrice;
+    }
+
+    public CurrencyCode getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(CurrencyCode currency) {
+        this.currency = currency;
     }
 
     public PromoCode getPromoCode() {

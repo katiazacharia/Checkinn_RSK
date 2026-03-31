@@ -19,7 +19,7 @@ public class NotificationResponse {
     public NotificationResponse(Notification n) {
         this.id = n.getId();
         this.userId = n.getUser() != null ? n.getUser().getId() : null;
-        //this.bookingId = n.getBooking() != null ? n.getBooking().getId() : null;
+        this.bookingId = n.getBooking() != null ? n.getBooking().getId() : null;
         this.type = n.getType();
         this.title = n.getTitle();
         this.message = n.getMessage();

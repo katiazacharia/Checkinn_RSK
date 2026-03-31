@@ -36,7 +36,7 @@ public class UserResponse {
 
         return phone;
     }
-    public String getRole() {
-        return role.name();
+    public Role getRole() {
+        return role;
     }
 }

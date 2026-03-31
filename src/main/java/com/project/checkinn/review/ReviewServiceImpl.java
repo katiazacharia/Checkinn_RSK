@@ -1,12 +1,14 @@
 package com.project.checkinn.review;
 
 import com.project.checkinn.booking.reservation.Booking;
+import com.project.checkinn.security.CurrentUserService;
 import com.project.checkinn.user.profile.User;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -18,27 +20,36 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepo reviewRepository;
     private final EntityManager entityManager;
+    private final CurrentUserService currentUserService;
 
-    public ReviewServiceImpl(ReviewRepo reviewRepository, EntityManager entityManager) {
+    public ReviewServiceImpl(ReviewRepo reviewRepository, EntityManager entityManager, CurrentUserService currentUserService) {
         this.reviewRepository = reviewRepository;
         this.entityManager = entityManager;
+        this.currentUserService = currentUserService;
     }
 
     @Override
-    public Review create(ReviewRequest request) {
+    public Review create(ReviewRequest request, Authentication authentication) {
         if (request == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        if (request.getUserId() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         if (request.getBookingId() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "bookingId is required");
         if (request.getRating() < 1 || request.getRating() > 5)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "rating must be between 1 and 5");
 
-        if (reviewRepository.existsByUser_IdAndBooking_Id(request.getUserId(), request.getBookingId()))
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        if (reviewRepository.existsByUser_IdAndBooking_Id(currentUserId, request.getBookingId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Review already exists for this booking");
+        }
 
-        User userRef = entityManager.getReference(User.class, request.getUserId());
-        Booking bookingRef = entityManager.getReference(Booking.class, request.getBookingId());
+        User user = entityManager.find(User.class, currentUserId);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
 
-        Review review = ReviewMapper.toEntity(request, userRef, bookingRef);
+        Booking booking = entityManager.find(Booking.class, request.getBookingId());
+        if (booking == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Booking not found");
+        }
+        Review review = ReviewMapper.toEntity(request, user, booking);
         review.setCreatedAt(LocalDateTime.now());
         return reviewRepository.save(review);
     }

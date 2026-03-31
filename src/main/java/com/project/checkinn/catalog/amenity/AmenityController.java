@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import jakarta.validation.Valid;
@@ -33,9 +34,12 @@ public class AmenityController {
 
     @GetMapping("/{id}")
     public AmenityResponse getById(@PathVariable Long id) {
+
         return amenityService.getById(id);
     }
+
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<AmenityResponse> create(
             @Valid @RequestBody AmenityRequest request,
             UriComponentsBuilder uriBuilder
@@ -52,6 +56,7 @@ public class AmenityController {
 
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<AmenityResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody AmenityRequest request
@@ -62,6 +67,7 @@ public class AmenityController {
 
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         amenityService.delete(id);
         return ResponseEntity.noContent().build();
@@ -77,6 +83,7 @@ public class AmenityController {
 
 
     @PostMapping("/{amenityId}/hotel/{hotelId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void addAmenityToHotel(@PathVariable Long amenityId, @PathVariable Long hotelId) {
         amenityService.addAmenityToHotel(hotelId, amenityId);
@@ -84,6 +91,7 @@ public class AmenityController {
 
 
     @DeleteMapping("/{amenityId}/hotel/{hotelId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAmenityFromHotel(@PathVariable Long amenityId, @PathVariable Long hotelId) {
         amenityService.removeAmenityFromHotel(hotelId, amenityId);

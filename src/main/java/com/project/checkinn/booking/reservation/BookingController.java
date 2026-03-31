@@ -4,12 +4,12 @@ package com.project.checkinn.booking.reservation;
 import com.project.checkinn.booking.preview.BookingPreviewRequest;
 import com.project.checkinn.booking.preview.BookingPreviewResponse;
 import com.project.checkinn.common.BookingStatus;
+import com.project.checkinn.security.CurrentUserService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -23,7 +23,7 @@ public class BookingController {
 
     private final BookingService bookingService;
 
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService ) {
         this.bookingService = bookingService;
     }
 
@@ -43,13 +43,13 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("@authz.isBookingOwner(#id, authentication) or hasAnyRole('ADMIN','MANAGER')")
     public BookingResponse one(@PathVariable Long id) {
 
         return BookingMapper.toResponse(bookingService.getById(id));
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/users/{userId}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<BookingResponse> byUser(@PathVariable Long userId) {
         return bookingService.getByUser(userId)
@@ -76,7 +76,7 @@ public class BookingController {
             UriComponentsBuilder uriBuilder, Authentication authentication
 
     ) {
-        Booking saved = bookingService.create(request,authentication);
+        Booking saved = bookingService.createMyBooking(request,authentication);
         BookingResponse response = BookingMapper.toResponse(saved);
 
         URI location = uriBuilder
@@ -105,35 +105,13 @@ public class BookingController {
     @GetMapping("/me")
     @PreAuthorize("hasRole('CUSTOMER')")
     public List<BookingResponse> myBookings(Authentication authentication) {
-        Long userId = getUserId(authentication);
 
-        return bookingService.getByUser(userId)
+        return bookingService.getMyBookings(authentication)
                 .stream()
                 .map(BookingMapper::toResponse)
                 .toList();
     }
 
-    private Long getUserId(Authentication authentication) {
-        if (authentication == null) return null;
 
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) return null;
-
-        Object claim = jwt.getClaim("userId");
-        if (claim == null) return null;
-
-        if (claim instanceof Integer i) return i.longValue();
-        if (claim instanceof Long l) return l;
-
-        if (claim instanceof String s) {
-            try {
-                return Long.valueOf(s);
-            } catch (NumberFormatException e) {
-                return null;
-            }
-        }
-
-        return null;
-    }
 
 }

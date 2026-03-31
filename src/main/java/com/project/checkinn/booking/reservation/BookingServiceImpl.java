@@ -17,6 +17,7 @@ import com.project.checkinn.loyalty.RedeemRequest;
 import com.project.checkinn.notification.NotificationService;
 import com.project.checkinn.promo.PromoCode;
 import com.project.checkinn.promo.PromoCodeRepository;
+import com.project.checkinn.security.CurrentUserService;
 import com.project.checkinn.user.profile.User;
 import com.project.checkinn.user.profile.UserRepo;
 import jakarta.persistence.EntityManager;
@@ -68,7 +69,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking create(BookingRequest request, Authentication authentication) {
+    public Booking createMyBooking(BookingRequest request, Authentication authentication) {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
@@ -84,20 +85,17 @@ public class BookingServiceImpl implements BookingService {
         if (!out.isAfter(in))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "checkOutDate must be after checkInDate");
 
-        Long userId = getUserId(authentication);
-        if (userId == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
-        }
+        Long userId = currentUserService.getCurrentUserId(authentication);
 
         long conflicts = bookingRepository.countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
                 request.getRoomId(),
                 BookingStatus.CANCELLED,
                 out,
-                in);
+                in
+        );
 
         if (conflicts > 0)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Dates not available for this room");
-
 
         User userRef = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -111,19 +109,29 @@ public class BookingServiceImpl implements BookingService {
         Room roomRef = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
 
-        CurrencyCode requestedCurrency =
-                request.getCurrency() != null ? request.getCurrency() : exchangeRateConfig.getBaseCurrency();
-
-        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
-
         if (roomRef.getStatus() != RoomStatus.AVAILABLE)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room is not available");
 
         if (request.getGuests() > roomRef.getCapacity())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Guests exceed room capacity");
 
-        BigDecimal basePrice =
-                pricingService.calculateTotalPrice(roomRef, in, out);
+        BigDecimal basePrice = pricingService.calculateTotalPrice(roomRef, in, out);
+
+        CurrencyCode requestedCurrency =
+                request.getCurrency() != null ? request.getCurrency() : exchangeRateConfig.getBaseCurrency();
+
+        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
+
+        BigDecimal finalPrice;
+        BigDecimal exchangeRate;
+
+        if (requestedCurrency == baseCurrency) {
+            finalPrice = basePrice;
+            exchangeRate = BigDecimal.ONE;
+        } else {
+            exchangeRate = exchangeRateService.getRate(baseCurrency, requestedCurrency);
+            finalPrice = exchangeRateService.convert(basePrice, baseCurrency, requestedCurrency);
+        }
 
         Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
         booking.setTotalPrice(basePrice);
@@ -149,15 +157,14 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(BookingStatus.PENDING);
-        experiencePlusService.assignExtras(booking);
 
+        experiencePlusService.assignExtras(booking);
 
 
 
 
         return bookingRepository.save(booking);
     }
-
     @Override
     public Booking getById(Long id) {
         return bookingRepository.findById(id)
@@ -256,11 +263,11 @@ public class BookingServiceImpl implements BookingService {
         CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
 
         if (roomRef.getStatus() != RoomStatus.AVAILABLE) {
-            return new BookingPreviewResponse(false, true, null,requestedCurrency.name(),null,null, "Room is not available");
+            return new BookingPreviewResponse(false, true, null,requestedCurrency,null,null, "Room is not available");
         }
 
         if (request.getGuests() > roomRef.getCapacity()) {
-            return new BookingPreviewResponse(false, false, null,requestedCurrency.name(),null,null, "Guests exceed room capacity");
+            return new BookingPreviewResponse(false, false, null,requestedCurrency,null,null, "Guests exceed room capacity");
         }
 
         long conflicts = bookingRepository.countByRoom_IdAndStatusNotAndCheckInDateLessThanAndCheckOutDateGreaterThan(
@@ -271,7 +278,7 @@ public class BookingServiceImpl implements BookingService {
         );
 
         if (conflicts > 0) {
-            return new BookingPreviewResponse(false, true, null,requestedCurrency.name(),null,null, "Dates not available for this room");
+            return new BookingPreviewResponse(false, true, null,requestedCurrency,null,null, "Dates not available for this room");
         }
 
         BigDecimal basePrice = pricingService.calculateTotalPrice(roomRef, in, out);
@@ -286,31 +293,14 @@ public class BookingServiceImpl implements BookingService {
             exchangeRate = exchangeRateService.getRate(baseCurrency, requestedCurrency);
             finalPrice = exchangeRateService.convert(basePrice, baseCurrency, requestedCurrency);
         }
-        return new BookingPreviewResponse(true, true,finalPrice,requestedCurrency.name(),basePrice,exchangeRate, "Room is available");
+        return new BookingPreviewResponse(true, true,finalPrice,requestedCurrency,basePrice,exchangeRate, "Room is available");
     }
 
 
-    private Long getUserId(Authentication authentication) {
-        if (authentication == null) return null;
-
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) return null;
-
-        Object claim = jwt.getClaim("userId");
-        if (claim == null) return null;
-
-        if (claim instanceof Integer i) return i.longValue();
-        if (claim instanceof Long l) return l;
-
-        if (claim instanceof String s) {
-            try {
-                return Long.valueOf(s);
-            } catch (NumberFormatException e) {
-                return null;
-            }
-        }
-
-        return null;
+    @Override
+    public List<Booking> getMyBookings(Authentication authentication) {
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        return bookingRepository.findByUser_Id(currentUserId);
     }
 
 }

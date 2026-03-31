@@ -2,16 +2,23 @@ package com.project.checkinn.catalog.room;
 
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
 public class RoomRequest {
 
+    @NotNull
     private Long hotelId;
+    @NotNull
     private String roomNumber;
+    @NotNull
     private RoomType type;
+    @NotNull
     private BigDecimal pricePerNight;
+    @NotNull
     private int capacity;
+    @NotNull
     private RoomStatus status;
 
     public RoomRequest() {}

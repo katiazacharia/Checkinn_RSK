@@ -89,17 +89,25 @@ public class DataSeeder {
             appUser.setEnabled(true);
             appUser.setRole(role);
             appUser = appUserRepo.save(appUser);
+        } else {
+            appUser.setEnabled(true);
+            appUser.setRole(role);
+            appUser = appUserRepo.save(appUser);
         }
 
-        if (userRepo.findById(appUser.getId()).isEmpty()) {
-            User profile = new User();
+        User profile = userRepo.findByAppUserId(appUser.getId()).orElse(null);
+
+        if (profile == null) {
+            profile = new User();
             profile.setAppUser(appUser);
-            profile.setFullName(fullName);
-            profile.setEmail(email);
-            profile.setPhone(phone);
-            profile.setRole(role);
-            userRepo.save(profile);
         }
+
+        profile.setFullName(fullName);
+        profile.setEmail(email);
+        profile.setPhone(phone);
+        profile.setRole(role);
+
+        userRepo.save(profile);
     }
 
     private void seedAmenities(AmenityRepo repo) {

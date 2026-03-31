@@ -31,7 +31,6 @@ public class RoomController {
     }
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public Page<RoomResponse> all(
             @RequestParam(required = false) Long hotelId,
             @RequestParam(required = false) RoomType type,
@@ -46,7 +45,6 @@ public class RoomController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
     public RoomResponse one(@PathVariable Long id,@RequestParam(required = false) CurrencyCode currency) {
         return roomService.getById(id,currency);
     }

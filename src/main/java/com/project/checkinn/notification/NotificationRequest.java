@@ -2,13 +2,18 @@ package com.project.checkinn.notification;
 
 import com.project.checkinn.common.NotificationStatus;
 import com.project.checkinn.common.NotificationType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class NotificationRequest {
 
     private Long userId;
     private Long bookingId;
+    @NotNull
     private NotificationType type;
+    @NotBlank
     private String title;
+    @NotBlank
     private String message;
     private NotificationStatus status;
 

@@ -1,6 +1,7 @@
 package com.project.checkinn.booking.reservation;
 
 import com.project.checkinn.common.CurrencyCode;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
@@ -15,7 +16,7 @@ public class BookingRequest {
     private Long promoCodeId;
     @NotNull
     private Long roomId;
-    @NotNull
+    @Min(1)
     private int guests;
     private CurrencyCode currency;
     private Integer pointsToRedeem;

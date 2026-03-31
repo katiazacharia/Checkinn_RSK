@@ -7,8 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public class ReviewRequest {
 
-    @NotNull(message = "userId is required")
-    private Long userId;
+
     @NotNull(message = "bookingId is required")
     private Long bookingId;
     @Min(value = 1, message = "rating must be between 1 and 5")
@@ -17,17 +16,6 @@ public class ReviewRequest {
     @Size(max = 1000, message = "comment max length is 1000")
     private String comment;
 
-    public Long getUserId() {
-
-        return userId;
-
-    }
-
-    public void setUserId(Long userId) {
-
-        this.userId = userId;
-
-    }
 
     public Long getBookingId() {
 
