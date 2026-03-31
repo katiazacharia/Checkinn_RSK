@@ -35,14 +35,15 @@ public class PaymentServiceImpl implements PaymentService {
     private final NotificationService notificationService;
     private final ExperiencePlusService experiencePlusService;
     private final LoyaltyService loyaltyService;
-
+    private final CurrentUserService currentUserService;
     public PaymentServiceImpl(PaymentRepo paymentRepository, EntityManager entityManager,
-                              NotificationService notificationService, ExperiencePlusService experiencePlusService, LoyaltyService loyaltyService) {
+                              NotificationService notificationService, ExperiencePlusService experiencePlusService, LoyaltyService loyaltyService, CurrentUserService currentUserService) {
         this.paymentRepository = paymentRepository;
         this.entityManager = entityManager;
         this.notificationService = notificationService;
         this.experiencePlusService = experiencePlusService;
         this.loyaltyService = loyaltyService;
+        this.currentUserService = currentUserService;
     }
     @Transactional
     @Override
@@ -87,10 +88,10 @@ public class PaymentServiceImpl implements PaymentService {
 
         if (earnedPoints > 0) {
             EarnRequest earnRequest = new EarnRequest();
-            earnRequest.setUserId(booking.getUser().getId());
             earnRequest.setPoints(earnedPoints);
             earnRequest.setNote("Earned from booking #" + booking.getId());
-            loyaltyService.earn(earnRequest);
+
+            loyaltyService.earn(booking.getUser().getId(), earnRequest);
         }
 
         List<ExperienceExtra> extras = experiencePlusService.assignExtras(booking);
@@ -198,12 +199,6 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
 
-        if (payment.getStatus() != PaymentStatus.PAID) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Only successful payments can be refunded"
-            );
-        }
 
         if (payment.getStatus() == PaymentStatus.REFUNDED) {
             throw new ResponseStatusException(
@@ -211,6 +206,15 @@ public class PaymentServiceImpl implements PaymentService {
                     "Payment already refunded"
             );
         }
+
+        if (payment.getStatus() != PaymentStatus.PAID) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Only successful payments can be refunded"
+            );
+        }
+
+
 
         payment.setStatus(PaymentStatus.REFUNDED);
 
@@ -221,10 +225,10 @@ public class PaymentServiceImpl implements PaymentService {
         if (pointsToDeduct > 0) {
             try {
                 RedeemRequest deductRequest = new RedeemRequest();
-                deductRequest.setUserId(payment.getBooking().getUser().getId());
                 deductRequest.setPoints(pointsToDeduct);
                 deductRequest.setNote("Points reversed for refund on booking #" + payment.getBooking().getId());
-                loyaltyService.redeem(deductRequest);
+
+                loyaltyService.redeem(payment.getBooking().getUser().getId(), deductRequest);
             } catch (Exception ignored) {}
         }
         Booking booking = payment.getBooking();
