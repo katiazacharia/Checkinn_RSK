@@ -4,6 +4,7 @@ import com.project.checkinn.common.NotificationStatus;
 import com.project.checkinn.common.NotificationType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,6 +30,16 @@ public interface NotificationService {
             Pageable pageable
     );
 
+    Page<Notification> searchMyNotifications(
+            Long bookingId,
+            NotificationType type,
+            NotificationStatus status,
+            LocalDateTime from,
+            LocalDateTime to,
+            String q,
+            Authentication authentication,
+            Pageable pageable
+    );
 
     Notification createFromRequest(NotificationRequest request);
 
@@ -47,4 +58,12 @@ public interface NotificationService {
     void markReadAll(Long userId);
 
     void delete(Long id);
+
+    List<Notification> getMyNotifications(Authentication authentication);
+
+    List<Notification> getMyUnread(Authentication authentication);
+
+    void markAllMyRead(Authentication authentication);
+
+
 }

@@ -7,10 +7,12 @@ import com.project.checkinn.loyalty.account.LoyaltyAccountResponse;
 import com.project.checkinn.loyalty.transaction.LoyaltyTransaction;
 import com.project.checkinn.loyalty.transaction.LoyaltyTransactionRepo;
 import com.project.checkinn.loyalty.transaction.LoyaltyTransactionResponse;
+import com.project.checkinn.security.CurrentUserService;
 import com.project.checkinn.user.profile.User;
 
 import jakarta.persistence.EntityManager;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,13 +31,15 @@ public class LoyaltyServiceImpl implements LoyaltyService {
     private final LoyaltyAccountRepo accountRepo;
     private final LoyaltyTransactionRepo transactionRepo;
     private final EntityManager entityManager;
+    private final CurrentUserService currentUserService;
 
     public LoyaltyServiceImpl(LoyaltyAccountRepo accountRepo,
                               LoyaltyTransactionRepo transactionRepo,
-                              EntityManager entityManager) {
+                              EntityManager entityManager, CurrentUserService currentUserService) {
         this.accountRepo = accountRepo;
         this.transactionRepo = transactionRepo;
         this.entityManager = entityManager;
+        this.currentUserService = currentUserService;
     }
 
     @Override
@@ -50,14 +54,20 @@ public class LoyaltyServiceImpl implements LoyaltyService {
     }
 
     @Override
-    public LoyaltyAccountResponse earn(EarnRequest request) {
+    public LoyaltyAccountResponse getMyAccount(Authentication authentication) {
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        return getAccount(currentUserId);
+    }
+
+    @Override
+    public LoyaltyAccountResponse earn(Long userId,EarnRequest request) {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        if (request.getUserId() == null)
+        if (userId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         if (request.getPoints() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
-        LoyaltyAccount acc = accountRepo.findByUser_Id(request.getUserId())
+        LoyaltyAccount acc = accountRepo.findByUser_Id(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
         acc.setPoints(acc.getPoints() + request.getPoints());
@@ -65,7 +75,7 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         accountRepo.save(acc);
 
         LoyaltyTransaction tx = new LoyaltyTransaction();
-        tx.setUser(entityManager.getReference(User.class, request.getUserId()));
+        tx.setUser(entityManager.getReference(User.class, userId));
         tx.setType(LoyaltyTransactionType.EARN);
         tx.setPoints(request.getPoints()); // + earn
         tx.setNote(request.getNote());
@@ -76,15 +86,15 @@ public class LoyaltyServiceImpl implements LoyaltyService {
     }
 
     @Override
-    public LoyaltyAccountResponse redeem(RedeemRequest request) {
+    public LoyaltyAccountResponse redeem(Long userId,RedeemRequest request) {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        if (request.getUserId() == null)
+        if (userId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         if (request.getPoints() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
 
-        LoyaltyAccount acc = accountRepo.findByUser_Id(request.getUserId())
+        LoyaltyAccount acc = accountRepo.findByUser_Id(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
         int after = acc.getPoints() - request.getPoints();
@@ -96,7 +106,7 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         accountRepo.save(acc);
 
         LoyaltyTransaction tx = new LoyaltyTransaction();
-        tx.setUser(entityManager.getReference(User.class, request.getUserId()));
+        tx.setUser(entityManager.getReference(User.class,userId));
         tx.setType(LoyaltyTransactionType.REDEEM);
         tx.setPoints(-request.getPoints()); // - redeem (حسب تعليقك بالـ entity)
         tx.setNote(request.getNote());
@@ -107,15 +117,21 @@ public class LoyaltyServiceImpl implements LoyaltyService {
     }
 
     @Override
-    public LoyaltyAccountResponse previewRedeem(RedeemRequest request) {
+    public LoyaltyAccountResponse redeemMyPoints(RedeemRequest request, Authentication authentication) {
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        return redeem(currentUserId,request);
+    }
+
+    @Override
+    public LoyaltyAccountResponse previewRedeem(Long userId, RedeemRequest request) {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        if (request.getUserId() == null)
+        if (userId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         if (request.getPoints() <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must be > 0");
 
-        LoyaltyAccount acc = accountRepo.findByUser_Id(request.getUserId())
+        LoyaltyAccount acc = accountRepo.findByUser_Id(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
 
         int after = acc.getPoints() - request.getPoints();
@@ -124,6 +140,13 @@ public class LoyaltyServiceImpl implements LoyaltyService {
 
         // بدون حفظ، وبنفس Response class (بعد ما تضيفي constructor الإضافي)
         return new LoyaltyAccountResponse(acc.getId(), acc.getUser().getId(), after, acc.getUpdatedAt());
+    }
+
+    @Override
+    public LoyaltyAccountResponse previewMyRedeem(RedeemRequest request, Authentication authentication) {
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+
+        return previewRedeem(currentUserId, request);
     }
 
     @Override
@@ -136,6 +159,13 @@ public class LoyaltyServiceImpl implements LoyaltyService {
                 .map(LoyaltyTransactionResponse::new)
                 .toList();
     }
+
+    @Override
+    public List<LoyaltyTransactionResponse> myHistory(Authentication authentication) {
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        return history(currentUserId);
+    }
+
     @Override
     public Page<LoyaltyTransactionResponse> historyPaged(
             Long userId,

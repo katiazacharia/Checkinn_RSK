@@ -22,11 +22,9 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
-    private final CurrentUserService currentUserService;
 
-    public BookingController(BookingService bookingService, CurrentUserService currentUserService) {
+    public BookingController(BookingService bookingService ) {
         this.bookingService = bookingService;
-        this.currentUserService = currentUserService;
     }
 
 //list with optional filters: status, userId, roomId, from, to

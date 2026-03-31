@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.project.checkinn.catalog.hotel.HotelMapper.toResponse;
+
 @Service
 public class HotelServiceImpl implements HotelService{
 
@@ -33,11 +35,14 @@ public class HotelServiceImpl implements HotelService{
     public HotelResponse getById(Long id) {
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-        return HotelMapper.toResponse(h);
+        return toResponse(h);
     }
 
     @Override
     public HotelResponse create(HotelRequest req) {
+
+        if(req == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"request is required");
 
         if (req.getName() == null || req.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
@@ -58,11 +63,15 @@ public class HotelServiceImpl implements HotelService{
             h.setAmenities(amenities);
         }
 
-        return toResponse(hotelRepo.save(h));
+        return HotelMapper.toResponse(hotelRepo.save(h));
     }
 
     @Override
     public HotelResponse update(Long id, HotelRequest req) {
+
+
+        if(req == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"request is required");
 
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
@@ -78,7 +87,7 @@ public class HotelServiceImpl implements HotelService{
             h.setAmenities(amenities);
         }
 
-        return toResponse(hotelRepo.save(h));
+        return HotelMapper.toResponse(hotelRepo.save(h));
     }
 
     @Override
@@ -89,27 +98,6 @@ public class HotelServiceImpl implements HotelService{
         }
 
         hotelRepo.deleteById(id);
-    }
-
-    private HotelResponse toResponse(Hotel h) {
-
-        Set<Long> roomIds = h.getRooms().stream()
-                .map(r -> r.getId())
-                .collect(Collectors.toSet());
-
-        Set<Long> amenityIds = h.getAmenities().stream()
-                .map(a -> a.getId())
-                .collect(Collectors.toSet());
-
-        return new HotelResponse(
-                h.getId(),
-                h.getName(),
-                h.getCity(),
-                h.getAddress(),
-                h.getDescription(),
-                roomIds,
-                amenityIds
-        );
     }
 
     @Override
@@ -156,7 +144,7 @@ public class HotelServiceImpl implements HotelService{
 
         h.addAmenity(a);
 
-        return toResponse(hotelRepo.save(h));
+        return HotelMapper.toResponse(hotelRepo.save(h));
     }
 
     @Override
@@ -170,7 +158,7 @@ public class HotelServiceImpl implements HotelService{
 
         h.removeAmenity(a);
 
-        return toResponse(hotelRepo.save(h));
+        return HotelMapper.toResponse(hotelRepo.save(h));
     }
 
     @Override
@@ -189,7 +177,7 @@ public class HotelServiceImpl implements HotelService{
             h.addAmenity(a);
         }
 
-        return toResponse(hotelRepo.save(h));
+        return HotelMapper.toResponse(hotelRepo.save(h));
     }
 
 

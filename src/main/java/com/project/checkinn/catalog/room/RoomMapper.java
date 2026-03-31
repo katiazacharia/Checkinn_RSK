@@ -1,6 +1,7 @@
 package com.project.checkinn.catalog.room;
 
 import com.project.checkinn.catalog.hotel.Hotel;
+import com.project.checkinn.common.CurrencyCode;
 
 import java.math.BigDecimal;
 
@@ -20,8 +21,8 @@ public class RoomMapper {
                r.getStatus()
 
        );
-       response.setCurrency("ILS");
-       response.setOriginalPricePerNight(r.getPricePerNight());
+        response.setCurrency(CurrencyCode.ILS.name());
+        response.setOriginalPricePerNight(r.getPricePerNight());
        response.setExchangeRate(BigDecimal.ONE);
 
         return response;

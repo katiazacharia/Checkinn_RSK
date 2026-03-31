@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -25,13 +26,10 @@ import java.util.stream.Collectors;
 public class HotelController {
 
     private final HotelService hotelService;
-    private final HotelRepo hotelRepo;
-    private final AmenityRepo amenityRepo;
 
-    public HotelController(HotelService hotelService, HotelRepo hotelRepo, AmenityRepo amenityRepo) {
+    public HotelController(HotelService hotelService) {
         this.hotelService = hotelService;
-        this.hotelRepo = hotelRepo;
-        this.amenityRepo = amenityRepo;
+
     }
 
     @GetMapping
@@ -48,6 +46,7 @@ public class HotelController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<HotelResponse> create(
             @Valid @RequestBody HotelRequest request,
             UriComponentsBuilder uriBuilder
@@ -63,6 +62,7 @@ public class HotelController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<HotelResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody HotelRequest request
@@ -72,6 +72,7 @@ public class HotelController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         hotelService.delete(id);
         return ResponseEntity.noContent().build();
@@ -88,46 +89,27 @@ public class HotelController {
         return hotelService.search(city, name, amenityId, pageable);
     }
 
-    // ✅ هاي endpoints خليتهم شغالين زي ما عندك، بس استبدلت toResponse بـ HotelMapper
     @PostMapping("/{id}/amenities/{amenityId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<HotelResponse> addAmenity(@PathVariable Long id, @PathVariable Long amenityId) {
-        Hotel h = hotelRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
-        Amenity a = amenityRepo.findById(amenityId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
-
-        h.getAmenities().add(a);
-        Hotel saved = hotelRepo.save(h);
-
-        return ResponseEntity.ok(HotelMapper.toResponse(saved));
+        return ResponseEntity.ok(hotelService.addAmenity(id, amenityId));
     }
 
     @DeleteMapping("/{id}/amenities/{amenityId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<HotelResponse> removeAmenity(@PathVariable Long id, @PathVariable Long amenityId) {
-        Hotel h = hotelRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-
-        h.getAmenities().removeIf(am -> am.getId().equals(amenityId));
-        Hotel saved = hotelRepo.save(h);
-
-        return ResponseEntity.ok(HotelMapper.toResponse(saved));
+        return ResponseEntity.ok(hotelService.removeAmenity(id, amenityId));
     }
 
     @PutMapping("/{id}/amenities")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<HotelResponse> replaceAmenities(
             @PathVariable Long id,
             @RequestBody HotelRequest req
     ) {
-        Hotel h = hotelRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
-        Set<Long> ids = (req.getAmenityIds() == null) ? Set.of() : req.getAmenityIds();
-
-        Set<Amenity> amenities = new HashSet<>(amenityRepo.findAllById(ids));
-        h.setAmenities(amenities);
-
-        return ResponseEntity.ok(HotelMapper.toResponse(hotelRepo.save(h)));
+        return ResponseEntity.ok(hotelService.replaceAmenities(id,req.getAmenityIds()));
     }
 
 }

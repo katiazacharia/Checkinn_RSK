@@ -4,6 +4,8 @@ import com.project.checkinn.loyalty.account.LoyaltyAccountResponse;
 import com.project.checkinn.loyalty.transaction.LoyaltyTransactionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,6 +25,13 @@ public class LoyaltyController {
 
     // Account / Balance
 
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public LoyaltyAccountResponse myAccount(Authentication authentication) {
+        return loyaltyService.getMyAccount(authentication);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping("/user/{userId}")
     public LoyaltyAccountResponse account(@PathVariable Long userId) {
         if (userId == null)
@@ -30,7 +39,7 @@ public class LoyaltyController {
         return loyaltyService.getAccount(userId);
     }
 
-    // نرجع نفس LoyaltyAccountResponse عشان ما نعمل كلاس جديد
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping("/user/{userId}/balance")
     public LoyaltyAccountResponse balance(@PathVariable Long userId) {
         if (userId == null)
@@ -38,15 +47,13 @@ public class LoyaltyController {
         return loyaltyService.getAccount(userId);
     }
 
-    //Earn
-
-    @PostMapping("/earn")
-    public LoyaltyAccountResponse earn(@Valid @RequestBody EarnRequest request) {
-        if (request == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        return loyaltyService.earn(request);
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/balance")
+    public LoyaltyAccountResponse myBalance(Authentication authentication) {
+        return loyaltyService.getMyAccount(authentication);
     }
-
+    //Earn
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PostMapping("/user/{userId}/earn")
     public LoyaltyAccountResponse earnForUser(@PathVariable Long userId,
                                               @Valid @RequestBody EarnRequest request) {
@@ -55,22 +62,22 @@ public class LoyaltyController {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
-        request.setUserId(userId);
-        return loyaltyService.earn(request);
+        return loyaltyService.earn(userId,request);
     }
 
 
     // Redeem + Preview
 
-    @PostMapping("/redeem")  // POST /loyalty/redeem
-    public LoyaltyAccountResponse redeem(@Valid @RequestBody RedeemRequest request) {
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/redeem")
+    public LoyaltyAccountResponse redeem(@Valid @RequestBody RedeemRequest request,
+                                         Authentication authentication) {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        return loyaltyService.redeem(request);
+        return loyaltyService.redeemMyPoints(request, authentication);
     }
-
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PostMapping("/user/{userId}/redeem")     // POST /loyalty/user/{userId}/redeem
-
     public LoyaltyAccountResponse redeemForUser(@PathVariable Long userId,
                                                 @Valid @RequestBody RedeemRequest request) {
         if (userId == null)
@@ -78,18 +85,20 @@ public class LoyaltyController {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
-        request.setUserId(userId);
-        return loyaltyService.redeem(request);
+        return loyaltyService.redeem(userId,request);
     }
 
-    @PostMapping("/redeem/preview")  // نفس RedeemRequest ونفس LoyaltyAccountResponse بس بدون حفظ
-    public LoyaltyAccountResponse previewRedeem(@Valid @RequestBody RedeemRequest request) {
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/redeem/preview")
+    public LoyaltyAccountResponse previewRedeem(@Valid @RequestBody RedeemRequest request,
+                                                Authentication authentication) {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        return loyaltyService.previewRedeem(request);
+        return loyaltyService.previewMyRedeem(request, authentication);
     }
 
     // POST /loyalty/user/{userId}/redeem/preview
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @PostMapping("/user/{userId}/redeem/preview")
     public LoyaltyAccountResponse previewRedeemForUser(@PathVariable Long userId,
                                                        @Valid @RequestBody RedeemRequest request) {
@@ -98,17 +107,21 @@ public class LoyaltyController {
         if (request == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
-        request.setUserId(userId);
-        return loyaltyService.previewRedeem(request);
+       return loyaltyService.previewRedeem(userId, request);
     }
 
     // History
-
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping("/user/{userId}/history")
     public List<LoyaltyTransactionResponse> history(@PathVariable Long userId) {
         if (userId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         return loyaltyService.history(userId);
+    }
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/history")
+    public List<LoyaltyTransactionResponse> myHistory(Authentication authentication) {
+        return loyaltyService.myHistory(authentication);
     }
 
 }

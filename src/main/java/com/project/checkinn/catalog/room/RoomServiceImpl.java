@@ -90,7 +90,7 @@ public class RoomServiceImpl implements RoomService{
         CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
 
 
-        if(requestedCurrency != baseCurrency){
+        if(requestedCurrency.equals(baseCurrency)){
             BigDecimal rate = exchangeRateService.getRate(baseCurrency,requestedCurrency);
             BigDecimal convertedPrice = exchangeRateService.convert(
                 r.getPricePerNight(),

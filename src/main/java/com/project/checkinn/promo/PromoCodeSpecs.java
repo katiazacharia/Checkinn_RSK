@@ -16,15 +16,6 @@ public class PromoCodeSpecs {
         return (root, q, cb) -> cb.like(cb.lower(root.get("code")), "%" + code.toLowerCase() + "%");
     }
 
-    public static Specification<PromoCode> discountMin(BigDecimal min) {
-        if (min == null) return null;
-        return (root, q, cb) -> cb.greaterThanOrEqualTo(root.get("discountValue"), min);
-    }
-
-    public static Specification<PromoCode> discountMax(BigDecimal max) {
-        if (max == null) return null;
-        return (root, q, cb) -> cb.lessThanOrEqualTo(root.get("discountValue"), max);
-    }
 
     public static Specification<PromoCode> validFromFrom(LocalDate from) {
         if (from == null) return null;

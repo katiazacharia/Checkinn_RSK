@@ -87,11 +87,11 @@ public class BookingServiceImpl implements BookingService {
                 request.getRoomId(),
                 BookingStatus.CANCELLED,
                 out,
-                in);
+                in
+        );
 
         if (conflicts > 0)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Dates not available for this room");
-
 
         User userRef = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
@@ -111,18 +111,36 @@ public class BookingServiceImpl implements BookingService {
         if (request.getGuests() > roomRef.getCapacity())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Guests exceed room capacity");
 
-        BigDecimal basePrice =
-                pricingService.calculateTotalPrice(roomRef, in, out);
+        BigDecimal basePrice = pricingService.calculateTotalPrice(roomRef, in, out);
+
+        CurrencyCode requestedCurrency =
+                request.getCurrency() != null ? request.getCurrency() : exchangeRateConfig.getBaseCurrency();
+
+        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
+
+        BigDecimal finalPrice;
+        BigDecimal exchangeRate;
+
+        if (requestedCurrency == baseCurrency) {
+            finalPrice = basePrice;
+            exchangeRate = BigDecimal.ONE;
+        } else {
+            exchangeRate = exchangeRateService.getRate(baseCurrency, requestedCurrency);
+            finalPrice = exchangeRateService.convert(basePrice, baseCurrency, requestedCurrency);
+        }
 
         Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
-        booking.setTotalPrice(basePrice);
-        booking.setStatus(BookingStatus.PENDING);
-        experiencePlusService.assignExtras(booking);
 
+        booking.setOriginalTotalPrice(basePrice);
+        booking.setCurrency(requestedCurrency);
+        booking.setExchangeRate(exchangeRate);
+        booking.setTotalPrice(finalPrice);
+        booking.setStatus(BookingStatus.PENDING);
+
+        experiencePlusService.assignExtras(booking);
 
         return bookingRepository.save(booking);
     }
-
     @Override
     public Booking getById(Long id) {
         return bookingRepository.findById(id)

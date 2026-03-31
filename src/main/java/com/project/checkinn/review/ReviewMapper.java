@@ -21,7 +21,6 @@ public class ReviewMapper {
         review.setBooking(booking);
         review.setRating(request.getRating());
         review.setComment(request.getComment());
-        review.setCreatedAt(LocalDateTime.now());
 
         return review;
     }

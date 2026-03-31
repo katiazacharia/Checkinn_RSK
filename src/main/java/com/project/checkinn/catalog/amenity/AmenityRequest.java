@@ -1,5 +1,7 @@
 package com.project.checkinn.catalog.amenity;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class AmenityRequest {
     private String name;
     private String icon;
@@ -7,6 +9,7 @@ public class AmenityRequest {
 
     public AmenityRequest() {}
 
+    @NotBlank
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 

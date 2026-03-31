@@ -1,30 +1,46 @@
 package com.project.checkinn.security;
 
 import com.project.checkinn.booking.reservation.BookingRepository;
+import com.project.checkinn.review.ReviewRepo;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 @Component("authz")
 public class AuthorizationService {
+    private final CurrentUserService currentUserService;
     private final BookingRepository bookingRepository;
+    private final ReviewRepo reviewRepo;
 
-    public AuthorizationService(BookingRepository bookingRepository) {
+    public AuthorizationService(CurrentUserService currentUserService,BookingRepository bookingRepository, ReviewRepo reviewRepo) {
+        this.currentUserService = currentUserService;
         this.bookingRepository = bookingRepository;
+        this.reviewRepo = reviewRepo;
     }
 
     public boolean isSelfUser(Long userId, Authentication authentication) {
-        Long tokenUserId = getUserId(authentication);
+        Long tokenUserId = currentUserService.getCurrentUserId(authentication);
         return tokenUserId != null && tokenUserId.equals(userId);
     }
 
     public boolean isBookingOwner(Long bookingId, Authentication authentication) {
-        Long tokenUserId = getUserId(authentication);
+        Long tokenUserId = currentUserService.getCurrentUserId(authentication);
         if (tokenUserId == null) return false;
 
         return bookingRepository.findById(bookingId)
                 .map(b -> b.getUser() != null
                         && tokenUserId.equals(b.getUser().getId()))
+                .orElse(false);
+    }
+
+    public boolean isReviewOwner(Long reviewId, Authentication authentication) {
+
+        if (reviewId == null) return false;
+
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+
+        return reviewRepo.findById(reviewId)
+                .map(review -> review.getUser().getId().equals(currentUserId))
                 .orElse(false);
     }
 

@@ -4,6 +4,7 @@ import com.project.checkinn.booking.reservation.Booking;
 import com.project.checkinn.booking.reservation.BookingRepository;
 import com.project.checkinn.common.NotificationStatus;
 import com.project.checkinn.common.NotificationType;
+import com.project.checkinn.security.CurrentUserService;
 import com.project.checkinn.user.profile.User;
 
 import com.project.checkinn.user.profile.UserRepo;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,6 +25,8 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final UserRepo userRepository;
     private final BookingRepository bookingRepository;
+    private final CurrentUserService currentUserService;
+
 
     @Override
     public Page<Notification> search(
@@ -46,6 +50,12 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationRepository.findAll(spec, pageable);
     }
 
+    @Override
+    public Page<Notification> searchMyNotifications(Long bookingId,NotificationType type, NotificationStatus status, LocalDateTime from, LocalDateTime to, String q, Authentication authentication, Pageable pageable) {
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        return search(currentUserId,bookingId,type,status,from,to,q,pageable);
+    }
+
 
     private final NotificationRepository notificationRepository;
     private final EntityManager entityManager;
@@ -53,11 +63,12 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationServiceImpl(NotificationRepository notificationRepository,
                                    EntityManager entityManager,
                                    UserRepo userRepository,
-                                   BookingRepository bookingRepository) {
+                                   BookingRepository bookingRepository, CurrentUserService currentUserService) {
         this.notificationRepository = notificationRepository;
         this.entityManager = entityManager;
         this.userRepository = userRepository;
         this.bookingRepository = bookingRepository;
+        this.currentUserService = currentUserService;
     }
 
     @Override
@@ -90,11 +101,13 @@ public class NotificationServiceImpl implements NotificationService {
 
         notification.setUser(user);
 
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND,
-                                "Booking with id " + bookingId + " not found"));
-
+        Booking booking = null;
+        if (bookingId != null) {
+            booking = bookingRepository.findById(bookingId)
+                    .orElseThrow(() ->
+                            new ResponseStatusException(HttpStatus.NOT_FOUND,
+                                    "Booking with id " + bookingId + " not found"));
+        }
         notification.setBooking(booking);
 
         notification.setType(type);
@@ -181,6 +194,24 @@ public class NotificationServiceImpl implements NotificationService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found");
         }
         notificationRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Notification> getMyNotifications(Authentication authentication) {
+        Long userId = currentUserService.getCurrentUserId(authentication);
+        return getByUser(userId);
+    }
+
+    @Override
+    public List<Notification> getMyUnread(Authentication authentication) {
+        Long userId = currentUserService.getCurrentUserId(authentication);
+        return getByUserAndStatus(userId, NotificationStatus.UNREAD);
+    }
+
+    @Override
+    public void markAllMyRead(Authentication authentication) {
+        Long userId = currentUserService.getCurrentUserId(authentication);
+        markReadAll(userId);
     }
 
 
