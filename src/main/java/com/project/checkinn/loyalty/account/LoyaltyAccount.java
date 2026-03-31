@@ -42,12 +42,9 @@ public class LoyaltyAccount {
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
 
-//    public enum Tier { BRONZE, SILVER, GOLD }
 
     public void recalculateTier() {
-        if (this.points >= 1500)     this.tier = Tier.GOLD;
-        else if (this.points >= 500) this.tier = Tier.SILVER;
-        else                         this.tier = Tier.BRONZE;
+        this.tier = Tier.fromPoints(this.points);
     }
 
     public Tier getTier() { return tier; }

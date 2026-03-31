@@ -83,7 +83,7 @@ public class PaymentServiceImpl implements PaymentService {
         Payment saved = paymentRepository.save(payment);
 
         int earnedPoints = booking.getTotalPrice()
-                .divide(BigDecimal.TEN, RoundingMode.FLOOR)
+                .divide(BigDecimal.valueOf(20),RoundingMode.FLOOR)
                 .intValue();
 
         if (earnedPoints > 0) {
@@ -219,7 +219,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(PaymentStatus.REFUNDED);
 
         int pointsToDeduct = payment.getAmount()
-                .divide(BigDecimal.TEN, RoundingMode.FLOOR)
+                .divide(BigDecimal.valueOf(20), RoundingMode.FLOOR)
                 .intValue();
 
         if (pointsToDeduct > 0) {
