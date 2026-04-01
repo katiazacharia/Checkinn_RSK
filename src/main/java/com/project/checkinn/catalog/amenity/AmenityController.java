@@ -1,5 +1,7 @@
 package com.project.checkinn.catalog.amenity;
 
+import com.project.checkinn.catalog.hotel.Hotel;
+import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -8,19 +10,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/amenities")
 public class AmenityController {
 
      private final AmenityService amenityService;
+    private final EntityManager entityManager;
 
-    public AmenityController(AmenityService amenityService) {
+    public AmenityController(AmenityService amenityService, EntityManager entityManager) {
         this.amenityService = amenityService;
+        this.entityManager = entityManager;
     }
 
     @GetMapping
@@ -79,6 +86,28 @@ public class AmenityController {
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
             Pageable pageable) {
         return amenityService.getAmenitiesForHotel(hotelId, pageable);
+    }
+    @GetMapping("/hotel/{hotelId}/with-name")
+    public Map<String, Object> getAmenitiesForHotelWithHotelName(
+            @PathVariable Long hotelId,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+
+
+        Page<AmenityResponse> amenities = amenityService.getAmenitiesForHotel(hotelId, pageable);
+
+
+        Hotel hotel = entityManager.find(Hotel.class, hotelId);
+        if (hotel == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
+        }
+
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("hotelName", hotel.getName());
+        response.put("amenities", amenities);
+
+        return response;
     }
 
 

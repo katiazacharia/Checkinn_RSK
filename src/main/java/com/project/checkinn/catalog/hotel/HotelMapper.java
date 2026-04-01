@@ -1,5 +1,9 @@
 package com.project.checkinn.catalog.hotel;
 
+import com.project.checkinn.catalog.room.RoomMapper;
+import com.project.checkinn.catalog.room.RoomResponse;
+
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -8,13 +12,13 @@ public class HotelMapper {
     private HotelMapper() {}
 
     public static HotelResponse toResponse(Hotel h) {
-        Set<Long> roomIds = h.getRooms().stream()
-                .map(r -> r.getId())
-                .collect(Collectors.toSet());
+        List<RoomResponse> rooms = h.getRooms().stream()
+                .map(RoomMapper::toResponse)
+                .toList();
 
-        Set<Long> amenityIds = h.getAmenities().stream()
-                .map(a -> a.getId())
-                .collect(Collectors.toSet());
+        List<String> amenities = h.getAmenities().stream()
+                .map(a -> a.getName())
+                .toList();
 
         return new HotelResponse(
                 h.getId(),
@@ -22,9 +26,7 @@ public class HotelMapper {
                 h.getCity(),
                 h.getAddress(),
                 h.getDescription(),
-                h.getImageUrl(),
-                roomIds,
-                amenityIds
+                amenities
         );
     }
 }
