@@ -49,6 +49,13 @@ public class RoomController {
     public RoomResponse one(@PathVariable Long id,@RequestParam(required = false) CurrencyCode currency) {
         return roomService.getById(id,currency);
     }
+    @GetMapping("/by-hotel/{hotelName}")
+    public Page<RoomResponse> getRoomsByHotelName(
+            @PathVariable String hotelName,
+            @PageableDefault(page = 0, size = 10) Pageable pageable
+    ) {
+        return roomService.getRoomsByHotelName(hotelName, pageable);
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
@@ -59,8 +66,8 @@ public class RoomController {
         RoomResponse saved = roomService.create(request);
 
         URI location = uriBuilder
-                .path("/rooms/{id}")
-                .buildAndExpand(saved.getId())
+                .path("/rooms/{hotelId}/{roomNumber}")
+                .buildAndExpand(saved.getHotelId(), saved.getRoomNumber())
                 .toUri();
 
         return ResponseEntity.created(location).body(saved);

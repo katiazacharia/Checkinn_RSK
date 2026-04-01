@@ -44,6 +44,16 @@ public class RoomServiceImpl implements RoomService {
         this.imageStorageService = imageStorageService;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomResponse> getRoomsByHotelName(String hotelName, Pageable pageable) {
+        Hotel hotel = hotelRepo.findByNameIgnoreCase(hotelName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
+
+        return roomRepo.findByHotelId(hotel.getId(), pageable)
+                .map(RoomMapper::toResponse);
+    }
+
 
     @Override
     @Transactional(readOnly = true)

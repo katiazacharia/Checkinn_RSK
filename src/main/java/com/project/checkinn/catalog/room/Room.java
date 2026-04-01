@@ -1,10 +1,13 @@
 package com.project.checkinn.catalog.room;
 
+import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(
@@ -72,4 +75,16 @@ public class Room {
 
     public RoomStatus getStatus() { return status; }
     public void setStatus(RoomStatus status) { this.status = status; }
+
+
+    @ManyToMany
+    @JoinTable(
+            name = "room_amenities",
+            joinColumns = @JoinColumn(name = "room_id"),
+            inverseJoinColumns = @JoinColumn(name = "amenity_id")
+    )
+    private Set<Amenity> amenities = new HashSet<>();
+
+    public Set<Amenity> getAmenities() { return amenities; }
+    public void setAmenities(Set<Amenity> amenities) { this.amenities = amenities; }
 }

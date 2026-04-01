@@ -42,6 +42,6 @@ public interface RoomService {
 
 
     String uploadImage(Long roomId, MultipartFile file);
-
+    Page<RoomResponse> getRoomsByHotelName(String hotelName, Pageable pageable);
 
 }

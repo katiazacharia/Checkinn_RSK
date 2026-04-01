@@ -45,7 +45,7 @@ public class DataSeeder {
             seedUsers(appUserRepository, userRepo, passwordEncoder);
             seedAmenities(amenityRepo);
             seedHotels(hotelRepo, amenityRepo);
-            seedRooms(hotelRepo, roomRepo);
+            seedRooms(hotelRepo, roomRepo, amenityRepo);
             seedPromoCodes(promoCodeRepository);
             seedExperienceExtras(experienceExtraRepo);
         };
@@ -111,12 +111,26 @@ public class DataSeeder {
     }
 
     private void seedAmenities(AmenityRepo repo) {
+
+        //hotel amenities
         createAmenityIfMissing(repo, "WiFi", "wifi", "High-speed wireless internet available in all areas.");
         createAmenityIfMissing(repo, "Pool", "pool", "Outdoor swimming pool for guests.");
         createAmenityIfMissing(repo, "Parking", "car", "Free on-site parking.");
         createAmenityIfMissing(repo, "Gym", "dumbbell", "Fitness center with essential equipment.");
         createAmenityIfMissing(repo, "Breakfast", "utensils", "Daily breakfast available.");
+
+        // Room amenities - new
+        createAmenityIfMissing(repo, "Mini Bar", "wine", "In-room mini bar with drinks and snacks.");
+        createAmenityIfMissing(repo, "Water Heater", "flame", "Electric water heater in room.");
+        createAmenityIfMissing(repo, "Air Conditioning", "wind", "Climate control air conditioning.");
+        createAmenityIfMissing(repo, "City View", "building", "Room with city view.");
+        createAmenityIfMissing(repo, "Sea View", "waves", "Room with sea view.");
+        createAmenityIfMissing(repo, "Sofa", "sofa", "Comfortable sofa in room.");
+        createAmenityIfMissing(repo, "Balcony", "door-open", "Private balcony.");
+        createAmenityIfMissing(repo, "Extra Bed for Baby", "baby", "Extra baby cot available on request.");
     }
+
+
 
     private void createAmenityIfMissing(AmenityRepo repo, String name, String icon, String description) {
         if (repo.existsByNameIgnoreCase(name)) {
@@ -173,6 +187,56 @@ public class DataSeeder {
         hotelRepo.save(h3);
     }
 
+    private void seedRooms(HotelRepo hotelRepo, RoomRepo roomRepo, AmenityRepo amenityRepo) {
+        if (roomRepo.count() > 0) return;
+
+        List<Hotel> hotels = hotelRepo.findAll();
+        if (hotels.size() < 3) return;
+
+        Hotel ammanHotel = hotels.get(0);
+        Hotel aqabaHotel = hotels.get(1);
+        Hotel petraHotel = hotels.get(2);
+
+        Amenity wifi = findAmenityByName(amenityRepo, "WiFi");
+        Amenity miniBar = findAmenityByName(amenityRepo, "Mini Bar");
+        Amenity waterHeater = findAmenityByName(amenityRepo, "Water Heater");
+        Amenity ac = findAmenityByName(amenityRepo, "Air Conditioning");
+        Amenity cityView = findAmenityByName(amenityRepo, "City View");
+        Amenity seaView = findAmenityByName(amenityRepo, "Sea View");
+        Amenity sofa = findAmenityByName(amenityRepo, "Sofa");
+        Amenity balcony = findAmenityByName(amenityRepo, "Balcony");
+        Amenity babyBed = findAmenityByName(amenityRepo, "Extra Bed for Baby");
+
+        // Amman Hotel rooms
+        createRoom(roomRepo, ammanHotel, "101", RoomType.SINGLE, "50.00", 1, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, cityView).stream().filter(java.util.Objects::nonNull).toList()));
+
+        createRoom(roomRepo, ammanHotel, "102", RoomType.DOUBLE, "80.00", 2, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa).stream().filter(java.util.Objects::nonNull).toList()));
+
+        createRoom(roomRepo, ammanHotel, "201", RoomType.SUITE, "150.00", 4, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa, balcony, babyBed, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
+
+        // Aqaba Hotel rooms
+        createRoom(roomRepo, aqabaHotel, "101", RoomType.SINGLE, "70.00", 1, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, seaView).stream().filter(java.util.Objects::nonNull).toList()));
+
+        createRoom(roomRepo, aqabaHotel, "102", RoomType.DOUBLE, "110.00", 2, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, seaView, balcony).stream().filter(java.util.Objects::nonNull).toList()));
+
+        createRoom(roomRepo, aqabaHotel, "202", RoomType.SUITE, "220.00", 4, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, seaView, sofa, balcony, babyBed, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
+
+        // Petra Hotel rooms
+        createRoom(roomRepo, petraHotel, "11", RoomType.SINGLE, "60.00", 1, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, cityView).stream().filter(java.util.Objects::nonNull).toList()));
+
+        createRoom(roomRepo, petraHotel, "12", RoomType.DOUBLE, "95.00", 2, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa).stream().filter(java.util.Objects::nonNull).toList()));
+
+        createRoom(roomRepo, petraHotel, "21", RoomType.SUITE, "180.00", 3, RoomStatus.AVAILABLE,
+                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa, balcony, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
+    }
     private Amenity findAmenityByName(AmenityRepo repo, String name) {
         return repo.findAll()
                 .stream()
@@ -181,38 +245,12 @@ public class DataSeeder {
                 .orElse(null);
     }
 
-    private void seedRooms(HotelRepo hotelRepo, RoomRepo roomRepo) {
-        if (roomRepo.count() > 0) {
-            return;
-        }
 
-        List<Hotel> hotels = hotelRepo.findAll();
-        if (hotels.size() < 3) {
-            return;
-        }
-
-        Hotel ammanHotel = hotels.get(0);
-        Hotel aqabaHotel = hotels.get(1);
-        Hotel petraHotel = hotels.get(2);
-
-        createRoom(roomRepo, ammanHotel, "101", RoomType.SINGLE, "50.00", 1, RoomStatus.AVAILABLE);
-        createRoom(roomRepo, ammanHotel, "102", RoomType.DOUBLE, "80.00", 2, RoomStatus.AVAILABLE);
-        createRoom(roomRepo, ammanHotel, "201", RoomType.SUITE, "150.00", 4, RoomStatus.AVAILABLE);
-
-        createRoom(roomRepo, aqabaHotel, "101", RoomType.SINGLE, "70.00", 1, RoomStatus.AVAILABLE);
-        createRoom(roomRepo, aqabaHotel, "102", RoomType.DOUBLE, "110.00", 2, RoomStatus.AVAILABLE);
-        createRoom(roomRepo, aqabaHotel, "202", RoomType.SUITE, "220.00", 4, RoomStatus.AVAILABLE);
-
-        createRoom(roomRepo, petraHotel, "11", RoomType.SINGLE, "60.00", 1, RoomStatus.AVAILABLE);
-        createRoom(roomRepo, petraHotel, "12", RoomType.DOUBLE, "95.00", 2, RoomStatus.AVAILABLE);
-        createRoom(roomRepo, petraHotel, "21", RoomType.SUITE, "180.00", 3, RoomStatus.AVAILABLE);
-    }
 
     private void createRoom(RoomRepo repo, Hotel hotel, String roomNumber,
-                            RoomType type, String price, int capacity, RoomStatus status) {
-        if (repo.existsByHotelIdAndRoomNumber(hotel.getId(), roomNumber)) {
-            return;
-        }
+                            RoomType type, String price, int capacity, RoomStatus status,
+                            java.util.Set<Amenity> amenities) {
+        if (repo.existsByHotelIdAndRoomNumber(hotel.getId(), roomNumber)) return;
 
         Room room = new Room();
         room.setHotel(hotel);
@@ -221,6 +259,7 @@ public class DataSeeder {
         room.setPricePerNight(new BigDecimal(price));
         room.setCapacity(capacity);
         room.setStatus(status);
+        room.setAmenities(amenities);
         repo.save(room);
     }
 
