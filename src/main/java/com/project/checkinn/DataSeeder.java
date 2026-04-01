@@ -156,32 +156,31 @@ public class DataSeeder {
         Amenity breakfast = findAmenityByName(amenityRepo, "Breakfast");
 
         Hotel h1 = new Hotel();
-        h1.setName("CheckInn Grand Amman");
-        h1.setCity("Amman");
-        h1.setAddress("7th Circle, Amman");
-        h1.setDescription("Modern hotel in Amman with comfortable rooms and premium services.");
+        h1.setName("CheckInn Grand Istanbul");
+        h1.setCity("Istanbul");
+        h1.setAddress("Sultanahmet, Istanbul");
+        h1.setDescription("Luxury hotel in the heart of Istanbul with stunning Bosphorus views.");
         h1.setAmenities(new java.util.HashSet<>(java.util.List.of(
                 wifi, parking, breakfast, gym
         ).stream().filter(java.util.Objects::nonNull).toList()));
 
         Hotel h2 = new Hotel();
-        h2.setName("Aqaba Sea View");
-        h2.setCity("Aqaba");
-        h2.setAddress("Corniche Road, Aqaba");
-        h2.setDescription("Sea-side stay with relaxing rooms and easy beach access.");
+        h2.setName("Ankara City Hotel");
+        h2.setCity("Ankara");
+        h2.setAddress("Kizilay, Ankara");
+        h2.setDescription("Modern hotel in Turkey's capital with easy access to city attractions.");
         h2.setAmenities(new java.util.HashSet<>(java.util.List.of(
                 wifi, pool, breakfast
         ).stream().filter(java.util.Objects::nonNull).toList()));
 
         Hotel h3 = new Hotel();
-        h3.setName("Petra Desert Lodge");
-        h3.setCity("Petra");
-        h3.setAddress("Tourism Street, Petra");
-        h3.setDescription("Quiet lodge near Petra attractions with cozy rooms.");
+        h3.setName("Izmir Pearl");
+        h3.setCity("Izmir");
+        h3.setAddress("Kordon, Izmir");
+        h3.setDescription("Cozy hotel by the Aegean sea with beautiful sunset views.");
         h3.setAmenities(new java.util.HashSet<>(java.util.List.of(
                 wifi, parking
         ).stream().filter(java.util.Objects::nonNull).toList()));
-
         hotelRepo.save(h1);
         hotelRepo.save(h2);
         hotelRepo.save(h3);
@@ -193,9 +192,9 @@ public class DataSeeder {
         List<Hotel> hotels = hotelRepo.findAll();
         if (hotels.size() < 3) return;
 
-        Hotel ammanHotel = hotels.get(0);
-        Hotel aqabaHotel = hotels.get(1);
-        Hotel petraHotel = hotels.get(2);
+        Hotel istanbulHotel = hotels.get(0);
+        Hotel ankaraHotel = hotels.get(1);
+        Hotel izmirHotel = hotels.get(2);
 
         Amenity wifi = findAmenityByName(amenityRepo, "WiFi");
         Amenity miniBar = findAmenityByName(amenityRepo, "Mini Bar");
@@ -207,34 +206,35 @@ public class DataSeeder {
         Amenity balcony = findAmenityByName(amenityRepo, "Balcony");
         Amenity babyBed = findAmenityByName(amenityRepo, "Extra Bed for Baby");
 
-        // Amman Hotel rooms
-        createRoom(roomRepo, ammanHotel, "101", RoomType.SINGLE, "50.00", 1, RoomStatus.AVAILABLE,
+        // Istanbul Hotel rooms
+        createRoom(roomRepo, istanbulHotel, "101", RoomType.SINGLE, "50.00", 1, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, cityView).stream().filter(java.util.Objects::nonNull).toList()));
 
-        createRoom(roomRepo, ammanHotel, "102", RoomType.DOUBLE, "80.00", 2, RoomStatus.AVAILABLE,
+        createRoom(roomRepo, istanbulHotel, "102", RoomType.DOUBLE, "80.00", 2, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa).stream().filter(java.util.Objects::nonNull).toList()));
 
-        createRoom(roomRepo, ammanHotel, "201", RoomType.SUITE, "150.00", 4, RoomStatus.AVAILABLE,
+        createRoom(roomRepo, istanbulHotel, "201", RoomType.SUITE, "150.00", 4, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa, balcony, babyBed, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
 
-        // Aqaba Hotel rooms
-        createRoom(roomRepo, aqabaHotel, "101", RoomType.SINGLE, "70.00", 1, RoomStatus.AVAILABLE,
+        // Ankara Hotel rooms
+
+        createRoom(roomRepo, ankaraHotel, "101", RoomType.SINGLE, "70.00", 1, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, seaView).stream().filter(java.util.Objects::nonNull).toList()));
 
-        createRoom(roomRepo, aqabaHotel, "102", RoomType.DOUBLE, "110.00", 2, RoomStatus.AVAILABLE,
+        createRoom(roomRepo, ankaraHotel, "102", RoomType.DOUBLE, "110.00", 2, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, seaView, balcony).stream().filter(java.util.Objects::nonNull).toList()));
 
-        createRoom(roomRepo, aqabaHotel, "202", RoomType.SUITE, "220.00", 4, RoomStatus.AVAILABLE,
+        createRoom(roomRepo, ankaraHotel, "202", RoomType.SUITE, "220.00", 4, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, seaView, sofa, balcony, babyBed, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
 
-        // Petra Hotel rooms
-        createRoom(roomRepo, petraHotel, "11", RoomType.SINGLE, "60.00", 1, RoomStatus.AVAILABLE,
+        // Izmir Hotel rooms
+        createRoom(roomRepo, izmirHotel, "11", RoomType.SINGLE, "60.00", 1, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, cityView).stream().filter(java.util.Objects::nonNull).toList()));
 
-        createRoom(roomRepo, petraHotel, "12", RoomType.DOUBLE, "95.00", 2, RoomStatus.AVAILABLE,
+        createRoom(roomRepo, izmirHotel, "12", RoomType.DOUBLE, "95.00", 2, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa).stream().filter(java.util.Objects::nonNull).toList()));
 
-        createRoom(roomRepo, petraHotel, "21", RoomType.SUITE, "180.00", 3, RoomStatus.AVAILABLE,
+        createRoom(roomRepo, izmirHotel, "21", RoomType.SUITE, "180.00", 3, RoomStatus.AVAILABLE,
                 new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa, balcony, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
     }
     private Amenity findAmenityByName(AmenityRepo repo, String name) {
