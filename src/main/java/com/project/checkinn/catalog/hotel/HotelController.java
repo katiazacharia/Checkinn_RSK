@@ -1,25 +1,17 @@
 package com.project.checkinn.catalog.hotel;
 
-import com.project.checkinn.catalog.amenity.Amenity;
-import com.project.checkinn.catalog.amenity.AmenityRepo;
-import com.project.checkinn.catalog.amenity.AmenityRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/hotels")
@@ -29,7 +21,6 @@ public class HotelController {
 
     public HotelController(HotelService hotelService) {
         this.hotelService = hotelService;
-
     }
 
     @GetMapping
@@ -78,38 +69,13 @@ public class HotelController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/search")
-    public Page<HotelResponse> search(
-            @RequestParam(required = false) String city,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) Long amenityId,
-            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
-        return hotelService.search(city, name, amenityId, pageable);
-    }
-
-    @PostMapping("/{id}/amenities/{amenityId}")
+    @PostMapping("/{id}/image")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<HotelResponse> addAmenity(@PathVariable Long id, @PathVariable Long amenityId) {
-
-        return ResponseEntity.ok(hotelService.addAmenity(id, amenityId));
-    }
-
-    @DeleteMapping("/{id}/amenities/{amenityId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<HotelResponse> removeAmenity(@PathVariable Long id, @PathVariable Long amenityId) {
-        return ResponseEntity.ok(hotelService.removeAmenity(id, amenityId));
-    }
-
-    @PutMapping("/{id}/amenities")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<HotelResponse> replaceAmenities(
+    public ResponseEntity<String> uploadHotelImage(
             @PathVariable Long id,
-            @RequestBody HotelRequest req
+            @RequestParam("file") MultipartFile file
     ) {
-
-        return ResponseEntity.ok(hotelService.replaceAmenities(id,req.getAmenityIds()));
+        String imageUrl = hotelService.uploadImage(id, file);
+        return ResponseEntity.ok(imageUrl);
     }
-
 }

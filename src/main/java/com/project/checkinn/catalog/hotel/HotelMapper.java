@@ -29,11 +29,4 @@ public class HotelMapper {
                 amenities
         );
     }
-
-    public static void updateEntity(Hotel h, HotelRequest req) {
-        if (req.getName() != null && !req.getName().isBlank()) h.setName(req.getName().trim());
-        if (req.getCity() != null && !req.getCity().isBlank()) h.setCity(req.getCity().trim());
-        h.setAddress(req.getAddress());
-        h.setDescription(req.getDescription());
-    }
 }

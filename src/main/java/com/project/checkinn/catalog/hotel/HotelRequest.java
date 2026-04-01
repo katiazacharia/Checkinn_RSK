@@ -1,13 +1,24 @@
 package com.project.checkinn.catalog.hotel;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.Set;
 
 public class HotelRequest {
-    private String name;
-    private String city;
-    private String address;
-    private String description;
 
+    @NotBlank(message = "Hotel name is required")
+    @Size(max = 255, message = "Name must be less than 255 characters")
+    private String name;
+
+    @NotBlank(message = "City is required")
+    @Size(max = 100, message = "City must be less than 100 characters")
+    private String city;
+
+    @Size(max = 255, message = "Address must be less than 255 characters")
+    private String address;
+
+    @Size(max = 1000, message = "Description must be less than 1000 characters")
+    private String description;
 
     private Set<Long> amenityIds;
 

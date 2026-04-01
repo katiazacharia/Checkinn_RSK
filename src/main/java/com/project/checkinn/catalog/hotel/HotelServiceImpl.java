@@ -1,29 +1,31 @@
 package com.project.checkinn.catalog.hotel;
 
+import com.project.checkinn.ImageStorageService;
 import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.amenity.AmenityRepo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import static com.project.checkinn.catalog.hotel.HotelMapper.toResponse;
 
 @Service
-public class HotelServiceImpl implements HotelService{
-
+public class HotelServiceImpl implements HotelService {
 
     private final HotelRepo hotelRepo;
     private final AmenityRepo amenityRepo;
+    private final ImageStorageService imageStorageService;
 
-    public HotelServiceImpl(HotelRepo hotelRepo, AmenityRepo amenityRepo) {
+    public HotelServiceImpl(HotelRepo hotelRepo,
+                            AmenityRepo amenityRepo,
+                            ImageStorageService imageStorageService) {
         this.hotelRepo = hotelRepo;
         this.amenityRepo = amenityRepo;
+        this.imageStorageService = imageStorageService;
     }
 
     @Override
@@ -35,22 +37,20 @@ public class HotelServiceImpl implements HotelService{
     public HotelResponse getById(Long id) {
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-        return toResponse(h);
+        return HotelMapper.toResponse(h);
     }
 
     @Override
     public HotelResponse create(HotelRequest req) {
 
-        if(req == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"request is required");
+        if (req == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
-        if (req.getName() == null || req.getName().isBlank()) {
+        if (req.getName() == null || req.getName().isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
-        }
 
-        if (req.getCity() == null || req.getCity().isBlank()) {
+        if (req.getCity() == null || req.getCity().isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "City is required");
-        }
 
         Hotel h = new Hotel();
         h.setName(req.getName().trim());
@@ -69,15 +69,17 @@ public class HotelServiceImpl implements HotelService{
     @Override
     public HotelResponse update(Long id, HotelRequest req) {
 
-
-        if(req == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"request is required");
+        if (req == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
 
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
-        if (req.getName() != null && !req.getName().isBlank()) h.setName(req.getName().trim());
-        if (req.getCity() != null && !req.getCity().isBlank()) h.setCity(req.getCity().trim());
+        if (req.getName() != null && !req.getName().isBlank())
+            h.setName(req.getName().trim());
+
+        if (req.getCity() != null && !req.getCity().isBlank())
+            h.setCity(req.getCity().trim());
 
         h.setAddress(req.getAddress());
         h.setDescription(req.getDescription());
@@ -92,11 +94,9 @@ public class HotelServiceImpl implements HotelService{
 
     @Override
     public void delete(Long id) {
-
         if (!hotelRepo.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
         }
-
         hotelRepo.deleteById(id);
     }
 
@@ -180,8 +180,17 @@ public class HotelServiceImpl implements HotelService{
         return HotelMapper.toResponse(hotelRepo.save(h));
     }
 
+    @Override
+    public String uploadImage(Long hotelId, MultipartFile file) {
 
+        Hotel hotel = hotelRepo.findById(hotelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
+        String imageUrl = imageStorageService.saveHotelImage(file);
 
+        hotel.setImageUrl(imageUrl);
+        hotelRepo.save(hotel);
 
+        return imageUrl;
+    }
 }

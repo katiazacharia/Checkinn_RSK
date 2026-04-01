@@ -3,7 +3,6 @@ package com.project.checkinn.catalog.hotel;
 import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.room.Room;
 import jakarta.persistence.*;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,8 +14,24 @@ public class Hotel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(nullable = false)
     private String name;
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     @Column(nullable = false)
     private String city;
@@ -26,10 +41,15 @@ public class Hotel {
     @Column(length = 1000)
     private String description;
 
-    @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "hotel",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
     private Set<Room> rooms = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "hotel_amenities",
             joinColumns = @JoinColumn(name = "hotel_id"),
@@ -40,6 +60,7 @@ public class Hotel {
     public Hotel() {}
 
     // getters & setters
+
     public Long getId() { return id; }
 
     public String getName() { return name; }
