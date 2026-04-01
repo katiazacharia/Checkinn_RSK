@@ -1,6 +1,8 @@
 package com.project.checkinn.error;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -15,13 +17,15 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex, HttpServletRequest req) {
         int status = ex.getStatusCode().value();
 
         ApiError body = new ApiError(
                 status,
-                ex.getReason(),
+                ex.getReason() != null ? ex.getReason() : "Unexpected error",
                 req.getRequestURI(),
                 LocalDateTime.now(),
                 List.of()
@@ -53,9 +57,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest req) {
 
+        log.error("Unexpected error occurred at {}: {}", req.getRequestURI(), ex.getMessage(), ex);
+
         ApiError body = new ApiError(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Unexpected error",
+                "Something went wrong. Please try again later.",
                 req.getRequestURI(),
                 LocalDateTime.now(),
                 List.of()

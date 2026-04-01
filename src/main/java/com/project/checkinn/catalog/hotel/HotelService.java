@@ -3,11 +3,15 @@ package com.project.checkinn.catalog.hotel;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.Set;
 
 
 
 public interface HotelService {
+
+    String uploadImage(Long hotelId, MultipartFile file);
 
 
     Page<HotelResponse> getAll(Pageable pageable);

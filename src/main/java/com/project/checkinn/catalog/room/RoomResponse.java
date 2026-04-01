@@ -15,6 +15,8 @@ public class RoomResponse {
     private BigDecimal exchangeRate;
     private int capacity;
     private RoomStatus status;
+    private String imageUrl;
+
 
     public RoomResponse() {}
 
@@ -68,4 +70,11 @@ public class RoomResponse {
     public void setPricePerNight(BigDecimal pricePerNight) { this.pricePerNight = pricePerNight; }
     public void setCapacity(int capacity) { this.capacity = capacity; }
     public void setStatus(RoomStatus status) { this.status = status; }
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }

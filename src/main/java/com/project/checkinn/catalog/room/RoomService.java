@@ -12,6 +12,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -38,5 +39,9 @@ public interface RoomService {
     RoomResponse update(Long id, RoomRequest req);
 
     void delete(Long id);
+
+
+    String uploadImage(Long roomId, MultipartFile file);
+
 
 }

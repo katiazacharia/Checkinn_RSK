@@ -35,19 +35,25 @@ public class SecurityConfig {
     private final CustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+    public SecurityConfig(CustomUserDetailsService userDetailsService,
+                          PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
+
                         .requestMatchers(
-                                "/", "/login", "/error",
+                                "/",
+                                "/login",
+                                "/error",
                                 "/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
@@ -55,6 +61,8 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/api-docs/**"
                         ).permitAll()
+
+                        .requestMatchers("/hotels/**", "/rooms/**").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/users/me").authenticated()
@@ -76,6 +84,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
 
                         .requestMatchers(HttpMethod.POST, "/payments/**").hasRole("CUSTOMER")
+
 
                         .requestMatchers(HttpMethod.GET, "/amenities/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/amenities/**").hasAnyRole("ADMIN", "MANAGER")
@@ -104,6 +113,7 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
+
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) ->
                                 writeErrorResponse(
@@ -124,6 +134,7 @@ public class SecurityConfig {
                                 )
                         )
                 )
+
                 .oauth2ResourceServer(oauth ->
                         oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()))
                 );
@@ -138,6 +149,7 @@ public class SecurityConfig {
             String message,
             String path
     ) throws IOException {
+
         response.setStatus(status);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
@@ -154,7 +166,8 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
@@ -166,6 +179,7 @@ public class SecurityConfig {
 
     @Bean
     public Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthConverter() {
+
         JwtGrantedAuthoritiesConverter conv = new JwtGrantedAuthoritiesConverter();
         conv.setAuthoritiesClaimName("roles");
         conv.setAuthorityPrefix("ROLE_");

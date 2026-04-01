@@ -7,23 +7,25 @@ import java.math.BigDecimal;
 
 public class RoomMapper {
 
-
     private RoomMapper() {}
 
     public static RoomResponse toResponse(Room r) {
-       RoomResponse response = new RoomResponse(
-               r.getId(),
-               r.getHotel().getId(),
-               r.getRoomNumber(),
-               r.getType(),
-               r.getPricePerNight(),
-               r.getCapacity(),
-               r.getStatus()
 
-       );
+        RoomResponse response = new RoomResponse(
+                r.getId(),
+                r.getHotel().getId(),
+                r.getRoomNumber(),
+                r.getType(),
+                r.getPricePerNight(),
+                r.getCapacity(),
+                r.getStatus()
+        );
+
         response.setCurrency(CurrencyCode.ILS.name());
         response.setOriginalPricePerNight(r.getPricePerNight());
-       response.setExchangeRate(BigDecimal.ONE);
+        response.setExchangeRate(BigDecimal.ONE);
+
+        response.setImageUrl(r.getImageUrl());
 
         return response;
     }

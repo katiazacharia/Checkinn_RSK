@@ -4,7 +4,6 @@ import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 
 @Entity
@@ -18,7 +17,18 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "hotel_id")
     private Hotel hotel;
 
@@ -42,6 +52,7 @@ public class Room {
     public Room() {}
 
     // getters & setters
+
     public Long getId() { return id; }
 
     public Hotel getHotel() { return hotel; }

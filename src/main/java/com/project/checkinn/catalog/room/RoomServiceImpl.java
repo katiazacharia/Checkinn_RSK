@@ -1,5 +1,6 @@
 package com.project.checkinn.catalog.room;
 
+import com.project.checkinn.ImageStorageService;
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
 import com.project.checkinn.common.CurrencyCode;
@@ -14,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -22,19 +24,26 @@ import java.util.List;
 
 
 @Service
-public class RoomServiceImpl implements RoomService{
+public class RoomServiceImpl implements RoomService {
 
     private final RoomRepo roomRepo;
     private final HotelRepo hotelRepo;
     private final ExchangeRateService exchangeRateService;
     private final ExchangeRateConfig exchangeRateConfig;
+    private final ImageStorageService imageStorageService;
 
-    public RoomServiceImpl(RoomRepo roomRepo, HotelRepo hotelRepo, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig) {
+    public RoomServiceImpl(RoomRepo roomRepo,
+                           HotelRepo hotelRepo,
+                           ExchangeRateService exchangeRateService,
+                           ExchangeRateConfig exchangeRateConfig,
+                           ImageStorageService imageStorageService) {
         this.roomRepo = roomRepo;
         this.hotelRepo = hotelRepo;
         this.exchangeRateService = exchangeRateService;
         this.exchangeRateConfig = exchangeRateConfig;
+        this.imageStorageService = imageStorageService;
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -90,7 +99,7 @@ public class RoomServiceImpl implements RoomService{
         CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
 
 
-        if(requestedCurrency.equals(baseCurrency)){
+        if(!requestedCurrency.equals(baseCurrency)){
             BigDecimal rate = exchangeRateService.getRate(baseCurrency,requestedCurrency);
             BigDecimal convertedPrice = exchangeRateService.convert(
                 r.getPricePerNight(),
@@ -195,4 +204,19 @@ public class RoomServiceImpl implements RoomService{
         roomRepo.deleteById(id);
     }
 
-}
+
+    @Override
+    public String uploadImage(Long roomId, MultipartFile file) {
+
+        Room room = roomRepo.findById(roomId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
+
+        String imageUrl = imageStorageService.saveRoomImage(file);
+
+        room.setImageUrl(imageUrl);
+        roomRepo.save(room);
+
+        return imageUrl;
+    }
+
+    }
