@@ -26,8 +26,7 @@ public class HotelMapper {
                 h.getCity(),
                 h.getAddress(),
                 h.getDescription(),
-                amenities,
-                rooms
+                amenities
         );
     }
 
