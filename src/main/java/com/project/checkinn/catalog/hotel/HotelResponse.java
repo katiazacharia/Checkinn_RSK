@@ -14,6 +14,16 @@ public class HotelResponse {
     private String description;
     private List<String> amenities;
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    private String imageUrl;
+
     public HotelResponse() {}
 
     public HotelResponse(Long id, String name, String city, String address, String description,

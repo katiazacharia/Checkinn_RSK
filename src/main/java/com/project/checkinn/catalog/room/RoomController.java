@@ -92,6 +92,7 @@ public class RoomController {
 
 
     @PostMapping("/{id}/image")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<String> uploadRoomImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file

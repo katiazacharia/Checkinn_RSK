@@ -12,15 +12,11 @@ public class HotelMapper {
     private HotelMapper() {}
 
     public static HotelResponse toResponse(Hotel h) {
-        List<RoomResponse> rooms = h.getRooms().stream()
-                .map(RoomMapper::toResponse)
-                .toList();
-
         List<String> amenities = h.getAmenities().stream()
                 .map(a -> a.getName())
                 .toList();
 
-        return new HotelResponse(
+        HotelResponse response = new HotelResponse(
                 h.getId(),
                 h.getName(),
                 h.getCity(),
@@ -28,5 +24,9 @@ public class HotelMapper {
                 h.getDescription(),
                 amenities
         );
+
+        response.setImageUrl(h.getImageUrl());
+
+        return response;
     }
 }
