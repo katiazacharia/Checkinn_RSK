@@ -80,36 +80,6 @@ public class AmenityController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/hotel/{hotelId}")
-    public Page<AmenityResponse> getAmenitiesForHotel(
-            @PathVariable Long hotelId,
-            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
-            Pageable pageable) {
-        return amenityService.getAmenitiesForHotel(hotelId, pageable);
-    }
-    @GetMapping("/hotel/{hotelId}/with-name")
-    public Map<String, Object> getAmenitiesForHotelWithHotelName(
-            @PathVariable Long hotelId,
-            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
-            Pageable pageable) {
-
-
-        Page<AmenityResponse> amenities = amenityService.getAmenitiesForHotel(hotelId, pageable);
-
-
-        Hotel hotel = entityManager.find(Hotel.class, hotelId);
-        if (hotel == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
-        }
-
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("hotelName", hotel.getName());
-        response.put("amenities", amenities);
-
-        return response;
-    }
-
 
     @PostMapping("/{amenityId}/hotel/{hotelId}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
@@ -124,5 +94,26 @@ public class AmenityController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAmenityFromHotel(@PathVariable Long amenityId, @PathVariable Long hotelId) {
         amenityService.removeAmenityFromHotel(hotelId, amenityId);
+    }
+
+
+
+    @GetMapping("/{hotelId}/amenities")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public Page<AmenityResponse> getAmenitiesByHotelId(
+            @PathVariable Long hotelId,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return amenityService.getAmenitiesForHotel(hotelId, pageable);
+    }
+
+    @GetMapping("/{hotelName}/amenities")
+    public Page<AmenityResponse> getAmenitiesByHotelName(
+            @PathVariable String hotelName,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return amenityService.getAmenitiesForHotelName(hotelName, pageable);
     }
 }

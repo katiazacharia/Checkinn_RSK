@@ -1,6 +1,7 @@
 package com.project.checkinn.catalog.amenity;
 
 import com.project.checkinn.catalog.hotel.Hotel;
+import com.project.checkinn.catalog.hotel.HotelRepo;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +16,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
+import static com.project.checkinn.catalog.amenity.AmenityMapper.toResponse;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 
 @Service
@@ -23,10 +25,13 @@ public class AmenityServiceImpl implements AmenityService {
 
     private final AmenityRepo amenityRepo;
     private final EntityManager entityManager;
+    private final HotelRepo hotelRepository;
 
-    public AmenityServiceImpl(AmenityRepo amenityRepo, EntityManager entityManager) {
+
+    public AmenityServiceImpl(AmenityRepo amenityRepo, EntityManager entityManager, HotelRepo hotelRepository) {
         this.amenityRepo = amenityRepo;
         this.entityManager = entityManager;
+        this.hotelRepository = hotelRepository;
     }
 
     @Override
@@ -40,7 +45,7 @@ public class AmenityServiceImpl implements AmenityService {
             page = amenityRepo.findAll(pageable);
         }
 
-        return page.map(this::toResponse);
+        return page.map(AmenityMapper::toResponse);
     }
 
     @Override
@@ -52,7 +57,7 @@ public class AmenityServiceImpl implements AmenityService {
     @Override
     public AmenityResponse getById(Long id) {
         Amenity a = amenityRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Amenity not found"));
         return toResponse(a);
     }
 
@@ -79,7 +84,7 @@ public class AmenityServiceImpl implements AmenityService {
     public AmenityResponse update(Long id, AmenityRequest req) {
 
         Amenity a = amenityRepo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Amenity not found"));
 
         if (req.getName() != null && !req.getName().isBlank()) {
             String newName = req.getName().trim();
@@ -102,7 +107,7 @@ public class AmenityServiceImpl implements AmenityService {
     public void delete(Long id) {
 
         if (!amenityRepo.existsById(id))
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found");
+            throw new ResponseStatusException(NOT_FOUND, "Amenity not found");
 
         amenityRepo.deleteById(id);
     }
@@ -114,10 +119,10 @@ public class AmenityServiceImpl implements AmenityService {
         Hotel hotel = entityManager.find(Hotel.class, hotelId);
 
         if (hotel == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
+            throw new ResponseStatusException(NOT_FOUND, "Hotel not found");
 
         Amenity amenity = amenityRepo.findById(amenityId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Amenity not found"));
 
         hotel.getAmenities().add(amenity);
         amenity.getHotels().add(hotel);
@@ -130,10 +135,10 @@ public class AmenityServiceImpl implements AmenityService {
         Hotel hotel = entityManager.find(Hotel.class, hotelId);
 
         if (hotel == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
+            throw new ResponseStatusException(NOT_FOUND, "Hotel not found");
 
         Amenity amenity = amenityRepo.findById(amenityId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Amenity not found"));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Amenity not found"));
 
         hotel.getAmenities().remove(amenity);
         amenity.getHotels().remove(hotel);
@@ -145,10 +150,10 @@ public class AmenityServiceImpl implements AmenityService {
         Hotel hotel = entityManager.find(Hotel.class, hotelId);
 
         if (hotel == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
+            throw new ResponseStatusException(NOT_FOUND, "Hotel not found");
 
         return amenityRepo.findByHotels_Id(hotelId, pageable)
-                .map(this::toResponse);
+                .map(a -> AmenityMapper.toResponseWithoutHotels(a));
     }
 
     @Override
@@ -159,19 +164,16 @@ public class AmenityServiceImpl implements AmenityService {
         return getAmenitiesForHotel(hotelId, defaultPageable).getContent();
     }
 
-    private AmenityResponse toResponse(Amenity a) {
+    @Override
+    public Page<AmenityResponse> getAmenitiesForHotelName(String hotelName, Pageable pageable) {
+        Hotel hotel = hotelRepository.findByNameIgnoreCase(hotelName)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Hotel not found"));
 
-        Set<Long> hotelIds = a.getHotels().stream()
-                .map(Hotel::getId)
-                .collect(Collectors.toSet());
 
-        return new AmenityResponse(
-                a.getId(),
-                a.getName(),
-                a.getIcon(),
-                a.getDescription(),
-                hotelIds
-        );
+        return amenityRepo.findByHotels_Id(hotel.getId(), pageable)
+                .map(a -> AmenityMapper.toResponseWithoutHotels(a));
     }
+
+
 
 }

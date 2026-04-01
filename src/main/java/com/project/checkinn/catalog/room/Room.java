@@ -12,7 +12,7 @@ import java.util.Set;
 @Entity
 @Table(
         name = "rooms",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"hotel_id", "roomNumber"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"hotel_id", "room_number"})
 )
 public class Room {
 
@@ -20,23 +20,13 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "image_url")
-    private String imageUrl;
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "hotel_id")
+    @JoinColumn(name = "hotel_id", nullable = false)
     private Hotel hotel;
 
-    @Column(nullable = false)
+    @Column(name = "room_number", nullable = false)
     private String roomNumber;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -51,6 +41,19 @@ public class Room {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoomStatus status;
+
+    @ElementCollection
+    @CollectionTable(name = "room_images", joinColumns = @JoinColumn(name = "room_id"))
+    @Column(name = "image_url")
+    private Set<String> imageUrls = new HashSet<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "room_amenities",
+            joinColumns = @JoinColumn(name = "room_id"),
+            inverseJoinColumns = @JoinColumn(name = "amenity_id"))
+    private Set<Amenity> amenities = new HashSet<>();
+
 
     public Room() {}
 
@@ -76,14 +79,13 @@ public class Room {
     public RoomStatus getStatus() { return status; }
     public void setStatus(RoomStatus status) { this.status = status; }
 
+    public Set<String> getImageUrls() {
+        return imageUrls;
+    }
 
-    @ManyToMany
-    @JoinTable(
-            name = "room_amenities",
-            joinColumns = @JoinColumn(name = "room_id"),
-            inverseJoinColumns = @JoinColumn(name = "amenity_id")
-    )
-    private Set<Amenity> amenities = new HashSet<>();
+    public void setImageUrls(Set<String> imageUrls) {
+        this.imageUrls = imageUrls;
+    }
 
     public Set<Amenity> getAmenities() { return amenities; }
     public void setAmenities(Set<Amenity> amenities) { this.amenities = amenities; }

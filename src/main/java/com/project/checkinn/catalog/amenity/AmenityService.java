@@ -26,4 +26,6 @@ public interface AmenityService {
 
     List<AmenityResponse> getAmenitiesForHotel(Long hotelId);
 
+    Page<AmenityResponse> getAmenitiesForHotelName(String hotelName, Pageable pageable);
+
 }

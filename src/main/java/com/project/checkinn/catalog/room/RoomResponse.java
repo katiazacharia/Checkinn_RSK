@@ -7,8 +7,8 @@ import java.util.Set;
 
 public class RoomResponse {
 
+    private Long id;
     private Long hotelId;
-    private String roomNumber;
     private RoomType type;
     private BigDecimal pricePerNight;
     private String currency;
@@ -16,26 +16,27 @@ public class RoomResponse {
     private BigDecimal exchangeRate;
     private int capacity;
     private RoomStatus status;
-    private String imageUrl;
+    private  Set<String> imageUrls;
     private Set<String> amenities;
 
     public RoomResponse() {
     }
 
-    public RoomResponse(Long hotelId, String roomNumber, RoomType type,
-                        BigDecimal pricePerNight, int capacity, RoomStatus status, Set<String> amenities) {
+    public RoomResponse(Long id, Long hotelId, RoomType type,
+                        BigDecimal pricePerNight, int capacity, RoomStatus status, Set<String> imageUrls, Set<String> amenities) {
 
+        this.id = id;
         this.hotelId = hotelId;
-        this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
         this.capacity = capacity;
         this.status = status;
+        this.imageUrls = imageUrls;
         this.amenities = amenities;
     }
 
+    public Long getId() { return id; }
     public Long getHotelId() { return hotelId; }
-    public String getRoomNumber() { return roomNumber; }
     public RoomType getType() { return type; }
     public BigDecimal getPricePerNight() { return pricePerNight; }
     public int getCapacity() { return capacity; }
@@ -43,11 +44,11 @@ public class RoomResponse {
     public String getCurrency() { return currency; }
     public BigDecimal getOriginalPricePerNight() { return originalPricePerNight; }
     public BigDecimal getExchangeRate() { return exchangeRate; }
-    public String getImageUrl() { return imageUrl; }
+    public Set<String> getImageUrls() { return imageUrls; }
     public Set<String> getAmenities() { return amenities; }
 
+    public void setId(Long id) { this.id = id; }
     public void setHotelId(Long hotelId) { this.hotelId = hotelId; }
-    public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
     public void setType(RoomType type) { this.type = type; }
     public void setPricePerNight(BigDecimal pricePerNight) { this.pricePerNight = pricePerNight; }
     public void setCapacity(int capacity) { this.capacity = capacity; }
@@ -55,6 +56,6 @@ public class RoomResponse {
     public void setCurrency(String currency) { this.currency = currency; }
     public void setOriginalPricePerNight(BigDecimal originalPricePerNight) { this.originalPricePerNight = originalPricePerNight; }
     public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setImageUrls(Set<String> imageUrls) { this.imageUrls = imageUrls; }
     public void setAmenities(Set<String> amenities) { this.amenities = amenities; }
 }

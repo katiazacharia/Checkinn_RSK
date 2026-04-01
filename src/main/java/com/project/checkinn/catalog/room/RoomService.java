@@ -1,5 +1,6 @@
 package com.project.checkinn.catalog.room;
 
+import com.project.checkinn.catalog.amenity.AmenityResponse;
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
 import com.project.checkinn.common.CurrencyCode;
@@ -43,5 +44,6 @@ public interface RoomService {
 
     String uploadImage(Long roomId, MultipartFile file);
     Page<RoomResponse> getRoomsByHotelName(String hotelName, Pageable pageable);
+    Page<AmenityResponse> getAmenitiesForRoom(Long roomId, Pageable pageable);
 
 }
