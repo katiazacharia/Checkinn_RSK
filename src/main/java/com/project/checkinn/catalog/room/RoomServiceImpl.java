@@ -1,6 +1,10 @@
 package com.project.checkinn.catalog.room;
 
 import com.project.checkinn.ImageStorageService;
+import com.project.checkinn.catalog.amenity.Amenity;
+import com.project.checkinn.catalog.amenity.AmenityMapper;
+import com.project.checkinn.catalog.amenity.AmenityRepo;
+import com.project.checkinn.catalog.amenity.AmenityResponse;
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
 import com.project.checkinn.common.CurrencyCode;
@@ -10,6 +14,7 @@ import com.project.checkinn.exchangerate.ExchangeRateConfig;
 import com.project.checkinn.exchangerate.ExchangeRateService;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -20,7 +25,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -31,17 +39,19 @@ public class RoomServiceImpl implements RoomService {
     private final ExchangeRateService exchangeRateService;
     private final ExchangeRateConfig exchangeRateConfig;
     private final ImageStorageService imageStorageService;
+    private final AmenityRepo amenityRepo;
 
     public RoomServiceImpl(RoomRepo roomRepo,
                            HotelRepo hotelRepo,
                            ExchangeRateService exchangeRateService,
                            ExchangeRateConfig exchangeRateConfig,
-                           ImageStorageService imageStorageService) {
+                           ImageStorageService imageStorageService, AmenityRepo amenityRepo) {
         this.roomRepo = roomRepo;
         this.hotelRepo = hotelRepo;
         this.exchangeRateService = exchangeRateService;
         this.exchangeRateConfig = exchangeRateConfig;
         this.imageStorageService = imageStorageService;
+        this.amenityRepo = amenityRepo;
     }
 
     @Override
@@ -52,6 +62,18 @@ public class RoomServiceImpl implements RoomService {
 
         return roomRepo.findByHotelId(hotel.getId(), pageable)
                 .map(RoomMapper::toResponse);
+    }
+
+    @Override
+    public Page<AmenityResponse> getAmenitiesForRoom(Long roomId, Pageable pageable) {
+        Room room = roomRepo.findById(roomId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
+
+        List<AmenityResponse> amenities = room.getAmenities().stream()
+                .map(AmenityMapper::toResponseWithoutHotels)
+                .toList();
+
+        return new PageImpl<>(amenities, pageable, amenities.size());
     }
 
 
@@ -163,6 +185,11 @@ public class RoomServiceImpl implements RoomService {
         Room r = RoomMapper.toEntity(req, hotel);
         r.setRoomNumber(roomNumber);
 
+        if (req.getAmenityIds() != null) {
+            Set<Amenity> amenities = new HashSet<>(amenityRepo.findAllById(req.getAmenityIds()));
+            r.setAmenities(amenities);
+        }
+
         return RoomMapper.toResponse(roomRepo.save(r));
     }
 
@@ -223,7 +250,7 @@ public class RoomServiceImpl implements RoomService {
 
         String imageUrl = imageStorageService.saveRoomImage(file);
 
-        room.setImageUrl(imageUrl);
+        room.getImageUrls().add(imageUrl);
         roomRepo.save(room);
 
         return imageUrl;

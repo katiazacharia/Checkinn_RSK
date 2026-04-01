@@ -19,19 +19,20 @@ public class RoomMapper {
                 .collect(Collectors.toSet());
 
         RoomResponse response = new RoomResponse(
+                r.getId(),
                 r.getHotel().getId(),
-                r.getRoomNumber(),
                 r.getType(),
                 r.getPricePerNight(),
                 r.getCapacity(),
                 r.getStatus(),
+                r.getImageUrls(),
                 amenityNames
         );
 
         response.setCurrency(CurrencyCode.ILS.name());
         response.setOriginalPricePerNight(r.getPricePerNight());
         response.setExchangeRate(BigDecimal.ONE);
-        response.setImageUrl(r.getImageUrl());
+        response.setImageUrls(r.getImageUrls());
 
         return response;
     }

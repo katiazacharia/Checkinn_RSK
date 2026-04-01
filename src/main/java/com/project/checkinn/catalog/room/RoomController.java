@@ -1,5 +1,6 @@
 package com.project.checkinn.catalog.room;
 
+import com.project.checkinn.catalog.amenity.AmenityResponse;
 import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
@@ -49,13 +50,6 @@ public class RoomController {
     public RoomResponse one(@PathVariable Long id,@RequestParam(required = false) CurrencyCode currency) {
         return roomService.getById(id,currency);
     }
-    @GetMapping("/by-hotel/{hotelName}")
-    public Page<RoomResponse> getRoomsByHotelName(
-            @PathVariable String hotelName,
-            @PageableDefault(page = 0, size = 10) Pageable pageable
-    ) {
-        return roomService.getRoomsByHotelName(hotelName, pageable);
-    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
@@ -66,8 +60,8 @@ public class RoomController {
         RoomResponse saved = roomService.create(request);
 
         URI location = uriBuilder
-                .path("/rooms/{hotelId}/{roomNumber}")
-                .buildAndExpand(saved.getHotelId(), saved.getRoomNumber())
+                .path("/rooms/{id}")
+                .buildAndExpand(saved.getId())
                 .toUri();
 
         return ResponseEntity.created(location).body(saved);
@@ -90,8 +84,14 @@ public class RoomController {
         return ResponseEntity.noContent().build();
     }
 
-
-    @PostMapping("/{id}/image")
+    @GetMapping("/{id}/amenities")
+    public Page<AmenityResponse> getAmenitiesForRoom(
+            @PathVariable Long id,
+            Pageable pageable
+    ) {
+        return roomService.getAmenitiesForRoom(id, pageable);
+    }
+    @PostMapping("/{id}/images")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<String> uploadRoomImage(
             @PathVariable Long id,

@@ -5,9 +5,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.Optional;
+
 public interface RoomRepo extends JpaRepository<Room, Long>, JpaSpecificationExecutor<Room> {
 
     boolean existsByHotelIdAndRoomNumber(Long hotelId, String roomNumber);
 
     Page<Room> findByHotelId(Long hotelId, Pageable pageable);
+    Optional<Room> findByHotel_IdAndRoomNumber(Long hotelId, String roomNumber);
 }

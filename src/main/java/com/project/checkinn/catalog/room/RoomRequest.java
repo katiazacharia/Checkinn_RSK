@@ -5,6 +5,7 @@ import com.project.checkinn.common.RoomType;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 public class RoomRequest {
 
@@ -12,6 +13,7 @@ public class RoomRequest {
     private Long hotelId;
     @NotNull
     private String roomNumber;
+    private Set<Long> amenityIds;
     @NotNull
     private RoomType type;
     @NotNull
@@ -40,4 +42,12 @@ public class RoomRequest {
 
     public RoomStatus getStatus() { return status; }
     public void setStatus(RoomStatus status) { this.status = status; }
+
+    public Set<Long> getAmenityIds() {
+        return amenityIds;
+    }
+
+    public void setAmenityIds(Set<Long> amenityIds) {
+        this.amenityIds = amenityIds;
+    }
 }
