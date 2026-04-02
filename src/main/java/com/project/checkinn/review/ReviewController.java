@@ -50,7 +50,8 @@ public class ReviewController {
     }
 
     // POST /reviews
-    @PreAuthorize("(hasRole('CUSTOMER') and @authz.isUserOwner(#request.userId, authentication)) or hasAnyRole('ADMIN','MANAGER')")
+//    @PreAuthorize("(hasRole('CUSTOMER') and @authz.isUserOwner(#request.userId, authentication)) or hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('CUSTOMER') or hasAnyRole('ADMIN','MANAGER')")
     @PostMapping
     public ResponseEntity<ReviewResponse> create(
           @Valid @RequestBody ReviewRequest request,
