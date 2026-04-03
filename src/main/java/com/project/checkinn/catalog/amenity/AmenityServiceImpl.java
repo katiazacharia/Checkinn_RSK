@@ -28,12 +28,14 @@ public class AmenityServiceImpl implements AmenityService {
     private final AmenityRepo amenityRepo;
     private final EntityManager entityManager;
     private final HotelRepo hotelRepository;
+    private final RoomRepo roomRepo;
 
 
-    public AmenityServiceImpl(AmenityRepo amenityRepo, EntityManager entityManager, HotelRepo hotelRepository) {
+    public AmenityServiceImpl(AmenityRepo amenityRepo, EntityManager entityManager, HotelRepo hotelRepository, RoomRepo roomRepo) {
         this.amenityRepo = amenityRepo;
         this.entityManager = entityManager;
         this.hotelRepository = hotelRepository;
+        this.roomRepo = roomRepo;
     }
 
     @Override
@@ -196,6 +198,8 @@ public class AmenityServiceImpl implements AmenityService {
                 .map(a -> AmenityMapper.toResponse(a));
     }
 
+
+    @Transactional
     @Override
     public void addAmenityToRoom(Long roomId, Long amenityId) {
           Room room = entityManager.find(Room.class, roomId);
@@ -208,9 +212,11 @@ public class AmenityServiceImpl implements AmenityService {
 
             room.getAmenities().add(amenity);
             amenity.getRooms().add(room);
+        roomRepo.save(room);
 
     }
 
+    @Transactional
     @Override
     public void removeAmenityFromRoom(Long roomId, Long amenityId) {
         Room room = entityManager.find(Room.class, roomId);
@@ -223,6 +229,8 @@ public class AmenityServiceImpl implements AmenityService {
 
         room.getAmenities().remove(amenity);
         amenity.getRooms().remove(room);
+        roomRepo.save(room);
+
 
     }
 

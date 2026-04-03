@@ -16,10 +16,10 @@ public class BookingResponse {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private BookingStatus status;
-    private BigDecimal totalPrice;
-    private CurrencyCode currency;
     private BigDecimal originalTotalPrice;
     private BigDecimal exchangeRate;
+    private CurrencyCode currency;
+    private BigDecimal totalPrice;
     private Long promoCodeId; // optional
     private Long roomId;
     private List<String> extras;
@@ -32,6 +32,9 @@ public class BookingResponse {
         this.checkOutDate = booking.getCheckOutDate();
         this.status = booking.getStatus();
         this.totalPrice = booking.getTotalPrice();
+        this.currency = booking.getCurrency();
+        this.originalTotalPrice = booking.getOriginalTotalPrice();
+        this.exchangeRate = booking.getExchangeRate();
         this.promoCodeId = booking.getPromoCode() != null ? booking.getPromoCode().getId() : null;
         this.roomId = booking.getRoom() != null ? booking.getRoom().getId() : null;
         if (booking.getExtras() != null) {
