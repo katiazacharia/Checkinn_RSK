@@ -31,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.project.checkinn.catalog.room.Room;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -116,29 +117,11 @@ public class BookingServiceImpl implements BookingService {
         if (request.getGuests() > roomRef.getCapacity())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Guests exceed room capacity");
 
+
         BigDecimal basePrice = pricingService.calculateTotalPrice(roomRef, in, out);
-
-        CurrencyCode requestedCurrency =
-                request.getCurrency() != null ? request.getCurrency() : exchangeRateConfig.getBaseCurrency();
-
-        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
-
-        BigDecimal finalPrice;
-        BigDecimal exchangeRate;
-
-        if (requestedCurrency == baseCurrency) {
-            finalPrice = basePrice;
-            exchangeRate = BigDecimal.ONE;
-        } else {
-            exchangeRate = exchangeRateService.getRate(baseCurrency, requestedCurrency);
-            finalPrice = exchangeRateService.convert(basePrice, baseCurrency, requestedCurrency);
-        }
-
-        Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
-        booking.setTotalPrice(basePrice);
+        BigDecimal basePriceAfterDiscount = basePrice;
 
         if (request.getPointsToRedeem() != null && request.getPointsToRedeem() > 0) {
-
             RedeemRequest redeemRequest = new RedeemRequest();
             redeemRequest.setPoints(request.getPointsToRedeem());
             redeemRequest.setNote("Redeemed in booking");
@@ -146,22 +129,37 @@ public class BookingServiceImpl implements BookingService {
             loyaltyService.redeem(userId, redeemRequest);
 
             BigDecimal discount = BigDecimal.valueOf(request.getPointsToRedeem() * 0.05);
-
             BigDecimal maxDiscount = basePrice.multiply(BigDecimal.valueOf(0.2));
 
             if (discount.compareTo(maxDiscount) > 0) {
                 discount = maxDiscount;
             }
 
-            booking.setTotalPrice(basePrice.subtract(discount));
+            basePriceAfterDiscount = basePrice.subtract(discount);
         }
 
+        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
+        CurrencyCode requestedCurrency = request.getCurrency() != null ? request.getCurrency() : baseCurrency;
+
+        BigDecimal exchangeRate;
+        BigDecimal finalPrice;
+
+        if (requestedCurrency == baseCurrency) {
+            exchangeRate = BigDecimal.ONE;
+            finalPrice = basePriceAfterDiscount.setScale(2, RoundingMode.HALF_UP);
+        } else {
+            exchangeRate = exchangeRateService.getRate(baseCurrency, requestedCurrency);
+            finalPrice = exchangeRateService.convert(basePriceAfterDiscount, baseCurrency, requestedCurrency);
+        }
+
+        Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
+        booking.setOriginalTotalPrice(basePrice);
+        booking.setCurrency(requestedCurrency);
+        booking.setExchangeRate(exchangeRate);
+        booking.setTotalPrice(finalPrice);
         booking.setStatus(BookingStatus.PENDING);
 
         experiencePlusService.assignExtras(booking);
-
-
-
 
         return bookingRepository.save(booking);
     }

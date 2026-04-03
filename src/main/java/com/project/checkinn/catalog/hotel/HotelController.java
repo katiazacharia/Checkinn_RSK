@@ -45,7 +45,7 @@ public class HotelController {
     public HotelDetailsResponse one(@PathVariable Long id) {
         return hotelService.getById(id);
     }
-    @GetMapping("/{hotelName}")
+    @GetMapping("/name/{hotelName}")
     public HotelDetailsResponse getByName(@PathVariable String hotelName) {
         return hotelService.getByName(hotelName);
     }
@@ -106,7 +106,7 @@ public class HotelController {
     }
 
     //hotels/hotelName/ rooms in that hotel not in details this is for customers becuas they don't know the ids
-    @GetMapping("/{hotelName}/rooms")
+    @GetMapping("/name/{hotelName}/rooms")
     public Page<RoomSummaryResponse> getRoomsByHotelName(
             @PathVariable String hotelName,
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
@@ -125,7 +125,7 @@ public class HotelController {
         return amenityService.getAmenitiesForHotel(hotelId, pageable);
     }
 
-    @GetMapping("/{hotelName}/amenities")
+    @GetMapping("/name/{hotelName}/amenities")
     public Page<AmenityResponse> getAmenitiesByHotelName(
             @PathVariable String hotelName,
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
@@ -135,7 +135,7 @@ public class HotelController {
     }
 
 
-    @GetMapping("/{hotelName}/rooms/{roomId}")
+    @GetMapping("/name/{hotelName}/rooms/{roomId}")
     public RoomDetailsWithAmenitiesResponse getRoomDetailsByHotelName(
             @PathVariable String hotelName,
             @PathVariable Long roomId
