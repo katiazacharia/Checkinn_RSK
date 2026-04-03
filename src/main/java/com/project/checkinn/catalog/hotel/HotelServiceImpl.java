@@ -29,19 +29,26 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
-    public Page<HotelResponse> getAll(Pageable pageable) {
-        return hotelRepo.findAll(pageable).map(HotelMapper::toResponse);
+    public Page<HotelListResponse> getAll(Pageable pageable) {
+        return hotelRepo.findAll(pageable).map(HotelMapper::toListResponse);
     }
 
     @Override
-    public HotelResponse getById(Long id) {
+    public HotelDetailsResponse getById(Long id) {
         Hotel h = hotelRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-        return HotelMapper.toResponse(h);
+        return HotelMapper.toDetailsResponse(h);
     }
 
     @Override
-    public HotelResponse create(HotelRequest req) {
+    public HotelDetailsResponse getByName(String name) {
+        Hotel h = hotelRepo.findByNameIgnoreCase(name)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
+        return HotelMapper.toDetailsResponse(h);
+    }
+
+    @Override
+    public HotelDetailsResponse create(HotelRequest req) {
 
         if (req == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
@@ -63,11 +70,11 @@ public class HotelServiceImpl implements HotelService {
             h.setAmenities(amenities);
         }
 
-        return HotelMapper.toResponse(hotelRepo.save(h));
+        return HotelMapper.toDetailsResponse(hotelRepo.save(h));
     }
 
     @Override
-    public HotelResponse update(Long id, HotelRequest req) {
+    public HotelDetailsResponse update(Long id, HotelRequest req) {
 
         if (req == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
@@ -89,7 +96,7 @@ public class HotelServiceImpl implements HotelService {
             h.setAmenities(amenities);
         }
 
-        return HotelMapper.toResponse(hotelRepo.save(h));
+        return HotelMapper.toDetailsResponse(hotelRepo.save(h));
     }
 
     @Override
@@ -101,7 +108,7 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
-    public Page<HotelResponse> search(String city, String name, Long amenityId, Pageable pageable) {
+    public Page<HotelDetailsResponse> search(String city, String name, Long amenityId, Pageable pageable) {
 
         boolean hasCity = city != null && !city.isBlank();
         boolean hasName = name != null && !name.isBlank();
@@ -130,11 +137,11 @@ public class HotelServiceImpl implements HotelService {
             page = hotelRepo.findAll(pageable);
         }
 
-        return page.map(HotelMapper::toResponse);
+        return page.map(HotelMapper::toDetailsResponse);
     }
 
     @Override
-    public HotelResponse addAmenity(Long hotelId, Long amenityId) {
+    public HotelDetailsResponse addAmenity(Long hotelId, Long amenityId) {
 
         Hotel h = hotelRepo.findById(hotelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
@@ -144,11 +151,11 @@ public class HotelServiceImpl implements HotelService {
 
         h.addAmenity(a);
 
-        return HotelMapper.toResponse(hotelRepo.save(h));
+        return HotelMapper.toDetailsResponse(hotelRepo.save(h));
     }
 
     @Override
-    public HotelResponse removeAmenity(Long hotelId, Long amenityId) {
+    public HotelDetailsResponse removeAmenity(Long hotelId, Long amenityId) {
 
         Hotel h = hotelRepo.findById(hotelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
@@ -158,11 +165,11 @@ public class HotelServiceImpl implements HotelService {
 
         h.removeAmenity(a);
 
-        return HotelMapper.toResponse(hotelRepo.save(h));
+        return HotelMapper.toDetailsResponse(hotelRepo.save(h));
     }
 
     @Override
-    public HotelResponse replaceAmenities(Long hotelId, Set<Long> amenityIds) {
+    public HotelDetailsResponse replaceAmenities(Long hotelId, Set<Long> amenityIds) {
 
         Hotel h = hotelRepo.findById(hotelId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
@@ -177,7 +184,7 @@ public class HotelServiceImpl implements HotelService {
             h.addAmenity(a);
         }
 
-        return HotelMapper.toResponse(hotelRepo.save(h));
+        return HotelMapper.toDetailsResponse(hotelRepo.save(h));
     }
 
     @Override
@@ -188,7 +195,7 @@ public class HotelServiceImpl implements HotelService {
 
         String imageUrl = imageStorageService.saveHotelImage(file);
 
-        hotel.setImageUrl(imageUrl);
+        hotel.getImageUrls().add(imageUrl);
         hotelRepo.save(hotel);
 
         return imageUrl;

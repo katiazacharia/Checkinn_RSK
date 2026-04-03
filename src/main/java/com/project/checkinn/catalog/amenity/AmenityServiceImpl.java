@@ -2,6 +2,8 @@ package com.project.checkinn.catalog.amenity;
 
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
+import com.project.checkinn.catalog.room.Room;
+import com.project.checkinn.catalog.room.RoomRepo;
 import jakarta.persistence.EntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -76,6 +78,7 @@ public class AmenityServiceImpl implements AmenityService {
         a.setName(name);
         a.setIcon(req.getIcon());
         a.setDescription(req.getDescription());
+        a.setType(req.getType());
 
         return toResponse(amenityRepo.save(a));
     }
@@ -100,16 +103,35 @@ public class AmenityServiceImpl implements AmenityService {
         a.setIcon(req.getIcon());
         a.setDescription(req.getDescription());
 
+        if (req.getType() != null) {
+            a.setType(req.getType());
+        }
+
         return toResponse(amenityRepo.save(a));
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
 
-        if (!amenityRepo.existsById(id))
-            throw new ResponseStatusException(NOT_FOUND, "Amenity not found");
+        Amenity amenity = amenityRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Amenity not found"));
 
-        amenityRepo.deleteById(id);
+        // فك الربط مع الغرف
+        for (Room room : amenity.getRooms()) {
+            room.getAmenities().remove(amenity);
+        }
+
+        // فك الربط مع الفنادق
+        for (Hotel hotel : amenity.getHotels()) {
+            hotel.getAmenities().remove(amenity);
+        }
+
+        // نظف الجهتين
+        amenity.getRooms().clear();
+        amenity.getHotels().clear();
+
+        amenityRepo.delete(amenity);
     }
 
     @Override
@@ -153,7 +175,7 @@ public class AmenityServiceImpl implements AmenityService {
             throw new ResponseStatusException(NOT_FOUND, "Hotel not found");
 
         return amenityRepo.findByHotels_Id(hotelId, pageable)
-                .map(a -> AmenityMapper.toResponseWithoutHotels(a));
+                .map(a -> AmenityMapper.toResponse(a));
     }
 
     @Override
@@ -171,9 +193,38 @@ public class AmenityServiceImpl implements AmenityService {
 
 
         return amenityRepo.findByHotels_Id(hotel.getId(), pageable)
-                .map(a -> AmenityMapper.toResponseWithoutHotels(a));
+                .map(a -> AmenityMapper.toResponse(a));
     }
 
+    @Override
+    public void addAmenityToRoom(Long roomId, Long amenityId) {
+          Room room = entityManager.find(Room.class, roomId);
+
+            if (room == null)
+                throw new ResponseStatusException(NOT_FOUND, "Room not found");
+
+            Amenity amenity = amenityRepo.findById(amenityId)
+                    .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Amenity not found"));
+
+            room.getAmenities().add(amenity);
+            amenity.getRooms().add(room);
+
+    }
+
+    @Override
+    public void removeAmenityFromRoom(Long roomId, Long amenityId) {
+        Room room = entityManager.find(Room.class, roomId);
+
+        if (room == null)
+            throw new ResponseStatusException(NOT_FOUND, "Room not found");
+
+        Amenity amenity = amenityRepo.findById(amenityId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Amenity not found"));
+
+        room.getAmenities().remove(amenity);
+        amenity.getRooms().remove(room);
+
+    }
 
 
 }

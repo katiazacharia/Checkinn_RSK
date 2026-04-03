@@ -43,7 +43,12 @@ public interface RoomService {
 
 
     String uploadImage(Long roomId, MultipartFile file);
-    Page<RoomResponse> getRoomsByHotelName(String hotelName, Pageable pageable);
+    Page<RoomSummaryResponse> getRoomsByHotelName(String hotelName, Pageable pageable);
     Page<AmenityResponse> getAmenitiesForRoom(Long roomId, Pageable pageable);
 
+    Page<RoomSummaryResponse> getRoomsByHotelId(Long hotelId, Pageable pageable);
+
+    RoomDetailsWithAmenitiesResponse getRoomDetailsByHotelName(String hotelName, Long roomId);
+
+    RoomDetailsWithAmenitiesResponse getRoomDetailsByHotelId(Long hotelId, Long roomId);
 }

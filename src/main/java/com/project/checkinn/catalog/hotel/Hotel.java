@@ -3,7 +3,10 @@ package com.project.checkinn.catalog.hotel;
 import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.room.Room;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -14,9 +17,10 @@ public class Hotel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
+    @ElementCollection
+    @CollectionTable(name = "hotel_images", joinColumns = @JoinColumn(name = "hotel_id"))
     @Column(name = "image_url")
-    private String imageUrl;
+    private List<String> imageUrls = new ArrayList<>();
 
     @Column(nullable = false)
     private String name;
@@ -25,12 +29,12 @@ public class Hotel {
         this.id = id;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public List<String> getImageUrls() {
+        return imageUrls;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
     @Column(nullable = false)

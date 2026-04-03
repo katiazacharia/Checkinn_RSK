@@ -6,6 +6,7 @@ import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
 import com.project.checkinn.catalog.room.Room;
 import com.project.checkinn.catalog.room.RoomRepo;
+import com.project.checkinn.common.AmenityType;
 import com.project.checkinn.common.ExperienceExtraType;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
@@ -25,7 +26,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @Configuration
 public class DataSeeder {
@@ -50,6 +54,8 @@ public class DataSeeder {
             seedExperienceExtras(experienceExtraRepo);
         };
     }
+
+    // ========================= USERS =========================
 
     private void seedUsers(AppUserRepository appUserRepo, UserRepo userRepo, PasswordEncoder encoder) {
         seedUser(appUserRepo, userRepo, encoder,
@@ -86,17 +92,13 @@ public class DataSeeder {
             appUser = new AppUser();
             appUser.setUsername(username);
             appUser.setPasswordHash(encoder.encode(rawPassword));
-            appUser.setEnabled(true);
-            appUser.setRole(role);
-            appUser = appUserRepo.save(appUser);
-        } else {
-            appUser.setEnabled(true);
-            appUser.setRole(role);
-            appUser = appUserRepo.save(appUser);
         }
 
-        User profile = userRepo.findByAppUserId(appUser.getId()).orElse(null);
+        appUser.setEnabled(true);
+        appUser.setRole(role);
+        appUser = appUserRepo.save(appUser);
 
+        User profile = userRepo.findByAppUserId(appUser.getId()).orElse(null);
         if (profile == null) {
             profile = new User();
             profile.setAppUser(appUser);
@@ -110,149 +112,181 @@ public class DataSeeder {
         userRepo.save(profile);
     }
 
+    // ========================= AMENITIES =========================
+
     private void seedAmenities(AmenityRepo repo) {
+        // Hotel amenities
+        upsertAmenity(repo, "WiFi", "wifi", "High-speed wireless internet available in all areas.", AmenityType.HOTEL);
+        upsertAmenity(repo, "Pool", "pool", "Outdoor swimming pool for guests.", AmenityType.HOTEL);
+        upsertAmenity(repo, "Parking", "car", "Free on-site parking.", AmenityType.HOTEL);
+        upsertAmenity(repo, "Gym", "dumbbell", "Fitness center with essential equipment.", AmenityType.HOTEL);
+        upsertAmenity(repo, "Breakfast", "utensils", "Daily breakfast available.", AmenityType.HOTEL);
 
-        //hotel amenities
-        createAmenityIfMissing(repo, "WiFi", "wifi", "High-speed wireless internet available in all areas.");
-        createAmenityIfMissing(repo, "Pool", "pool", "Outdoor swimming pool for guests.");
-        createAmenityIfMissing(repo, "Parking", "car", "Free on-site parking.");
-        createAmenityIfMissing(repo, "Gym", "dumbbell", "Fitness center with essential equipment.");
-        createAmenityIfMissing(repo, "Breakfast", "utensils", "Daily breakfast available.");
-
-        // Room amenities - new
-        createAmenityIfMissing(repo, "Mini Bar", "wine", "In-room mini bar with drinks and snacks.");
-        createAmenityIfMissing(repo, "Water Heater", "flame", "Electric water heater in room.");
-        createAmenityIfMissing(repo, "Air Conditioning", "wind", "Climate control air conditioning.");
-        createAmenityIfMissing(repo, "City View", "building", "Room with city view.");
-        createAmenityIfMissing(repo, "Sea View", "waves", "Room with sea view.");
-        createAmenityIfMissing(repo, "Sofa", "sofa", "Comfortable sofa in room.");
-        createAmenityIfMissing(repo, "Balcony", "door-open", "Private balcony.");
-        createAmenityIfMissing(repo, "Extra Bed for Baby", "baby", "Extra baby cot available on request.");
+        // Room amenities
+        upsertAmenity(repo, "Mini Bar", "wine", "In-room mini bar with drinks and snacks.", AmenityType.ROOM);
+        upsertAmenity(repo, "Water Heater", "flame", "Electric water heater in room.", AmenityType.ROOM);
+        upsertAmenity(repo, "Air Conditioning", "wind", "Climate control air conditioning.", AmenityType.ROOM);
+        upsertAmenity(repo, "City View", "building", "Room with city view.", AmenityType.ROOM);
+        upsertAmenity(repo, "Sea View", "waves", "Room with sea view.", AmenityType.ROOM);
+        upsertAmenity(repo, "Sofa", "sofa", "Comfortable sofa in room.", AmenityType.ROOM);
+        upsertAmenity(repo, "Balcony", "door-open", "Private balcony.", AmenityType.ROOM);
+        upsertAmenity(repo, "Extra Bed for Baby", "baby", "Extra baby cot available on request.", AmenityType.ROOM);
     }
 
+    private void upsertAmenity(AmenityRepo repo, String name, String icon, String description, AmenityType type) {
+        Amenity amenity = repo.findAll()
+                .stream()
+                .filter(a -> a.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(new Amenity());
 
-
-    private void createAmenityIfMissing(AmenityRepo repo, String name, String icon, String description) {
-        if (repo.existsByNameIgnoreCase(name)) {
-            return;
-        }
-
-        Amenity amenity = new Amenity();
         amenity.setName(name);
         amenity.setIcon(icon);
         amenity.setDescription(description);
+        amenity.setType(type);
+
         repo.save(amenity);
     }
 
+    // ========================= HOTELS =========================
+
     private void seedHotels(HotelRepo hotelRepo, AmenityRepo amenityRepo) {
-        if (hotelRepo.count() > 0) {
-            return;
-        }
-
-        Amenity wifi = findAmenityByName(amenityRepo, "WiFi");
-        Amenity pool = findAmenityByName(amenityRepo, "Pool");
-        Amenity parking = findAmenityByName(amenityRepo, "Parking");
-        Amenity gym = findAmenityByName(amenityRepo, "Gym");
-        Amenity breakfast = findAmenityByName(amenityRepo, "Breakfast");
-
-        Hotel h1 = new Hotel();
+        Hotel h1 = findHotelByName(hotelRepo, "CheckInn Grand Istanbul");
+        if (h1 == null) h1 = new Hotel();
         h1.setName("CheckInn Grand Istanbul");
         h1.setCity("Istanbul");
         h1.setAddress("Sultanahmet, Istanbul");
         h1.setDescription("Luxury hotel in the heart of Istanbul with stunning Bosphorus views.");
-        h1.setAmenities(new java.util.HashSet<>(java.util.List.of(
-                wifi, parking, breakfast, gym
-        ).stream().filter(java.util.Objects::nonNull).toList()));
+        h1.setAmenities(hotelAmenitySet(
+                findAmenityByName(amenityRepo, "WiFi"),
+                findAmenityByName(amenityRepo, "Parking"),
+                findAmenityByName(amenityRepo, "Breakfast"),
+                findAmenityByName(amenityRepo, "Gym")
+        ));
+        h1 = hotelRepo.save(h1);
 
-        Hotel h2 = new Hotel();
+        Hotel h2 = findHotelByName(hotelRepo, "Ankara City Hotel");
+        if (h2 == null) h2 = new Hotel();
         h2.setName("Ankara City Hotel");
         h2.setCity("Ankara");
         h2.setAddress("Kizilay, Ankara");
         h2.setDescription("Modern hotel in Turkey's capital with easy access to city attractions.");
-        h2.setAmenities(new java.util.HashSet<>(java.util.List.of(
-                wifi, pool, breakfast
-        ).stream().filter(java.util.Objects::nonNull).toList()));
+        h2.setAmenities(hotelAmenitySet(
+                findAmenityByName(amenityRepo, "WiFi"),
+                findAmenityByName(amenityRepo, "Pool"),
+                findAmenityByName(amenityRepo, "Breakfast")
+        ));
+        h2 = hotelRepo.save(h2);
 
-        Hotel h3 = new Hotel();
+        Hotel h3 = findHotelByName(hotelRepo, "Izmir Pearl");
+        if (h3 == null) h3 = new Hotel();
         h3.setName("Izmir Pearl");
         h3.setCity("Izmir");
         h3.setAddress("Kordon, Izmir");
         h3.setDescription("Cozy hotel by the Aegean sea with beautiful sunset views.");
-        h3.setAmenities(new java.util.HashSet<>(java.util.List.of(
-                wifi, parking
-        ).stream().filter(java.util.Objects::nonNull).toList()));
-        hotelRepo.save(h1);
-        hotelRepo.save(h2);
+        h3.setAmenities(hotelAmenitySet(
+                findAmenityByName(amenityRepo, "WiFi"),
+                findAmenityByName(amenityRepo, "Parking")
+        ));
         hotelRepo.save(h3);
     }
 
+    // ========================= ROOMS =========================
+
     private void seedRooms(HotelRepo hotelRepo, RoomRepo roomRepo, AmenityRepo amenityRepo) {
-        if (roomRepo.count() > 0) return;
-
-        List<Hotel> hotels = hotelRepo.findAll();
-        if (hotels.size() < 3) return;
-
-        Hotel istanbulHotel = hotels.get(0);
-        Hotel ankaraHotel = hotels.get(1);
-        Hotel izmirHotel = hotels.get(2);
-
-        Amenity wifi = findAmenityByName(amenityRepo, "WiFi");
-        Amenity miniBar = findAmenityByName(amenityRepo, "Mini Bar");
-        Amenity waterHeater = findAmenityByName(amenityRepo, "Water Heater");
-        Amenity ac = findAmenityByName(amenityRepo, "Air Conditioning");
-        Amenity cityView = findAmenityByName(amenityRepo, "City View");
-        Amenity seaView = findAmenityByName(amenityRepo, "Sea View");
-        Amenity sofa = findAmenityByName(amenityRepo, "Sofa");
-        Amenity balcony = findAmenityByName(amenityRepo, "Balcony");
-        Amenity babyBed = findAmenityByName(amenityRepo, "Extra Bed for Baby");
+        Hotel istanbulHotel = requireHotelByName(hotelRepo, "CheckInn Grand Istanbul");
+        Hotel ankaraHotel = requireHotelByName(hotelRepo, "Ankara City Hotel");
+        Hotel izmirHotel = requireHotelByName(hotelRepo, "Izmir Pearl");
 
         // Istanbul Hotel rooms
-        createRoom(roomRepo, istanbulHotel, "101", RoomType.SINGLE, "50.00", 1, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, cityView).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, istanbulHotel, "101", RoomType.SINGLE, "50.00", 1, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "City View")
+                ));
 
-        createRoom(roomRepo, istanbulHotel, "102", RoomType.DOUBLE, "80.00", 2, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, istanbulHotel, "102", RoomType.DOUBLE, "80.00", 2, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "Mini Bar"),
+                        findAmenityByName(amenityRepo, "City View"),
+                        findAmenityByName(amenityRepo, "Sofa")
+                ));
 
-        createRoom(roomRepo, istanbulHotel, "201", RoomType.SUITE, "150.00", 4, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa, balcony, babyBed, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, istanbulHotel, "201", RoomType.SUITE, "150.00", 4, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "Mini Bar"),
+                        findAmenityByName(amenityRepo, "City View"),
+                        findAmenityByName(amenityRepo, "Sofa"),
+                        findAmenityByName(amenityRepo, "Balcony"),
+                        findAmenityByName(amenityRepo, "Extra Bed for Baby"),
+                        findAmenityByName(amenityRepo, "Water Heater")
+                ));
 
         // Ankara Hotel rooms
+        upsertRoom(roomRepo, ankaraHotel, "101", RoomType.SINGLE, "70.00", 1, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "Sea View")
+                ));
 
-        createRoom(roomRepo, ankaraHotel, "101", RoomType.SINGLE, "70.00", 1, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, seaView).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, ankaraHotel, "102", RoomType.DOUBLE, "110.00", 2, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "Mini Bar"),
+                        findAmenityByName(amenityRepo, "Sea View"),
+                        findAmenityByName(amenityRepo, "Balcony")
+                ));
 
-        createRoom(roomRepo, ankaraHotel, "102", RoomType.DOUBLE, "110.00", 2, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, seaView, balcony).stream().filter(java.util.Objects::nonNull).toList()));
-
-        createRoom(roomRepo, ankaraHotel, "202", RoomType.SUITE, "220.00", 4, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, seaView, sofa, balcony, babyBed, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, ankaraHotel, "202", RoomType.SUITE, "220.00", 4, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "Mini Bar"),
+                        findAmenityByName(amenityRepo, "Sea View"),
+                        findAmenityByName(amenityRepo, "Sofa"),
+                        findAmenityByName(amenityRepo, "Balcony"),
+                        findAmenityByName(amenityRepo, "Extra Bed for Baby"),
+                        findAmenityByName(amenityRepo, "Water Heater")
+                ));
 
         // Izmir Hotel rooms
-        createRoom(roomRepo, izmirHotel, "11", RoomType.SINGLE, "60.00", 1, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, cityView).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, izmirHotel, "11", RoomType.SINGLE, "60.00", 1, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "City View")
+                ));
 
-        createRoom(roomRepo, izmirHotel, "12", RoomType.DOUBLE, "95.00", 2, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, izmirHotel, "12", RoomType.DOUBLE, "95.00", 2, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "Mini Bar"),
+                        findAmenityByName(amenityRepo, "City View"),
+                        findAmenityByName(amenityRepo, "Sofa")
+                ));
 
-        createRoom(roomRepo, izmirHotel, "21", RoomType.SUITE, "180.00", 3, RoomStatus.AVAILABLE,
-                new java.util.HashSet<>(java.util.List.of(wifi, ac, miniBar, cityView, sofa, balcony, waterHeater).stream().filter(java.util.Objects::nonNull).toList()));
+        upsertRoom(roomRepo, izmirHotel, "21", RoomType.SUITE, "180.00", 3, RoomStatus.AVAILABLE,
+                roomAmenitySet(
+                        findAmenityByName(amenityRepo, "Air Conditioning"),
+                        findAmenityByName(amenityRepo, "Mini Bar"),
+                        findAmenityByName(amenityRepo, "City View"),
+                        findAmenityByName(amenityRepo, "Sofa"),
+                        findAmenityByName(amenityRepo, "Balcony"),
+                        findAmenityByName(amenityRepo, "Water Heater")
+                ));
     }
-    private Amenity findAmenityByName(AmenityRepo repo, String name) {
-        return repo.findAll()
-                .stream()
-                .filter(a -> a.getName().equalsIgnoreCase(name))
-                .findFirst()
-                .orElse(null);
-    }
 
-
-
-    private void createRoom(RoomRepo repo, Hotel hotel, String roomNumber,
+    private void upsertRoom(RoomRepo repo, Hotel hotel, String roomNumber,
                             RoomType type, String price, int capacity, RoomStatus status,
-                            java.util.Set<Amenity> amenities) {
-        if (repo.existsByHotelIdAndRoomNumber(hotel.getId(), roomNumber)) return;
+                            Set<Amenity> amenities) {
+        Room room = repo.findAll()
+                .stream()
+                .filter(r -> r.getHotel() != null
+                        && r.getHotel().getId().equals(hotel.getId())
+                        && r.getRoomNumber().equalsIgnoreCase(roomNumber))
+                .findFirst()
+                .orElse(new Room());
 
-        Room room = new Room();
         room.setHotel(hotel);
         room.setRoomNumber(roomNumber);
         room.setType(type);
@@ -260,8 +294,11 @@ public class DataSeeder {
         room.setCapacity(capacity);
         room.setStatus(status);
         room.setAmenities(amenities);
+
         repo.save(room);
     }
+
+    // ========================= PROMO CODES =========================
 
     private void seedPromoCodes(PromoCodeRepository repo) {
         createPromoIfMissing(repo, "WELCOME10", new BigDecimal("10.00"),
@@ -289,8 +326,11 @@ public class DataSeeder {
         promo.setValidFrom(validFrom);
         promo.setValidTo(validTo);
         promo.setActive(active);
+
         repo.save(promo);
     }
+
+    // ========================= EXPERIENCE EXTRAS =========================
 
     private void seedExperienceExtras(ExperienceExtraRepo repo) {
         if (repo.count() > 0) {
@@ -324,5 +364,51 @@ public class DataSeeder {
         repo.save(e1);
         repo.save(e2);
         repo.save(e3);
+    }
+
+    // ========================= HELPERS =========================
+
+    private Amenity findAmenityByName(AmenityRepo repo, String name) {
+        return repo.findAll()
+                .stream()
+                .filter(a -> a.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Hotel findHotelByName(HotelRepo repo, String name) {
+        return repo.findAll()
+                .stream()
+                .filter(h -> h.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Hotel requireHotelByName(HotelRepo repo, String name) {
+        Hotel hotel = findHotelByName(repo, name);
+        if (hotel == null) {
+            throw new IllegalStateException("Hotel not found while seeding: " + name);
+        }
+        return hotel;
+    }
+
+    private Set<Amenity> hotelAmenitySet(Amenity... amenities) {
+        Set<Amenity> result = new HashSet<>();
+        for (Amenity amenity : amenities) {
+            if (amenity != null && amenity.getType() == AmenityType.HOTEL) {
+                result.add(amenity);
+            }
+        }
+        return result;
+    }
+
+    private Set<Amenity> roomAmenitySet(Amenity... amenities) {
+        Set<Amenity> result = new HashSet<>();
+        for (Amenity amenity : amenities) {
+            if (amenity != null && amenity.getType() == AmenityType.ROOM) {
+                result.add(amenity);
+            }
+        }
+        return result;
     }
 }

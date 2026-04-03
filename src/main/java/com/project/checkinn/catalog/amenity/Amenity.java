@@ -1,6 +1,8 @@
 package com.project.checkinn.catalog.amenity;
 
 import com.project.checkinn.catalog.hotel.Hotel;
+import com.project.checkinn.catalog.room.Room;
+import com.project.checkinn.common.AmenityType;
 import jakarta.persistence.*;
 
 import java.util.HashSet;
@@ -21,8 +23,17 @@ public class Amenity {
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AmenityType type;
+
+
+
     @ManyToMany(mappedBy = "amenities")
     private Set<Hotel> hotels = new HashSet<>();
+
+    @ManyToMany(mappedBy = "amenities")
+    private Set<Room> rooms = new HashSet<>();
 
     public Amenity() {}
 
@@ -40,4 +51,20 @@ public class Amenity {
 
     public Set<Hotel> getHotels() { return hotels; }
     public void setHotels(Set<Hotel> hotels) { this.hotels = hotels; }
+
+    public Set<Room> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(Set<Room> rooms) {
+        this.rooms = rooms;
+    }
+
+    public AmenityType getType() {
+        return type;
+    }
+
+    public void setType(AmenityType type) {
+        this.type = type;
+    }
 }

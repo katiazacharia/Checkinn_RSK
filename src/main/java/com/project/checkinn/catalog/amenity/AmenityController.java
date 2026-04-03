@@ -23,11 +23,9 @@ import java.util.Map;
 public class AmenityController {
 
      private final AmenityService amenityService;
-    private final EntityManager entityManager;
 
-    public AmenityController(AmenityService amenityService, EntityManager entityManager) {
+    public AmenityController(AmenityService amenityService) {
         this.amenityService = amenityService;
-        this.entityManager = entityManager;
     }
 
     @GetMapping
@@ -97,23 +95,17 @@ public class AmenityController {
     }
 
 
-
-    @GetMapping("/{hotelId}/amenities")
+    @PostMapping("/{amenityId}/room/{roomId}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public Page<AmenityResponse> getAmenitiesByHotelId(
-            @PathVariable Long hotelId,
-            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
-        return amenityService.getAmenitiesForHotel(hotelId, pageable);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addAmenityToRoom(@PathVariable Long amenityId, @PathVariable Long roomId) {
+        amenityService.addAmenityToRoom(roomId, amenityId);
     }
 
-    @GetMapping("/{hotelName}/amenities")
-    public Page<AmenityResponse> getAmenitiesByHotelName(
-            @PathVariable String hotelName,
-            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
-        return amenityService.getAmenitiesForHotelName(hotelName, pageable);
+    @DeleteMapping("/{amenityId}/room/{roomId}")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeAmenityFromRoom(@PathVariable Long amenityId, @PathVariable Long roomId) {
+        amenityService.removeAmenityFromRoom(roomId, amenityId);
     }
 }

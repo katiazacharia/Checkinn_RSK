@@ -12,5 +12,6 @@ public interface RoomRepo extends JpaRepository<Room, Long>, JpaSpecificationExe
     boolean existsByHotelIdAndRoomNumber(Long hotelId, String roomNumber);
 
     Page<Room> findByHotelId(Long hotelId, Pageable pageable);
-    Optional<Room> findByHotel_IdAndRoomNumber(Long hotelId, String roomNumber);
+    Optional<Room> findByIdAndHotelId(Long id, Long hotelId);
+
 }
