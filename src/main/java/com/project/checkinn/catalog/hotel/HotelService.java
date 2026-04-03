@@ -13,23 +13,24 @@ public interface HotelService {
 
     String uploadImage(Long hotelId, MultipartFile file);
 
+    Page<HotelListResponse> getAll(Pageable pageable);
 
-    Page<HotelResponse> getAll(Pageable pageable);
+    HotelDetailsResponse getById(Long id);
 
-    HotelResponse getById(Long id);
+    HotelDetailsResponse getByName(String name);
 
-    HotelResponse create(HotelRequest req);
+    HotelDetailsResponse create(HotelRequest req);
 
-    HotelResponse update(Long id, HotelRequest req);
+    HotelDetailsResponse update(Long id, HotelRequest req);
 
     void delete(Long id);
 
-    Page<HotelResponse> search(String city, String name, Long amenityId, Pageable pageable);
+    Page<HotelDetailsResponse> search(String city, String name, Long amenityId, Pageable pageable);
 
-    HotelResponse addAmenity(Long hotelId, Long amenityId);
+    HotelDetailsResponse addAmenity(Long hotelId, Long amenityId);
 
-    HotelResponse removeAmenity(Long hotelId, Long amenityId);
+    HotelDetailsResponse removeAmenity(Long hotelId, Long amenityId);
 
-    HotelResponse replaceAmenities(Long hotelId, Set<Long> amenityIds);
+    HotelDetailsResponse replaceAmenities(Long hotelId, Set<Long> amenityIds);
 
 }

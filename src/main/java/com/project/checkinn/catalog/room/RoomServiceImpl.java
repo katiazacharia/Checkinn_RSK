@@ -7,6 +7,7 @@ import com.project.checkinn.catalog.amenity.AmenityRepo;
 import com.project.checkinn.catalog.amenity.AmenityResponse;
 import com.project.checkinn.catalog.hotel.Hotel;
 import com.project.checkinn.catalog.hotel.HotelRepo;
+import com.project.checkinn.common.AmenityType;
 import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.common.RoomStatus;
 import com.project.checkinn.common.RoomType;
@@ -56,24 +57,35 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<RoomResponse> getRoomsByHotelName(String hotelName, Pageable pageable) {
+    public Page<RoomSummaryResponse> getRoomsByHotelName(String hotelName, Pageable pageable) {
         Hotel hotel = hotelRepo.findByNameIgnoreCase(hotelName)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
 
         return roomRepo.findByHotelId(hotel.getId(), pageable)
-                .map(RoomMapper::toResponse);
+                .map(RoomMapper::toSummaryResponse);
     }
-
     @Override
     public Page<AmenityResponse> getAmenitiesForRoom(Long roomId, Pageable pageable) {
         Room room = roomRepo.findById(roomId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
 
         List<AmenityResponse> amenities = room.getAmenities().stream()
-                .map(AmenityMapper::toResponseWithoutHotels)
+                .filter(a -> a.getType() == AmenityType.ROOM)
+                .map(AmenityMapper::toResponse)
                 .toList();
 
         return new PageImpl<>(amenities, pageable, amenities.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<RoomSummaryResponse> getRoomsByHotelId(Long hotelId, Pageable pageable) {
+        if (!hotelRepo.existsById(hotelId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
+        }
+
+        return roomRepo.findByHotelId(hotelId, pageable)
+                .map(RoomMapper::toSummaryResponse);
     }
 
 
@@ -227,6 +239,11 @@ public class RoomServiceImpl implements RoomService {
         if (req.getCapacity() >= 0) r.setCapacity(req.getCapacity());
         if (req.getStatus() != null) r.setStatus(req.getStatus());
 
+        if (req.getAmenityIds() != null) {
+            Set<Amenity> amenities = new HashSet<>(amenityRepo.findAllById(req.getAmenityIds()));
+            r.setAmenities(amenities);
+        }
+
         return RoomMapper.toResponse(roomRepo.save(r));
     }
 
@@ -254,6 +271,44 @@ public class RoomServiceImpl implements RoomService {
         roomRepo.save(room);
 
         return imageUrl;
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public RoomDetailsWithAmenitiesResponse getRoomDetailsByHotelName(String hotelName, Long roomId) {
+        Hotel hotel = hotelRepo.findByNameIgnoreCase(hotelName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
+
+        Room room = roomRepo.findByIdAndHotelId(roomId, hotel.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found in this hotel"));
+
+        RoomResponse roomResponse = RoomMapper.toResponse(room);
+
+        List<AmenityResponse> amenities = room.getAmenities().stream()
+                .filter(a -> a.getType() == AmenityType.ROOM)
+                .map(AmenityMapper::toResponse)
+                .toList();
+
+        return new RoomDetailsWithAmenitiesResponse(roomResponse, amenities);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RoomDetailsWithAmenitiesResponse getRoomDetailsByHotelId(Long hotelId, Long roomId) {
+        if (!hotelRepo.existsById(hotelId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found");
+        }
+
+        Room room = roomRepo.findByIdAndHotelId(roomId, hotelId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found in this hotel"));
+
+        RoomResponse roomResponse = RoomMapper.toResponse(room);
+
+        List<AmenityResponse> amenities = room.getAmenities().stream()
+                .filter(a -> a.getType() == AmenityType.ROOM)
+                .map(AmenityMapper::toResponse)
+                .toList();
+
+        return new RoomDetailsWithAmenitiesResponse(roomResponse, amenities);
     }
 
     }

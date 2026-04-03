@@ -12,38 +12,36 @@ public class RoomMapper {
 
     private RoomMapper() {}
 
-    public static RoomResponse toResponse(Room r) {
-
-        Set<String> amenityNames = r.getAmenities().stream()
-                .map(Amenity::getName)
-                .collect(Collectors.toSet());
-
-        RoomResponse response = new RoomResponse(
-                r.getId(),
-                r.getHotel().getId(),
-                r.getType(),
-                r.getPricePerNight(),
-                r.getCapacity(),
-                r.getStatus(),
-                r.getImageUrls(),
-                amenityNames
+    public static RoomSummaryResponse toSummaryResponse(Room room) {
+        return new RoomSummaryResponse(
+                room.getId(),
+                room.getType(),
+                room.getPricePerNight(),
+                room.getCapacity()
         );
-
-        response.setCurrency(CurrencyCode.ILS.name());
-        response.setOriginalPricePerNight(r.getPricePerNight());
-        response.setExchangeRate(BigDecimal.ONE);
-        response.setImageUrls(r.getImageUrls());
-
-        return response;
     }
+
+    public static RoomResponse toResponse(Room room) {
+        return new RoomResponse(
+                room.getId(),
+                room.getHotel().getId(),
+                room.getType(),
+                room.getRoomNumber(),
+                room.getPricePerNight(),
+                room.getCapacity(),
+                room.getStatus(),
+                room.getImageUrls()
+        );
+    }
+
     public static Room toEntity(RoomRequest req, Hotel hotel) {
-        Room r = new Room();
-        r.setHotel(hotel);
-        r.setRoomNumber(req.getRoomNumber().trim());
-        r.setType(req.getType());
-        r.setPricePerNight(req.getPricePerNight());
-        r.setCapacity(req.getCapacity());
-        r.setStatus(req.getStatus());
-        return r;
+        Room room = new Room();
+        room.setHotel(hotel);
+        room.setRoomNumber(req.getRoomNumber());
+        room.setType(req.getType());
+        room.setPricePerNight(req.getPricePerNight());
+        room.setCapacity(req.getCapacity());
+        room.setStatus(req.getStatus());
+        return room;
     }
 }

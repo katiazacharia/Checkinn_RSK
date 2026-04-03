@@ -28,4 +28,7 @@ public interface AmenityService {
 
     Page<AmenityResponse> getAmenitiesForHotelName(String hotelName, Pageable pageable);
 
+    void addAmenityToRoom(Long roomId, Long amenityId);
+    void removeAmenityFromRoom(Long roomId, Long amenityId);
+
 }

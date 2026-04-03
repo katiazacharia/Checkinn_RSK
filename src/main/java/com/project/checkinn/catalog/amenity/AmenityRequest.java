@@ -1,11 +1,13 @@
 package com.project.checkinn.catalog.amenity;
 
+import com.project.checkinn.common.AmenityType;
 import jakarta.validation.constraints.NotBlank;
 
 public class AmenityRequest {
     private String name;
     private String icon;
     private String description;
+    private AmenityType type;
 
     public AmenityRequest() {}
 
@@ -18,4 +20,12 @@ public class AmenityRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public AmenityType getType() {
+        return type;
+    }
+
+    public void setType(AmenityType type) {
+        this.type = type;
+    }
 }

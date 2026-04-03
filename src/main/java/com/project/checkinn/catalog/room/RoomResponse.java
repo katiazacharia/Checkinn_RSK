@@ -10,6 +10,7 @@ public class RoomResponse {
     private Long id;
     private Long hotelId;
     private RoomType type;
+    private String roomNumber;
     private BigDecimal pricePerNight;
     private String currency;
     private BigDecimal originalPricePerNight;
@@ -17,22 +18,21 @@ public class RoomResponse {
     private int capacity;
     private RoomStatus status;
     private  Set<String> imageUrls;
-    private Set<String> amenities;
 
     public RoomResponse() {
     }
 
-    public RoomResponse(Long id, Long hotelId, RoomType type,
-                        BigDecimal pricePerNight, int capacity, RoomStatus status, Set<String> imageUrls, Set<String> amenities) {
+    public RoomResponse(Long id, Long hotelId, RoomType type, String roomNumber,
+                        BigDecimal pricePerNight, int capacity, RoomStatus status, Set<String> imageUrls) {
 
         this.id = id;
         this.hotelId = hotelId;
         this.type = type;
+        this.roomNumber = roomNumber;
         this.pricePerNight = pricePerNight;
         this.capacity = capacity;
         this.status = status;
         this.imageUrls = imageUrls;
-        this.amenities = amenities;
     }
 
     public Long getId() { return id; }
@@ -45,7 +45,14 @@ public class RoomResponse {
     public BigDecimal getOriginalPricePerNight() { return originalPricePerNight; }
     public BigDecimal getExchangeRate() { return exchangeRate; }
     public Set<String> getImageUrls() { return imageUrls; }
-    public Set<String> getAmenities() { return amenities; }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
+
+    public void setRoomNumber(String roomNumber) {
+        this.roomNumber = roomNumber;
+    }
 
     public void setId(Long id) { this.id = id; }
     public void setHotelId(Long hotelId) { this.hotelId = hotelId; }
@@ -57,5 +64,4 @@ public class RoomResponse {
     public void setOriginalPricePerNight(BigDecimal originalPricePerNight) { this.originalPricePerNight = originalPricePerNight; }
     public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
     public void setImageUrls(Set<String> imageUrls) { this.imageUrls = imageUrls; }
-    public void setAmenities(Set<String> amenities) { this.amenities = amenities; }
 }
