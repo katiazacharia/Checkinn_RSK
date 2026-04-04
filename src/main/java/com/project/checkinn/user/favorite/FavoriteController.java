@@ -51,7 +51,7 @@ public class FavoriteController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/me/exists") //check if  my favorite exists by itemId
+    @GetMapping("/me/exists")
     public boolean exists(@RequestParam Long itemId, Authentication authentication) {
         return favoriteService.exists(itemId, authentication);
     }

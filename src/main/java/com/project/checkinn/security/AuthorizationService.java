@@ -2,6 +2,7 @@ package com.project.checkinn.security;
 
 import com.project.checkinn.booking.reservation.BookingRepository;
 import com.project.checkinn.review.ReviewRepo;
+import com.project.checkinn.user.favorite.FavoriteRepo;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
@@ -11,11 +12,16 @@ public class AuthorizationService {
     private final CurrentUserService currentUserService;
     private final BookingRepository bookingRepository;
     private final ReviewRepo reviewRepo;
+    private final FavoriteRepo favoriteRepo;
 
-    public AuthorizationService(CurrentUserService currentUserService,BookingRepository bookingRepository, ReviewRepo reviewRepo) {
+    public AuthorizationService(CurrentUserService currentUserService,
+                                BookingRepository bookingRepository,
+                                ReviewRepo reviewRepo,
+                                FavoriteRepo favoriteRepo) {
         this.currentUserService = currentUserService;
         this.bookingRepository = bookingRepository;
         this.reviewRepo = reviewRepo;
+        this.favoriteRepo = favoriteRepo;
     }
 
     public boolean isSelfUser(Long userId, Authentication authentication) {
@@ -43,6 +49,18 @@ public class AuthorizationService {
                 .map(review -> review.getUser().getId().equals(currentUserId))
                 .orElse(false);
     }
+
+    public boolean isFavoriteOwner(Long favoriteId, Authentication authentication) {
+        if (favoriteId == null) return false;
+
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        if (currentUserId == null) return false;
+
+        return favoriteRepo.findById(favoriteId)
+                .map(fav -> fav.getUser().getId().equals(currentUserId))
+                .orElse(false);
+    }
+
 
     private Long getUserId(Authentication authentication) {
         if (authentication == null) return null;

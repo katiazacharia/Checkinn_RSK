@@ -163,7 +163,12 @@ public class DataSeeder {
                 findAmenityByName(amenityRepo, "Breakfast"),
                 findAmenityByName(amenityRepo, "Gym")
         ));
+        h1.setImageUrls(List.of(
+                "/Uploads/hotels/1775303590677_hotel 4.jpg",
+                "/Uploads/hotels/1775303585246_hotel 4 (2).jpg"
+        ));
         h1 = hotelRepo.save(h1);
+
 
         Hotel h2 = findHotelByName(hotelRepo, "Ankara City Hotel");
         if (h2 == null) h2 = new Hotel();
@@ -176,7 +181,12 @@ public class DataSeeder {
                 findAmenityByName(amenityRepo, "Pool"),
                 findAmenityByName(amenityRepo, "Breakfast")
         ));
+        h2.setImageUrls(List.of(
+                "/Uploads/hotels/1775305160071_hotel 5.jpg"
+        ));
         h2 = hotelRepo.save(h2);
+
+
 
         Hotel h3 = findHotelByName(hotelRepo, "Izmir Pearl");
         if (h3 == null) h3 = new Hotel();
