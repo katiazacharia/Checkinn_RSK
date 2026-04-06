@@ -15,17 +15,19 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -181,13 +183,15 @@ public class SecurityConfig {
     @Bean
     public Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthConverter() {
 
-        JwtGrantedAuthoritiesConverter conv = new JwtGrantedAuthoritiesConverter();
-        conv.setAuthoritiesClaimName("roles");
-        conv.setAuthorityPrefix("ROLE_");
+        return jwt -> {
+            List<String> roles = jwt.getClaimAsStringList("roles");
+            if (roles == null) roles = Collections.emptyList();
 
-        JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
-        jwtConverter.setJwtGrantedAuthoritiesConverter(conv);
+            Collection<GrantedAuthority> authorities = roles.stream()
+                    .map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase())) // force uppercase
+                    .collect(Collectors.toList());
 
-        return jwtConverter;
+            return new JwtAuthenticationToken(jwt, authorities);
+        };
     }
 }
