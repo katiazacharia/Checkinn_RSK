@@ -1,5 +1,7 @@
 package com.project.checkinn.security;
 
+import jakarta.validation.constraints.Size;
+
 import java.util.Set;
 
 public record RegisterRequest(
@@ -7,5 +9,8 @@ public record RegisterRequest(
         String password,
         String fullName,
         String email,
-        String phone
+        @Size(min = 10, max = 10, message = "Phone must be 10 digits")
+        String phone,
+        String role
+
 ) {}

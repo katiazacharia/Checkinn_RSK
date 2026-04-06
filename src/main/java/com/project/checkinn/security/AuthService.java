@@ -6,8 +6,10 @@ import com.project.checkinn.user.profile.User;
 import com.project.checkinn.user.profile.UserRepo;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.util.List;
@@ -41,16 +43,18 @@ public class AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest req) {
         if (userRepo.existsByUsername(req.username())) {
-            throw new RuntimeException("Username already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
         }
+
         if (profileRepo.existsByEmail(req.email())) {
-            throw new RuntimeException("Email already exists");
-        }
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already exists");        }
         AppUser appuser = new AppUser();
         appuser.setUsername(req.username());
         appuser.setPasswordHash(encoder.encode(req.password()));
         appuser.setEnabled(true);
-        appuser.setRole(Role.CUSTOMER);
+        Role selectedRole = parseRegisterRole(req.role());
+        appuser.setRole(selectedRole);
+
 
         AppUser savedAppUser = userRepo.save(appuser);
 
@@ -59,7 +63,7 @@ public class AuthService {
         profile.setFullName(req.fullName());
         profile.setEmail(req.email());
         profile.setPhone(req.phone());
-        profile.setRole(Role.CUSTOMER);
+        profile.setRole(selectedRole);
 
         profileRepo.save(profile);
 
@@ -70,19 +74,46 @@ public class AuthService {
         );
     }
 
+    private Role parseRegisterRole(String roleValue) {
+        if (roleValue == null || roleValue.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Role is required. Allowed values: CUSTOMER or MANAGER"
+            );
+        }
+
+        String normalized = roleValue.trim().toUpperCase();
+
+        if (normalized.equals("ADMIN")) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "You cannot register as ADMIN"
+            );
+        }
+
+        if (!normalized.equals("CUSTOMER") && !normalized.equals("MANAGER")) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid role. Allowed values: CUSTOMER or MANAGER"
+            );
+        }
+
+        return Role.valueOf(normalized);
+    }
+
     @Transactional
     public LoginResponse login(String username, String password) {
 
         AppUser user = userRepo.findByUsername(username)
                 .filter(AppUser::isEnabled)
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
 
         if (!encoder.matches(password, user.getPasswordHash())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
         User profile = profileRepo.findByAppUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException("User profile not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User profile not found"));
 
         List<String> roles = List.of(user.getRole().name());
 
@@ -105,21 +136,21 @@ public class AuthService {
     @Transactional
     public LoginResponse refreshToken(String refreshTokenValue) {
         RefreshToken refreshToken = refreshTokenRepo.findByToken(refreshTokenValue)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid refresh token"));
 
         if (refreshToken.isRevoked()) {
-            throw new RuntimeException("Refresh token has been revoked");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token has been revoked");
         }
 
         if (refreshToken.isExpired()) {
             refreshTokenRepo.delete(refreshToken);
-            throw new RuntimeException("Refresh token has expired");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token has expired");
         }
 
         AppUser user = refreshToken.getUser();
 
         if (!user.isEnabled()) {
-            throw new RuntimeException("User account is disabled");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User account is disabled");
         }
 
         List<String> roles = List.of(user.getRole().name());
@@ -158,7 +189,7 @@ public class AuthService {
     @Transactional
     public void revokeRefreshToken(String token) {
         RefreshToken refreshToken = refreshTokenRepo.findByToken(token)
-                .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Refresh token not found"));
 
         refreshToken.setRevoked(true);
         refreshTokenRepo.save(refreshToken);

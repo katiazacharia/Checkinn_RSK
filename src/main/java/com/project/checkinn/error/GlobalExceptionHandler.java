@@ -44,12 +44,16 @@ public class GlobalExceptionHandler {
                 .map(e -> new FieldErrorDto(e.getField(), e.getDefaultMessage()))
                 .toList();
 
+        String message = errors.isEmpty()
+                ? "Validation failed"
+                : errors.get(0).getError();
+
         ApiError body = new ApiError(
                 HttpStatus.BAD_REQUEST.value(),
-                "Validation failed",
+                message,
                 req.getRequestURI(),
                 LocalDateTime.now(),
-                errors
+                List.of()
         );
 
         return ResponseEntity.badRequest().body(body);
