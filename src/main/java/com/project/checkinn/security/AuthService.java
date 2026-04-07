@@ -2,6 +2,8 @@ package com.project.checkinn.security;
 
 
 
+import com.project.checkinn.loyalty.account.LoyaltyAccount;
+import com.project.checkinn.loyalty.account.LoyaltyAccountRepo;
 import com.project.checkinn.user.profile.User;
 import com.project.checkinn.user.profile.UserRepo;
 import jakarta.transaction.Transactional;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,13 +27,15 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepo;
     private final long refreshTokenDays;
     private final UserRepo profileRepo;
+    private final LoyaltyAccountRepo loyaltyAccountRepo;
+
 
     public AuthService(
             AppUserRepository userRepo,
             PasswordEncoder encoder,
             JwtTokenService tokenService,
             RefreshTokenRepository refreshTokenRepo,
-            @Value("${security.jwt.secret.refresh-token-days}") long refreshTokenDays, UserRepo profileRepo
+            @Value("${security.jwt.secret.refresh-token-days}") long refreshTokenDays, UserRepo profileRepo, LoyaltyAccountRepo loyaltyAccountRepo
     ) {
         this.userRepo = userRepo;
         this.encoder = encoder;
@@ -38,6 +43,7 @@ public class AuthService {
         this.refreshTokenRepo = refreshTokenRepo;
         this.refreshTokenDays = refreshTokenDays;
         this.profileRepo = profileRepo;
+        this.loyaltyAccountRepo = loyaltyAccountRepo;
     }
 
     @Transactional
@@ -65,13 +71,29 @@ public class AuthService {
         profile.setPhone(req.phone());
         profile.setRole(selectedRole);
 
-        profileRepo.save(profile);
+
+        User savedProfile = profileRepo.save(profile);
+
+        createLoyaltyAccountForUser(savedProfile);
 
         return new RegisterResponse(
                 savedAppUser.getId(),
                 savedAppUser.getUsername(),
                 savedAppUser.getRole().name()
         );
+    }
+
+    private void createLoyaltyAccountForUser(User user) {
+        if (loyaltyAccountRepo.existsByUser_Id(user.getId())) {
+            return;
+        }
+
+        LoyaltyAccount account = new LoyaltyAccount();
+        account.setUser(user);
+        account.setPoints(0);
+        account.setUpdatedAt(LocalDateTime.now());
+        account.recalculateTier(); // أو setTier(BRONZE) حسب الentity عندكم
+        loyaltyAccountRepo.save(account);
     }
 
     private Role parseRegisterRole(String roleValue) {

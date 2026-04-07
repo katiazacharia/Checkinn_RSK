@@ -3,6 +3,8 @@ package com.project.checkinn.payment;
 import com.project.checkinn.booking.reservation.Booking;
 import com.project.checkinn.common.PaymentMethod;
 
+import java.math.BigDecimal;
+
 public class PaymentMapper {
 
     private PaymentMapper() {
@@ -10,6 +12,21 @@ public class PaymentMapper {
 
     public static PaymentResponse toResponse(Payment payment) {
         return payment == null ? null : new PaymentResponse(payment);
+    }
+
+    public static PaymentResponse toResponse(
+            Payment payment,
+            BigDecimal originalAmount,
+            BigDecimal loyaltyDiscount,
+            Integer redeemedPoints,
+            Integer earnedPoints
+    ) {
+        PaymentResponse response = new PaymentResponse(payment);
+        response.setOriginalAmount(originalAmount);
+        response.setLoyaltyDiscount(loyaltyDiscount);
+        response.setRedeemedPoints(redeemedPoints);
+        response.setEarnedPoints(earnedPoints);
+        return response;
     }
 
     public static Payment toEntity(Booking booking, PaymentMethod method) {

@@ -23,9 +23,11 @@ public class BookingResponse {
     private Long promoCodeId; // optional
     private Long roomId;
     private List<String> extras;
+    private Integer expectedLoyaltyPoints;
+    private String loyaltyMessage;
 
 
-    public BookingResponse(Booking booking) {
+    public BookingResponse(Booking booking, Integer expectedLoyaltyPoints, String loyaltyMessage) {
         this.id = booking.getId();
         this.userId = booking.getUser() != null ? booking.getUser().getId() : null;
         this.checkInDate = booking.getCheckInDate();
@@ -37,6 +39,8 @@ public class BookingResponse {
         this.exchangeRate = booking.getExchangeRate();
         this.promoCodeId = booking.getPromoCode() != null ? booking.getPromoCode().getId() : null;
         this.roomId = booking.getRoom() != null ? booking.getRoom().getId() : null;
+        this.expectedLoyaltyPoints = expectedLoyaltyPoints;
+        this.loyaltyMessage = loyaltyMessage;
         if (booking.getExtras() != null) {
             this.extras = booking.getExtras()
                     .stream()
@@ -52,6 +56,22 @@ public class BookingResponse {
     public BookingStatus getStatus() { return status; }
     public BigDecimal getTotalPrice() { return totalPrice; }
     public Long getPromoCodeId() { return promoCodeId; }
+
+    public Integer getExpectedLoyaltyPoints() {
+        return expectedLoyaltyPoints;
+    }
+
+    public void setExpectedLoyaltyPoints(Integer expectedLoyaltyPoints) {
+        this.expectedLoyaltyPoints = expectedLoyaltyPoints;
+    }
+
+    public String getLoyaltyMessage() {
+        return loyaltyMessage;
+    }
+
+    public void setLoyaltyMessage(String loyaltyMessage) {
+        this.loyaltyMessage = loyaltyMessage;
+    }
 
     public CurrencyCode getCurrency() {
         return currency;

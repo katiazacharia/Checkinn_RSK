@@ -198,4 +198,36 @@ public class LoyaltyServiceImpl implements LoyaltyService {
                 .map(LoyaltyTransactionResponse::new);
     }
 
+    @Override
+    public LoyaltyAccountResponse adjustPoints(Long userId, int points, String note) {
+        if (userId == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+
+        if (points == 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "points must not be 0");
+
+        LoyaltyAccount acc = accountRepo.findByUser_Id(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "loyalty account not found"));
+
+        int newPoints = acc.getPoints() + points;
+        if (newPoints < 0) {
+            newPoints = 0;
+        }
+
+        acc.setPoints(newPoints);
+        acc.recalculateTier();
+        acc.setUpdatedAt(LocalDateTime.now());
+        accountRepo.save(acc);
+
+        LoyaltyTransaction tx = new LoyaltyTransaction();
+        tx.setUser(entityManager.getReference(User.class, userId));
+        tx.setType(LoyaltyTransactionType.EXPIRE);
+        tx.setPoints(points);
+        tx.setNote(note);
+        tx.setCreatedAt(LocalDateTime.now());
+        transactionRepo.save(tx);
+
+        return new LoyaltyAccountResponse(acc);
+    }
+
 }
