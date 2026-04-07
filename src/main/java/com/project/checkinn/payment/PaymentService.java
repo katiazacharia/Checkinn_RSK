@@ -14,10 +14,7 @@ public interface PaymentService {
     Payment getById(Long id);
 
 
-    Payment create(
-            Long bookingId,
-            String method
-    );
+
 
     Payment getByBookingId(Long bookingId);
 
