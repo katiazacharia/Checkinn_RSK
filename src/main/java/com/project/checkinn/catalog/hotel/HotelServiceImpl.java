@@ -3,9 +3,12 @@ package com.project.checkinn.catalog.hotel;
 import com.project.checkinn.ImageStorageService;
 import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.amenity.AmenityRepo;
+import com.project.checkinn.security.CurrentUserService;
+import com.project.checkinn.user.profile.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,13 +22,15 @@ public class HotelServiceImpl implements HotelService {
     private final HotelRepo hotelRepo;
     private final AmenityRepo amenityRepo;
     private final ImageStorageService imageStorageService;
+    private final CurrentUserService currentUserService;
 
     public HotelServiceImpl(HotelRepo hotelRepo,
                             AmenityRepo amenityRepo,
-                            ImageStorageService imageStorageService) {
+                            ImageStorageService imageStorageService, CurrentUserService currentUserService) {
         this.hotelRepo = hotelRepo;
         this.amenityRepo = amenityRepo;
         this.imageStorageService = imageStorageService;
+        this.currentUserService = currentUserService;
     }
 
     @Override
@@ -48,7 +53,7 @@ public class HotelServiceImpl implements HotelService {
     }
 
     @Override
-    public HotelDetailsResponse create(HotelRequest req) {
+    public HotelDetailsResponse create(HotelRequest req, Authentication authentication) {
 
         if (req == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
@@ -59,11 +64,14 @@ public class HotelServiceImpl implements HotelService {
         if (req.getCity() == null || req.getCity().isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "City is required");
 
+        User currentUser = currentUserService.getCurrentUser(authentication);
+
         Hotel h = new Hotel();
         h.setName(req.getName().trim());
         h.setCity(req.getCity().trim());
         h.setAddress(req.getAddress());
         h.setDescription(req.getDescription());
+        h.setManager(currentUser);
 
         if (req.getAmenityIds() != null && !req.getAmenityIds().isEmpty()) {
             Set<Amenity> amenities = new HashSet<>(amenityRepo.findAllById(req.getAmenityIds()));

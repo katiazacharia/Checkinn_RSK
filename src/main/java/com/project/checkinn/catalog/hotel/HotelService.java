@@ -3,6 +3,7 @@ package com.project.checkinn.catalog.hotel;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
@@ -19,7 +20,7 @@ public interface HotelService {
 
     HotelDetailsResponse getByName(String name);
 
-    HotelDetailsResponse create(HotelRequest req);
+    HotelDetailsResponse create(HotelRequest req, Authentication authentication);
 
     HotelDetailsResponse update(Long id, HotelRequest req);
 

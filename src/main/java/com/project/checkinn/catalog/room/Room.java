@@ -36,7 +36,7 @@ public class Room {
     private BigDecimal pricePerNight;
 
     @Column(nullable = false)
-    private int capacity;
+    private Integer  capacity;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -73,8 +73,8 @@ public class Room {
     public BigDecimal getPricePerNight() { return pricePerNight; }
     public void setPricePerNight(BigDecimal pricePerNight) { this.pricePerNight = pricePerNight; }
 
-    public int getCapacity() { return capacity; }
-    public void setCapacity(int capacity) { this.capacity = capacity; }
+    public Integer  getCapacity() { return capacity; }
+    public void setCapacity(Integer  capacity) { this.capacity = capacity; }
 
     public RoomStatus getStatus() { return status; }
     public void setStatus(RoomStatus status) { this.status = status; }

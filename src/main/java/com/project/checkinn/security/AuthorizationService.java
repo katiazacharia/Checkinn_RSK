@@ -1,6 +1,8 @@
 package com.project.checkinn.security;
 
 import com.project.checkinn.booking.reservation.BookingRepository;
+import com.project.checkinn.catalog.hotel.HotelRepo;
+import com.project.checkinn.catalog.room.RoomRepo;
 import com.project.checkinn.review.ReviewRepo;
 import com.project.checkinn.user.favorite.FavoriteRepo;
 import org.springframework.security.core.Authentication;
@@ -13,15 +15,20 @@ public class AuthorizationService {
     private final BookingRepository bookingRepository;
     private final ReviewRepo reviewRepo;
     private final FavoriteRepo favoriteRepo;
+    private final HotelRepo hotelRepository;
+    private final RoomRepo roomRepo;
+
 
     public AuthorizationService(CurrentUserService currentUserService,
                                 BookingRepository bookingRepository,
                                 ReviewRepo reviewRepo,
-                                FavoriteRepo favoriteRepo) {
+                                FavoriteRepo favoriteRepo, HotelRepo hotelRepository, RoomRepo roomRepo) {
         this.currentUserService = currentUserService;
         this.bookingRepository = bookingRepository;
         this.reviewRepo = reviewRepo;
         this.favoriteRepo = favoriteRepo;
+        this.hotelRepository = hotelRepository;
+        this.roomRepo = roomRepo;
     }
 
     public boolean isSelfUser(Long userId, Authentication authentication) {
@@ -46,7 +53,7 @@ public class AuthorizationService {
         Long currentUserId = currentUserService.getCurrentUserId(authentication);
 
         return reviewRepo.findById(reviewId)
-                .map(review -> review.getUser().getId().equals(currentUserId))
+                .map(review -> review.getUser() != null && review.getUser().getId().equals(currentUserId))
                 .orElse(false);
     }
 
@@ -57,24 +64,35 @@ public class AuthorizationService {
         if (currentUserId == null) return false;
 
         return favoriteRepo.findById(favoriteId)
-                .map(fav -> fav.getUser().getId().equals(currentUserId))
+                .map(fav -> fav.getUser() != null && fav.getUser().getId().equals(currentUserId))
                 .orElse(false);
     }
 
 
-    private Long getUserId(Authentication authentication) {
-        if (authentication == null) return null;
-        Object principal = authentication.getPrincipal();
-        if (!(principal instanceof Jwt jwt)) return null;
 
-        Object claim = jwt.getClaim("userId");
-        if (claim == null) return null;
 
-        if (claim instanceof Integer i) return i.longValue();
-        if (claim instanceof Long l) return l;
-        if (claim instanceof String s) return Long.valueOf(s);
+    public boolean isHotelManager(Long hotelId, Authentication authentication) {
+        if (hotelId == null) return false;
 
-        return null;
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        if (currentUserId == null) return false;
+
+        return hotelRepository.findById(hotelId)
+                .map(hotel -> hotel.getManager() != null
+                        && hotel.getManager().getId().equals(currentUserId))
+                .orElse(false);
+    }
+
+    public boolean canManageRoom(Long roomId, Authentication authentication) {
+        if (roomId == null) return false;
+
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+
+        return roomRepo.findById(roomId)
+                .map(room -> room.getHotel() != null
+                        && room.getHotel().getManager() != null
+                        && room.getHotel().getManager().getId().equals(currentUserId))
+                .orElse(false);
     }
 }
 
