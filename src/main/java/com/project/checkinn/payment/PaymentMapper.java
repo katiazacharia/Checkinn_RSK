@@ -14,24 +14,7 @@ public class PaymentMapper {
         return payment == null ? null : new PaymentResponse(payment);
     }
 
-    public static PaymentResponse toResponse(
-            Payment payment,
-            BigDecimal originalAmount,
-            BigDecimal loyaltyDiscount,
-            Integer redeemedPoints,
-            Integer earnedPoints,
-            String loyaltyMessage
 
-    ) {
-        PaymentResponse response = new PaymentResponse(payment);
-        response.setOriginalAmount(originalAmount);
-        response.setLoyaltyDiscount(loyaltyDiscount);
-        response.setRedeemedPoints(redeemedPoints);
-        response.setEarnedPoints(earnedPoints);
-        response.setLoyaltyMessage(loyaltyMessage);
-
-        return response;
-    }
 
     public static Payment toEntity(Booking booking, PaymentMethod method) {
         if (booking == null) {

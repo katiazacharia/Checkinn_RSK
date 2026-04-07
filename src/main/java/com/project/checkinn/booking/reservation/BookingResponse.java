@@ -16,7 +16,6 @@ public class BookingResponse {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private BookingStatus status;
-    private BigDecimal originalTotalPrice;
     private BigDecimal exchangeRate;
     private CurrencyCode currency;
     private BigDecimal totalPrice;
@@ -25,9 +24,9 @@ public class BookingResponse {
     private List<String> extras;
     private Integer expectedLoyaltyPoints;
     private String loyaltyMessage;
+    private String originalTotalPriceFormatted;
 
-
-    public BookingResponse(Booking booking, Integer expectedLoyaltyPoints, String loyaltyMessage) {
+    public BookingResponse(Booking booking, Integer expectedLoyaltyPoints, String loyaltyMessage){
         this.id = booking.getId();
         this.userId = booking.getUser() != null ? booking.getUser().getId() : null;
         this.checkInDate = booking.getCheckInDate();
@@ -35,12 +34,12 @@ public class BookingResponse {
         this.status = booking.getStatus();
         this.totalPrice = booking.getTotalPrice();
         this.currency = booking.getCurrency();
-        this.originalTotalPrice = booking.getOriginalTotalPrice();
         this.exchangeRate = booking.getExchangeRate();
         this.promoCodeId = booking.getPromoCode() != null ? booking.getPromoCode().getId() : null;
         this.roomId = booking.getRoom() != null ? booking.getRoom().getId() : null;
         this.expectedLoyaltyPoints = expectedLoyaltyPoints;
         this.loyaltyMessage = loyaltyMessage;
+        this.originalTotalPriceFormatted = booking.getOriginalTotalPrice() + " ₪";
         if (booking.getExtras() != null) {
             this.extras = booking.getExtras()
                     .stream()
@@ -77,9 +76,6 @@ public class BookingResponse {
         return currency;
     }
 
-    public BigDecimal getOriginalTotalPrice() {
-        return originalTotalPrice;
-    }
 
     public BigDecimal getExchangeRate() {
         return exchangeRate;
@@ -93,9 +89,6 @@ public class BookingResponse {
         this.exchangeRate = exchangeRate;
     }
 
-    public void setOriginalTotalPrice(BigDecimal originalTotalPrice) {
-        this.originalTotalPrice = originalTotalPrice;
-    }
 
     public void setCurrency(CurrencyCode currency) {
         this.currency = currency;
@@ -104,5 +97,13 @@ public class BookingResponse {
     public Long getRoomId() { return roomId; }
     public List<String> getExtras() {
         return extras;
+    }
+
+    public String getOriginalTotalPriceFormatted() {
+        return originalTotalPriceFormatted;
+    }
+
+    public void setOriginalTotalPriceFormatted(String originalTotalPriceFormatted) {
+        this.originalTotalPriceFormatted = originalTotalPriceFormatted;
     }
 }

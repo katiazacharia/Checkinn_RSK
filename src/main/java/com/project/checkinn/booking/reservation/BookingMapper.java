@@ -25,8 +25,14 @@ public class BookingMapper {
 
         String loyaltyMessage = "If you complete payment, you will earn " + expectedLoyaltyPoints + " loyalty points.";
 
-        return new BookingResponse(booking, expectedLoyaltyPoints, loyaltyMessage);
-    }
+
+        BookingResponse response = new BookingResponse(booking, expectedLoyaltyPoints, loyaltyMessage);
+
+        response.setTotalPrice(booking.getTotalPrice());
+        response.setCurrency(booking.getCurrency());
+        response.setExchangeRate(booking.getExchangeRate());
+
+        return response;    }
 
     public static Booking toEntity(BookingRequest request, User user, Room room, PromoCode promoCode) {
         if (request == null || user == null || room == null) return null;
@@ -41,25 +47,4 @@ public class BookingMapper {
         return booking;
     }
 
-    public static BookingResponse toResponse(Booking booking, BigDecimal displayTotalPrice,
-                                             CurrencyCode currency,
-                                             BigDecimal originalTotalPrice,
-                                             BigDecimal exchangeRate){
-
-        if (booking == null) return null;
-        int expectedLoyaltyPoints = 0;
-        if (booking.getCheckInDate() != null && booking.getCheckOutDate() != null) {
-            long nights = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
-            expectedLoyaltyPoints = (int) nights * 10;
-        }
-
-        String loyaltyMessage = "If you complete payment, you will earn " + expectedLoyaltyPoints + " loyalty points.";
-
-        BookingResponse response = new BookingResponse(booking, expectedLoyaltyPoints, loyaltyMessage);
-        response.setTotalPrice(displayTotalPrice);
-        response.setCurrency(currency);
-        response.setOriginalTotalPrice(originalTotalPrice);
-        response.setExchangeRate(exchangeRate);
-        return response;
-    }
 }

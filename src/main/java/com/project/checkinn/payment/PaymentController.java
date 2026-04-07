@@ -94,14 +94,6 @@ public class PaymentController {
         return PaymentMapper.toResponse(paymentService.updateStatus(id, status));
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
-    public void delete(@PathVariable Long id) {
-        throw new ResponseStatusException(
-                HttpStatus.METHOD_NOT_ALLOWED,
-                "Deleting payments is not allowed"
-        );
-    }
 
     @PreAuthorize("@authz.isBookingOwner(#bookingId, authentication) or hasAnyRole('ADMIN','MANAGER')")
     @PostMapping("/{bookingId}/refund")
