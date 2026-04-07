@@ -184,6 +184,12 @@ public class RoomServiceImpl implements RoomService {
         if (req.getStatus() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status is required");
         }
+        if (req.getCapacity() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "capacity is required");
+        }
+        if (req.getCapacity() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "capacity must be >= 0");
+        }
 
         Hotel hotel = hotelRepo.findById(req.getHotelId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
@@ -213,11 +219,7 @@ public class RoomServiceImpl implements RoomService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found"));
 
         if (req.getHotelId() != null && !req.getHotelId().equals(r.getHotel().getId())) {
-
-            Hotel newHotel = hotelRepo.findById(req.getHotelId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Hotel not found"));
-
-            r.setHotel(newHotel);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Changing room hotel is not allowed here");
         }
 
         if (req.getRoomNumber() != null && !req.getRoomNumber().isBlank()) {
@@ -236,8 +238,9 @@ public class RoomServiceImpl implements RoomService {
 
         if (req.getType() != null) r.setType(req.getType());
         if (req.getPricePerNight() != null) r.setPricePerNight(req.getPricePerNight());
-        if (req.getCapacity() >= 0) r.setCapacity(req.getCapacity());
-        if (req.getStatus() != null) r.setStatus(req.getStatus());
+        if (req.getCapacity() != null && req.getCapacity() >= 0) {
+            r.setCapacity(req.getCapacity());
+        }        if (req.getStatus() != null) r.setStatus(req.getStatus());
 
         if (req.getAmenityIds() != null) {
             Set<Amenity> amenities = new HashSet<>(amenityRepo.findAllById(req.getAmenityIds()));

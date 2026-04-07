@@ -19,7 +19,7 @@ public class RoomRequest {
     @NotNull
     private BigDecimal pricePerNight;
     @NotNull
-    private int capacity;
+    private Integer capacity;
     @NotNull
     private RoomStatus status;
 
@@ -37,8 +37,8 @@ public class RoomRequest {
     public BigDecimal getPricePerNight() { return pricePerNight; }
     public void setPricePerNight(BigDecimal pricePerNight) { this.pricePerNight = pricePerNight; }
 
-    public int getCapacity() { return capacity; }
-    public void setCapacity(int capacity) { this.capacity = capacity; }
+    public Integer getCapacity() { return capacity; }
+    public void setCapacity(Integer capacity) { this.capacity = capacity; }
 
     public RoomStatus getStatus() { return status; }
     public void setStatus(RoomStatus status) { this.status = status; }

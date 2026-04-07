@@ -44,7 +44,7 @@ public class AmenityController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AmenityResponse> create(
             @Valid @RequestBody AmenityRequest request,
             UriComponentsBuilder uriBuilder
@@ -61,7 +61,7 @@ public class AmenityController {
 
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AmenityResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody AmenityRequest request
@@ -72,7 +72,7 @@ public class AmenityController {
 
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         amenityService.delete(id);
         return ResponseEntity.noContent().build();
@@ -80,7 +80,7 @@ public class AmenityController {
 
 
     @PostMapping("/{amenityId}/hotel/{hotelId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.isHotelManager(#hotelId, authentication))")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void addAmenityToHotel(@PathVariable Long amenityId, @PathVariable Long hotelId) {
         amenityService.addAmenityToHotel(hotelId, amenityId);
@@ -88,7 +88,7 @@ public class AmenityController {
 
 
     @DeleteMapping("/{amenityId}/hotel/{hotelId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.isHotelManager(#hotelId, authentication))")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAmenityFromHotel(@PathVariable Long amenityId, @PathVariable Long hotelId) {
         amenityService.removeAmenityFromHotel(hotelId, amenityId);
@@ -96,14 +96,14 @@ public class AmenityController {
 
 
     @PostMapping("/{amenityId}/room/{roomId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.canManageRoom(#roomId, authentication))")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void addAmenityToRoom(@PathVariable Long amenityId, @PathVariable Long roomId) {
         amenityService.addAmenityToRoom(roomId, amenityId);
     }
 
     @DeleteMapping("/{amenityId}/room/{roomId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.canManageRoom(#roomId, authentication))")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeAmenityFromRoom(@PathVariable Long amenityId, @PathVariable Long roomId) {
         amenityService.removeAmenityFromRoom(roomId, amenityId);

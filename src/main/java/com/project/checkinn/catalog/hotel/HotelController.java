@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -54,9 +55,10 @@ public class HotelController {
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<HotelDetailsResponse> create(
             @Valid @RequestBody HotelRequest request,
+            Authentication authentication,
             UriComponentsBuilder uriBuilder
     ) {
-        HotelDetailsResponse saved = hotelService.create(request);
+        HotelDetailsResponse saved = hotelService.create(request,authentication);
 
         URI location = uriBuilder
                 .path("/hotels/{id}")
@@ -67,7 +69,7 @@ public class HotelController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.isHotelManager(#id, authentication))")
     public ResponseEntity<HotelDetailsResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody HotelRequest request
@@ -77,7 +79,7 @@ public class HotelController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.isHotelManager(#id, authentication))")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         hotelService.delete(id);
         return ResponseEntity.noContent().build();
@@ -85,8 +87,8 @@ public class HotelController {
 
 
       @PostMapping("/{id}/image")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<String> uploadHotelImage(
+      @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.isHotelManager(#id, authentication))")
+      public ResponseEntity<String> uploadHotelImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
     ) {
@@ -96,7 +98,7 @@ public class HotelController {
 
     //hotels/hotelId/rooms in that hotel but not detailed  this is for admin/manager since they know the ids
     @GetMapping("/{hotelId}/rooms")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.isHotelManager(#hotelId, authentication))")
     public Page<RoomSummaryResponse> getRoomsByHotelId(
             @PathVariable Long hotelId,
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC)

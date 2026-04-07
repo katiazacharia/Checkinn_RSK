@@ -2,6 +2,7 @@ package com.project.checkinn.catalog.hotel;
 
 import com.project.checkinn.catalog.amenity.Amenity;
 import com.project.checkinn.catalog.room.Room;
+import com.project.checkinn.user.profile.User;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -61,6 +62,11 @@ public class Hotel {
     )
     private Set<Amenity> amenities = new HashSet<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id", nullable = false)
+    private User manager;
+
+
     public Hotel() {}
 
     // getters & setters
@@ -101,5 +107,13 @@ public class Hotel {
         for (Amenity a : new HashSet<>(this.amenities)) {
             removeAmenity(a);
         }
+    }
+
+    public User getManager() {
+        return manager;
+    }
+
+    public void setManager(User manager) {
+        this.manager = manager;
     }
 }

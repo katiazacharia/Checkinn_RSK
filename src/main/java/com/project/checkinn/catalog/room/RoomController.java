@@ -52,7 +52,7 @@ public class RoomController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.isHotelManager(#request.hotelId, authentication))")
     public ResponseEntity<RoomResponse> create(
             @Valid @RequestBody RoomRequest request,
             UriComponentsBuilder uriBuilder
@@ -68,7 +68,7 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.canManageRoom(#id, authentication))")
     public ResponseEntity<RoomResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody RoomRequest request
@@ -78,7 +78,7 @@ public class RoomController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.canManageRoom(#id, authentication))")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         roomService.delete(id);
         return ResponseEntity.noContent().build();
@@ -92,7 +92,7 @@ public class RoomController {
         return roomService.getAmenitiesForRoom(id, pageable);
     }
     @PostMapping("/{id}/images")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.canManageRoom(#id, authentication))")
     public ResponseEntity<String> uploadRoomImage(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
