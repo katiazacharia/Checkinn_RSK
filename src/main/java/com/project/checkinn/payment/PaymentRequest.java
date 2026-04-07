@@ -1,6 +1,7 @@
 package com.project.checkinn.payment;
 
 import com.project.checkinn.common.PaymentMethod;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class PaymentRequest {
@@ -8,7 +9,7 @@ public class PaymentRequest {
     @NotNull(message = "bookingId is required")
     private Long bookingId;
 
-    @NotNull(message = "payment method is required")
+    @NotBlank(message = "payment method is required")
     private String method;
     private Integer pointsToRedeem;
 

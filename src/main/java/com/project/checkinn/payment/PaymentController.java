@@ -32,7 +32,7 @@ public class PaymentController {
             PaymentMethod method;
             try {
                 method = PaymentMethod.valueOf(request.getMethod().toUpperCase());
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid payment method");
             }
 
