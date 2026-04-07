@@ -29,11 +29,16 @@ public class PaymentController {
         @PostMapping
         @ResponseStatus(HttpStatus.CREATED)
         public PaymentResponse create(@Valid @RequestBody PaymentRequest request) {
-
+            PaymentMethod method;
+            try {
+                method = PaymentMethod.valueOf(request.getMethod().toUpperCase());
+            } catch (Exception e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid payment method");
+            }
 
             return paymentService.create(
                     request.getBookingId(),
-                    request.getMethod(),
+                   method,
                     request.getPointsToRedeem()
             );        }
 

@@ -27,7 +27,7 @@ import com.project.checkinn.loyalty.RedeemRequest;
 import java.math.RoundingMode;
 
 @Service
-public class PaymentServiceImpl implements PaymentService {
+  public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepo paymentRepository;
     private final EntityManager entityManager;
@@ -49,29 +49,27 @@ public class PaymentServiceImpl implements PaymentService {
         this.exchangeRateService = exchangeRateService;
         this.exchangeRateConfig = exchangeRateConfig;
     }
-    @Transactional
+
+
+
     @Override
+    public Payment getByBookingId(Long bookingId) {
+        return paymentRepository.findByBooking_Id(bookingId)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found for this booking"));
+    }
 
-    public PaymentResponse create(
-            Long bookingId,
-            PaymentMethod method, Integer pointsToRedeem
-    ) {
-
+@Transactional
+    @Override
+    public PaymentResponse create(Long bookingId, PaymentMethod method, Integer pointsToRedeem) {
         if (bookingId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "bookingId is required");
 
-        if (method == null || method.isBlank())
+        if (method == null )
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "payment method is required");
 
-        PaymentMethod paymentMethod;
-        try {
-            paymentMethod = PaymentMethod.valueOf(method.toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Invalid payment method. Allowed values are: [CARD, CASH, PAYPAL]"
-            );
-        }
+        PaymentMethod paymentMethod=method;
+
 
         if (paymentRepository.existsByBooking_Id(bookingId))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Payment already exists for this booking");
@@ -180,16 +178,8 @@ public class PaymentServiceImpl implements PaymentService {
                 earnedPoints,
                 loyaltyMessage
         );
+
     }
-
-    @Override
-    public Payment getByBookingId(Long bookingId) {
-        return paymentRepository.findByBooking_Id(bookingId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found for this booking"));
-    }
-
-
 
     @Override
     public Payment getById(Long id) {

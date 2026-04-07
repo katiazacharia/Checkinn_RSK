@@ -9,7 +9,7 @@ public class PaymentRequest {
     private Long bookingId;
 
     @NotNull(message = "payment method is required")
-    private PaymentMethod method;
+    private String method;
     private Integer pointsToRedeem;
 
     public PaymentRequest() {}
@@ -17,8 +17,8 @@ public class PaymentRequest {
     public Long getBookingId() { return bookingId; }
     public void setBookingId(Long bookingId) { this.bookingId = bookingId; }
 
-    public PaymentMethod getMethod() { return method; }
-    public void setMethod(PaymentMethod method) { this.method = method; }
+    public String getMethod() { return method; }
+    public void setMethod(String method) { this.method = method; }
 
     public Integer getPointsToRedeem() {
         return pointsToRedeem;
