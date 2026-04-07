@@ -38,4 +38,6 @@ public interface LoyaltyService {
             String noteQ,
             Pageable pageable
     );
+
+    LoyaltyAccountResponse adjustPoints(Long userId, int points, String note);
 }

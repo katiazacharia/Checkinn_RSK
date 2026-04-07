@@ -8,8 +8,7 @@ import org.springframework.security.core.Authentication;
 
 public interface PaymentService {
 
-    Payment create(Long bookingId, PaymentMethod method
-    );
+    PaymentResponse create(Long bookingId, PaymentMethod method, Integer pointsToRedeem);
 
     Payment getById(Long id);
 
