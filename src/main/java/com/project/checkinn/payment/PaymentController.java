@@ -67,7 +67,7 @@ public class PaymentController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/me/booking/{bookingId}")
+    @GetMapping("/me/bookings/{bookingId}")
     public PaymentResponse getByBookingId(@PathVariable Long bookingId, Authentication authentication) {
         return PaymentMapper.toResponse(paymentService.getMyPaymentByBookingId(bookingId, authentication));
     }
