@@ -2,9 +2,6 @@ package com.project.checkinn.payment;
 
 import com.project.checkinn.common.PaymentMethod;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-
-import java.math.BigDecimal;
 
 public class PaymentRequest {
 

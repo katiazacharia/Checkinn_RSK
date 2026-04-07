@@ -5,12 +5,19 @@ import com.project.checkinn.common.PaymentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface PaymentService {
 
     PaymentResponse create(Long bookingId, PaymentMethod method, Integer pointsToRedeem);
 
     Payment getById(Long id);
+
+
+    Payment create(
+            Long bookingId,
+            String method
+    );
 
     Payment getByBookingId(Long bookingId);
 

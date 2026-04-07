@@ -60,11 +60,22 @@ public class PaymentServiceImpl implements PaymentService {
         if (bookingId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "bookingId is required");
 
-        if (method == null)
+        if (method == null || method.isBlank())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "payment method is required");
+
+        PaymentMethod paymentMethod;
+        try {
+            paymentMethod = PaymentMethod.valueOf(method.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid payment method. Allowed values are: [CARD, CASH, PAYPAL]"
+            );
+        }
 
         if (paymentRepository.existsByBooking_Id(bookingId))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Payment already exists for this booking");
+
         Booking booking = entityManager.find(Booking.class, bookingId);
 
         if (booking == null)
@@ -140,13 +151,13 @@ public class PaymentServiceImpl implements PaymentService {
         String message = "Your booking #" + booking.getId() + " has been confirmed.";
 
         if (!extras.isEmpty()) {
-
             String extrasText = extras.stream()
                     .map(e -> "- " + e.getName())
                     .reduce("", (a, b) -> a + "\n" + b);
 
             message += "\n\n ExperiencePlus Rewards:\n" + extrasText;
         }
+
         notificationService.create(
                 booking.getUser().getId(),
                 booking.getId(),
@@ -177,6 +188,8 @@ public class PaymentServiceImpl implements PaymentService {
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found for this booking"));
     }
+
+
 
     @Override
     public Payment getById(Long id) {
