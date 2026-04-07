@@ -37,7 +37,6 @@ public class PaymentController {
 
             return PaymentMapper.toResponse(payment);
         }
-
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public Page<PaymentResponse> myPayments(
