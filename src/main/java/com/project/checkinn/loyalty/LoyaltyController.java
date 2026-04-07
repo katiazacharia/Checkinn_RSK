@@ -31,7 +31,7 @@ public class LoyaltyController {
         return loyaltyService.getMyAccount(authentication);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{userId}")
     public LoyaltyAccountResponse account(@PathVariable Long userId) {
         if (userId == null)
@@ -39,7 +39,7 @@ public class LoyaltyController {
         return loyaltyService.getAccount(userId);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{userId}/balance")
     public LoyaltyAccountResponse balance(@PathVariable Long userId) {
         if (userId == null)
@@ -52,66 +52,11 @@ public class LoyaltyController {
     public LoyaltyAccountResponse myBalance(Authentication authentication) {
         return loyaltyService.getMyAccount(authentication);
     }
-    //Earn
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @PostMapping("/user/{userId}/earn")
-    public LoyaltyAccountResponse earnForUser(@PathVariable Long userId,
-                                              @Valid @RequestBody EarnRequest request) {
-        if (userId == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
-        if (request == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-
-        return loyaltyService.earn(userId,request);
-    }
 
 
-    // Redeem + Preview
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/me/redeem")
-    public LoyaltyAccountResponse redeem(@Valid @RequestBody RedeemRequest request,
-                                         Authentication authentication) {
-        if (request == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        return loyaltyService.redeemMyPoints(request, authentication);
-    }
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @PostMapping("/user/{userId}/redeem")     // POST /loyalty/user/{userId}/redeem
-    public LoyaltyAccountResponse redeemForUser(@PathVariable Long userId,
-                                                @Valid @RequestBody RedeemRequest request) {
-        if (userId == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
-        if (request == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-
-        return loyaltyService.redeem(userId,request);
-    }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/me/redeem/preview")
-    public LoyaltyAccountResponse previewRedeem(@Valid @RequestBody RedeemRequest request,
-                                                Authentication authentication) {
-        if (request == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-        return loyaltyService.previewMyRedeem(request, authentication);
-    }
-
-    // POST /loyalty/user/{userId}/redeem/preview
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    @PostMapping("/user/{userId}/redeem/preview")
-    public LoyaltyAccountResponse previewRedeemForUser(@PathVariable Long userId,
-                                                       @Valid @RequestBody RedeemRequest request) {
-        if (userId == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
-        if (request == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "request is required");
-
-       return loyaltyService.previewRedeem(userId, request);
-    }
 
     // History
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/user/{userId}/history")
     public List<LoyaltyTransactionResponse> history(@PathVariable Long userId) {
         if (userId == null)

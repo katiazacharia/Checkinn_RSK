@@ -66,7 +66,7 @@ public class GlobalExceptionHandler {
 
         ApiError body = new ApiError(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Something went wrong. Please try again later.",
+                ex.getMessage(),
                 req.getRequestURI(),
                 LocalDateTime.now(),
                 List.of()

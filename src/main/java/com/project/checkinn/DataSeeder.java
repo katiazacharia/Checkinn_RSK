@@ -28,7 +28,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 @Configuration
@@ -48,7 +47,7 @@ public class DataSeeder {
         return args -> {
             seedUsers(appUserRepository, userRepo, passwordEncoder);
             seedAmenities(amenityRepo);
-            seedHotels(hotelRepo, amenityRepo);
+            seedHotels(hotelRepo, amenityRepo, userRepo);
             seedRooms(hotelRepo, roomRepo, amenityRepo);
             seedPromoCodes(promoCodeRepository);
             seedExperienceExtras(experienceExtraRepo);
@@ -63,8 +62,16 @@ public class DataSeeder {
                 "System Admin", "admin@test.com", "0590000001");
 
         seedUser(appUserRepo, userRepo, encoder,
-                "manager", "Manager@123", Role.MANAGER,
-                "Hotel Manager", "manager@test.com", "0590000002");
+                "manager1", "Manager@123", Role.MANAGER,
+                "Istanbul Manager", "manager1@test.com", "0590000002");
+
+        seedUser(appUserRepo, userRepo, encoder,
+                "manager2", "Manager@123", Role.MANAGER,
+                "Ankara Manager", "manager2@test.com", "0590000005");
+
+        seedUser(appUserRepo, userRepo, encoder,
+                "manager3", "Manager@123", Role.MANAGER,
+                "Izmir Manager", "manager3@test.com", "0590000006");
 
         seedUser(appUserRepo, userRepo, encoder,
                 "customer1", "Cust@123", Role.CUSTOMER,
@@ -115,14 +122,12 @@ public class DataSeeder {
     // ========================= AMENITIES =========================
 
     private void seedAmenities(AmenityRepo repo) {
-        // Hotel amenities
         upsertAmenity(repo, "WiFi", "wifi", "High-speed wireless internet available in all areas.", AmenityType.HOTEL);
         upsertAmenity(repo, "Pool", "pool", "Outdoor swimming pool for guests.", AmenityType.HOTEL);
         upsertAmenity(repo, "Parking", "car", "Free on-site parking.", AmenityType.HOTEL);
         upsertAmenity(repo, "Gym", "dumbbell", "Fitness center with essential equipment.", AmenityType.HOTEL);
         upsertAmenity(repo, "Breakfast", "utensils", "Daily breakfast available.", AmenityType.HOTEL);
 
-        // Room amenities
         upsertAmenity(repo, "Mini Bar", "wine", "In-room mini bar with drinks and snacks.", AmenityType.ROOM);
         upsertAmenity(repo, "Water Heater", "flame", "Electric water heater in room.", AmenityType.ROOM);
         upsertAmenity(repo, "Air Conditioning", "wind", "Climate control air conditioning.", AmenityType.ROOM);
@@ -150,7 +155,11 @@ public class DataSeeder {
 
     // ========================= HOTELS =========================
 
-    private void seedHotels(HotelRepo hotelRepo, AmenityRepo amenityRepo) {
+    private void seedHotels(HotelRepo hotelRepo, AmenityRepo amenityRepo, UserRepo userRepo) {
+        User manager1 = requireUserByEmail(userRepo, "manager1@test.com");
+        User manager2 = requireUserByEmail(userRepo, "manager2@test.com");
+        User manager3 = requireUserByEmail(userRepo, "manager3@test.com");
+
         Hotel h1 = findHotelByName(hotelRepo, "CheckInn Grand Istanbul");
         if (h1 == null) h1 = new Hotel();
         h1.setName("CheckInn Grand Istanbul");
@@ -167,8 +176,8 @@ public class DataSeeder {
                 "/Uploads/hotels/1775303590677_hotel 4.jpg",
                 "/Uploads/hotels/1775303585246_hotel 4 (2).jpg"
         ));
+        h1.setManager(manager1);
         h1 = hotelRepo.save(h1);
-
 
         Hotel h2 = findHotelByName(hotelRepo, "Ankara City Hotel");
         if (h2 == null) h2 = new Hotel();
@@ -184,9 +193,8 @@ public class DataSeeder {
         h2.setImageUrls(List.of(
                 "/Uploads/hotels/1775305160071_hotel 5.jpg"
         ));
+        h2.setManager(manager2);
         h2 = hotelRepo.save(h2);
-
-
 
         Hotel h3 = findHotelByName(hotelRepo, "Izmir Pearl");
         if (h3 == null) h3 = new Hotel();
@@ -198,6 +206,10 @@ public class DataSeeder {
                 findAmenityByName(amenityRepo, "WiFi"),
                 findAmenityByName(amenityRepo, "Parking")
         ));
+        h3.setImageUrls(List.of(
+                "/Uploads/hotels/1775305160071_hotel 5.jpg"
+        ));
+        h3.setManager(manager3);
         hotelRepo.save(h3);
     }
 
@@ -208,7 +220,6 @@ public class DataSeeder {
         Hotel ankaraHotel = requireHotelByName(hotelRepo, "Ankara City Hotel");
         Hotel izmirHotel = requireHotelByName(hotelRepo, "Izmir Pearl");
 
-        // Istanbul Hotel rooms
         upsertRoom(roomRepo, istanbulHotel, "101", RoomType.SINGLE, "50.00", 1, RoomStatus.AVAILABLE,
                 roomAmenitySet(
                         findAmenityByName(amenityRepo, "Air Conditioning"),
@@ -234,7 +245,6 @@ public class DataSeeder {
                         findAmenityByName(amenityRepo, "Water Heater")
                 ));
 
-        // Ankara Hotel rooms
         upsertRoom(roomRepo, ankaraHotel, "101", RoomType.SINGLE, "70.00", 1, RoomStatus.AVAILABLE,
                 roomAmenitySet(
                         findAmenityByName(amenityRepo, "Air Conditioning"),
@@ -260,7 +270,6 @@ public class DataSeeder {
                         findAmenityByName(amenityRepo, "Water Heater")
                 ));
 
-        // Izmir Hotel rooms
         upsertRoom(roomRepo, izmirHotel, "11", RoomType.SINGLE, "60.00", 1, RoomStatus.AVAILABLE,
                 roomAmenitySet(
                         findAmenityByName(amenityRepo, "Air Conditioning"),
@@ -400,6 +409,14 @@ public class DataSeeder {
             throw new IllegalStateException("Hotel not found while seeding: " + name);
         }
         return hotel;
+    }
+
+    private User requireUserByEmail(UserRepo userRepo, String email) {
+        return userRepo.findAll()
+                .stream()
+                .filter(u -> u.getEmail() != null && u.getEmail().equalsIgnoreCase(email))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("User not found while seeding: " + email));
     }
 
     private Set<Amenity> hotelAmenitySet(Amenity... amenities) {

@@ -114,7 +114,7 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         tx.setUser(entityManager.getReference(User.class,userId));
         tx.setType(LoyaltyTransactionType.REDEEM);
         tx.setPoints(-request.getPoints());
-        tx.setNote("Discount: $" + finalDiscount);
+        tx.setNote("Discount: ₪" + finalDiscount);
         tx.setCreatedAt(LocalDateTime.now());
         transactionRepo.save(tx);
 

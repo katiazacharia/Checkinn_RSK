@@ -1,5 +1,6 @@
 package com.project.checkinn.payment;
 
+import com.project.checkinn.common.CurrencyCode;
 import com.project.checkinn.common.PaymentMethod;
 import com.project.checkinn.common.PaymentStatus;
 
@@ -14,23 +15,23 @@ public class PaymentResponse {
     private PaymentMethod method;
     private PaymentStatus status;
     private LocalDateTime paidAt;
-    private BigDecimal originalAmount;
     private Integer redeemedPoints;
     private BigDecimal loyaltyDiscount;
     private Integer earnedPoints;
     private String loyaltyMessage;
+    private CurrencyCode currency;
 
     public PaymentResponse() {}
 
 
-    public PaymentResponse(Payment payment, BigDecimal originalAmount, Integer redeemedPoints, BigDecimal loyaltyDiscount, Integer earnedPoints, String loyaltyMessage) {
+    public PaymentResponse(Payment payment, BigDecimal originalAmount, Integer redeemedPoints, BigDecimal loyaltyDiscount, Integer earnedPoints, String loyaltyMessage, CurrencyCode currency) {
         this.id = payment.getId();
         this.bookingId = payment.getBooking().getId();
         this.amount = payment.getAmount();
         this.method = payment.getMethod();
         this.status = payment.getStatus();
         this.paidAt = payment.getPaidAt();
-        this.originalAmount = originalAmount;
+        this.currency = currency;
         this.redeemedPoints = redeemedPoints;
         this.loyaltyDiscount = loyaltyDiscount;
         this.earnedPoints = earnedPoints;
@@ -45,6 +46,7 @@ public class PaymentResponse {
         this.method = payment.getMethod();
         this.status = payment.getStatus();
         this.paidAt = payment.getPaidAt();
+
     }
 
     public Long getId() { return id; }
@@ -54,9 +56,6 @@ public class PaymentResponse {
     public PaymentStatus getStatus() { return status; }
     public LocalDateTime getPaidAt() { return paidAt; }
 
-    public BigDecimal getOriginalAmount() {
-        return originalAmount;
-    }
 
     public Integer getRedeemedPoints() {
         return redeemedPoints;
@@ -90,7 +89,11 @@ public class PaymentResponse {
         this.redeemedPoints = redeemedPoints;
     }
 
-    public void setOriginalAmount(BigDecimal originalAmount) {
-        this.originalAmount = originalAmount;
+    public CurrencyCode getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(CurrencyCode currency) {
+        this.currency = currency;
     }
 }

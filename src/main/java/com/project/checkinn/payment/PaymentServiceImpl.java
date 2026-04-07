@@ -109,30 +109,49 @@ import java.math.RoundingMode;
 
             loyaltyService.redeem(booking.getUser().getId(), redeemRequest);
 
-            BigDecimal discount = calculateRedeemDiscount(pointsToRedeem);
+            BigDecimal discountBase = calculateRedeemDiscount(pointsToRedeem); // ILS
+
             BigDecimal maxDiscount = originalAmount.multiply(BigDecimal.valueOf(0.2));
 
-            if (discount.compareTo(maxDiscount) > 0) {
-                discount = maxDiscount;
+            if (discountBase.compareTo(maxDiscount) > 0) {
+                discountBase = maxDiscount;
             }
 
-            loyaltyDiscount = discount;
-            redeemedPoints = pointsToRedeem;
-            finalAmount = originalAmount.subtract(discount);
+            CurrencyCode targetCurrency = booking.getCurrency();
+            CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
+
+// 🔥 حول الخصم لنفس العملة
+            BigDecimal discountConverted;
+
+            if (targetCurrency == baseCurrency) {
+                discountConverted = discountBase;
+            } else {
+                discountConverted = exchangeRateService.convert(discountBase, baseCurrency, targetCurrency);
+            }
+
+// 🔥 حول السعر قبل الخصم
+            BigDecimal amountBeforeDiscount;
+
+            if (targetCurrency == baseCurrency) {
+                amountBeforeDiscount = originalAmount;
+            } else {
+                amountBeforeDiscount = exchangeRateService.convert(originalAmount, baseCurrency, targetCurrency);
+            }
+
+// 🔥 الخصم يصير على نفس العملة
+             finalAmount = amountBeforeDiscount.subtract(discountConverted);
 
             if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
                 finalAmount = BigDecimal.ZERO;
             }
-        }
-        CurrencyCode targetCurrency = booking.getCurrency();
-        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
-        BigDecimal convertedAmount;
 
-        if (targetCurrency == baseCurrency) {
-            convertedAmount = finalAmount.setScale(2, RoundingMode.HALF_UP);
-        } else {
-            convertedAmount = exchangeRateService.convert(finalAmount, baseCurrency, targetCurrency);
+            loyaltyDiscount = discountConverted;
+            redeemedPoints = pointsToRedeem;
+            if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
+                finalAmount = BigDecimal.ZERO;
+            }
         }
+         BigDecimal convertedAmount = finalAmount.setScale(2, RoundingMode.HALF_UP);
 
         Payment payment = PaymentMapper.toEntity(booking, method);
         payment.setAmount(convertedAmount);
@@ -174,21 +193,26 @@ import java.math.RoundingMode;
                 message
         );
 
+    String loyaltyMessage;
 
-        String loyaltyMessage = "You earned " + earnedPoints + " points";
-        if (redeemedPoints > 0) {
-            loyaltyMessage = "Redeemed " + redeemedPoints + " points and earned " + earnedPoints + " points";
-        }
+    CurrencyCode targetCurrency = booking.getCurrency();
+    if (redeemedPoints > 0) {
+        loyaltyMessage = "Redeemed " + redeemedPoints +
+                " points (discount: " + loyaltyDiscount + " " + targetCurrency + ")"
+                + " and earned " + earnedPoints + " points";
+    } else {
+        loyaltyMessage = "You earned " + earnedPoints + " points";
+    }
 
-        return new PaymentResponse(
-                saved,
-                originalAmount,
-                redeemedPoints,
-                loyaltyDiscount,
-                earnedPoints,
-                loyaltyMessage
-        );
-
+    return new PaymentResponse(
+            saved,
+            originalAmount,
+            redeemedPoints,
+            loyaltyDiscount,
+            earnedPoints,
+            loyaltyMessage,
+            targetCurrency
+    );
     }
 
     @Override
