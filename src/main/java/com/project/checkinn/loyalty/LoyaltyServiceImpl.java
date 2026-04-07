@@ -101,11 +101,8 @@ public class LoyaltyServiceImpl implements LoyaltyService {
         if (acc.getPoints() < request.getPoints())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "not enough points");
 
-        double pointValue = acc.getTier().getPointValue();
-        double discount = request.getPoints() * pointValue;
-
-        double maxDiscount = request.getTotalPrice() * acc.getTier().getMaxDiscount();
-
+        double discount = request.getPoints() * 0.02;
+        double maxDiscount = request.getTotalPrice() * 0.20;
         double finalDiscount = Math.min(discount, maxDiscount);
 
         acc.setPoints(acc.getPoints() - request.getPoints());
