@@ -46,6 +46,7 @@ public class RoomController {
         return roomService.getAll(hotelId, type, status, minCapacity, minPrice, maxPrice, pageable);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MANAGER') and @authz.canManageRoom(#id, authentication))")
     @GetMapping("/{id}")
     public RoomResponse one(@PathVariable Long id,@RequestParam(required = false) CurrencyCode currency) {
         return roomService.getById(id,currency);

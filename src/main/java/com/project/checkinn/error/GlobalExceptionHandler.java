@@ -3,17 +3,22 @@ package com.project.checkinn.error;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -101,5 +106,33 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest request
+    ) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", 403);
+        error.put("message", "Access Denied");
+        error.put("path", request.getRequestURI());
+        error.put("timestamp", Instant.now().toString());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraint(
+            DataIntegrityViolationException ex,
+            HttpServletRequest request
+    ) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("status", 409);
+        error.put("message", "Cannot delete room because it is used in bookings");
+        error.put("path", request.getRequestURI());
+        error.put("timestamp", Instant.now().toString());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }
