@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface PaymentService {
 
+    PaymentResponse create(Long bookingId, PaymentMethod method, Integer pointsToRedeem);
 
     Payment getById(Long id);
 

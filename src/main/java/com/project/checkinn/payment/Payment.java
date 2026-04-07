@@ -34,6 +34,9 @@ public class Payment {
 
     private LocalDateTime paidAt;
 
+    @Column(nullable = false)
+    private Integer earnedPoints = 0;
+
     public Payment() {}
 
     public Long getId() { return id; }
@@ -52,4 +55,12 @@ public class Payment {
 
     public LocalDateTime getPaidAt() { return paidAt; }
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+
+    public Integer getEarnedPoints() {
+        return earnedPoints;
+    }
+
+    public void setEarnedPoints(Integer earnedPoints) {
+        this.earnedPoints = earnedPoints;
+    }
 }

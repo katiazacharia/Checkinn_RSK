@@ -30,13 +30,13 @@ public class PaymentController {
         @ResponseStatus(HttpStatus.CREATED)
         public PaymentResponse create(@Valid @RequestBody PaymentRequest request) {
 
-            Payment payment = paymentService.create(
-                    request.getBookingId(),
-                    request.getMethod()
-            );
 
-            return PaymentMapper.toResponse(payment);
-        }
+            return paymentService.create(
+                    request.getBookingId(),
+                    request.getMethod(),
+                    request.getPointsToRedeem()
+            );        }
+
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public Page<PaymentResponse> myPayments(

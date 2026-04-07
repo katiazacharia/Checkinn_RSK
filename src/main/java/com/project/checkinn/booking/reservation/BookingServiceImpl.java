@@ -119,24 +119,8 @@ public class BookingServiceImpl implements BookingService {
 
 
         BigDecimal basePrice = pricingService.calculateTotalPrice(roomRef, in, out);
-        BigDecimal basePriceAfterDiscount = basePrice;
 
-        if (request.getPointsToRedeem() != null && request.getPointsToRedeem() > 0) {
-            RedeemRequest redeemRequest = new RedeemRequest();
-            redeemRequest.setPoints(request.getPointsToRedeem());
-            redeemRequest.setNote("Redeemed in booking");
 
-            loyaltyService.redeem(userId, redeemRequest);
-
-            BigDecimal discount = BigDecimal.valueOf(request.getPointsToRedeem() * 0.05);
-            BigDecimal maxDiscount = basePrice.multiply(BigDecimal.valueOf(0.2));
-
-            if (discount.compareTo(maxDiscount) > 0) {
-                discount = maxDiscount;
-            }
-
-            basePriceAfterDiscount = basePrice.subtract(discount);
-        }
 
         CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
         CurrencyCode requestedCurrency = request.getCurrency() != null ? request.getCurrency() : baseCurrency;
@@ -146,10 +130,10 @@ public class BookingServiceImpl implements BookingService {
 
         if (requestedCurrency == baseCurrency) {
             exchangeRate = BigDecimal.ONE;
-            finalPrice = basePriceAfterDiscount.setScale(2, RoundingMode.HALF_UP);
+            finalPrice = basePrice.setScale(2, RoundingMode.HALF_UP);
         } else {
             exchangeRate = exchangeRateService.getRate(baseCurrency, requestedCurrency);
-            finalPrice = exchangeRateService.convert(basePriceAfterDiscount, baseCurrency, requestedCurrency);
+            finalPrice = exchangeRateService.convert(basePrice, baseCurrency, requestedCurrency);
         }
 
         Booking booking = BookingMapper.toEntity(request, userRef, roomRef, promoRef);
@@ -158,10 +142,12 @@ public class BookingServiceImpl implements BookingService {
         booking.setExchangeRate(exchangeRate);
         booking.setTotalPrice(finalPrice);
         booking.setStatus(BookingStatus.PENDING);
-
         experiencePlusService.assignExtras(booking);
 
-        return bookingRepository.save(booking);
+        Booking savedBooking = bookingRepository.save(booking);
+
+
+        return savedBooking;
     }
     @Override
     public Booking getById(Long id) {

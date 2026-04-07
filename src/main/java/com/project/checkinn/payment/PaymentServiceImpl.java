@@ -1,10 +1,9 @@
 package com.project.checkinn.payment;
 
 import com.project.checkinn.booking.reservation.Booking;
-import com.project.checkinn.common.BookingStatus;
-import com.project.checkinn.common.NotificationType;
-import com.project.checkinn.common.PaymentMethod;
-import com.project.checkinn.common.PaymentStatus;
+import com.project.checkinn.common.*;
+import com.project.checkinn.exchangerate.ExchangeRateConfig;
+import com.project.checkinn.exchangerate.ExchangeRateService;
 import com.project.checkinn.experienceplus.ExperienceExtra;
 import com.project.checkinn.experienceplus.ExperiencePlusService;
 import com.project.checkinn.notification.NotificationService;
@@ -36,18 +35,27 @@ public class PaymentServiceImpl implements PaymentService {
     private final ExperiencePlusService experiencePlusService;
     private final LoyaltyService loyaltyService;
     private final CurrentUserService currentUserService;
+    private final ExchangeRateService exchangeRateService;
+    private final ExchangeRateConfig exchangeRateConfig;
+
     public PaymentServiceImpl(PaymentRepo paymentRepository, EntityManager entityManager,
-                              NotificationService notificationService, ExperiencePlusService experiencePlusService, LoyaltyService loyaltyService, CurrentUserService currentUserService) {
+                              NotificationService notificationService, ExperiencePlusService experiencePlusService, LoyaltyService loyaltyService, CurrentUserService currentUserService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig) {
         this.paymentRepository = paymentRepository;
         this.entityManager = entityManager;
         this.notificationService = notificationService;
         this.experiencePlusService = experiencePlusService;
         this.loyaltyService = loyaltyService;
         this.currentUserService = currentUserService;
+        this.exchangeRateService = exchangeRateService;
+        this.exchangeRateConfig = exchangeRateConfig;
     }
     @Transactional
     @Override
-    public Payment create(Long bookingId, String method) {
+
+    public PaymentResponse create(
+            Long bookingId,
+            PaymentMethod method, Integer pointsToRedeem
+    ) {
 
         if (bookingId == null)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "bookingId is required");
@@ -84,14 +92,52 @@ public class PaymentServiceImpl implements PaymentService {
 
         booking.setStatus(BookingStatus.CONFIRMED);
 
-        Payment payment = PaymentMapper.toEntity(booking, paymentMethod);
+        BigDecimal originalAmount = booking.getOriginalTotalPrice();
+        BigDecimal finalAmount = originalAmount;
+        BigDecimal loyaltyDiscount = BigDecimal.ZERO;
+        int redeemedPoints = 0;
+
+
+        if (pointsToRedeem != null && pointsToRedeem > 0) {
+            RedeemRequest redeemRequest = new RedeemRequest();
+            redeemRequest.setPoints(pointsToRedeem);
+            redeemRequest.setNote("Redeemed in payment for booking #" + booking.getId());
+            redeemRequest.setTotalPrice(originalAmount.doubleValue());
+
+            loyaltyService.redeem(booking.getUser().getId(), redeemRequest);
+
+            BigDecimal discount = BigDecimal.valueOf(pointsToRedeem * 0.05);
+            BigDecimal maxDiscount = originalAmount.multiply(BigDecimal.valueOf(0.2));
+
+            if (discount.compareTo(maxDiscount) > 0) {
+                discount = maxDiscount;
+            }
+
+            loyaltyDiscount = discount;
+            redeemedPoints = pointsToRedeem;
+            finalAmount = originalAmount.subtract(discount);
+        }
+        CurrencyCode targetCurrency = booking.getCurrency();
+        CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
+        BigDecimal convertedAmount;
+
+        if (targetCurrency == baseCurrency) {
+            convertedAmount = finalAmount.setScale(2, RoundingMode.HALF_UP);
+        } else {
+            convertedAmount = exchangeRateService.convert(finalAmount, baseCurrency, targetCurrency);
+        }
+
+        Payment payment = PaymentMapper.toEntity(booking, method);
+        payment.setAmount(convertedAmount);
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaidAt(LocalDateTime.now());
-        Payment saved = paymentRepository.save(payment);
 
-        int earnedPoints = booking.getTotalPrice()
-                .divide(BigDecimal.valueOf(20), RoundingMode.FLOOR)
+        int earnedPoints = finalAmount
+                .divide(BigDecimal.valueOf(20), 0, RoundingMode.FLOOR)
                 .intValue();
+
+        payment.setEarnedPoints(earnedPoints);
+        Payment saved = paymentRepository.save(payment);
 
         if (earnedPoints > 0) {
             EarnRequest earnRequest = new EarnRequest();
@@ -109,7 +155,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .map(e -> "- " + e.getName())
                     .reduce("", (a, b) -> a + "\n" + b);
 
-            message += "\n\n🎁 ExperiencePlus Rewards:\n" + extrasText;
+            message += "\n\n ExperiencePlus Rewards:\n" + extrasText;
         }
 
         notificationService.create(
@@ -120,7 +166,20 @@ public class PaymentServiceImpl implements PaymentService {
                 message
         );
 
-        return saved;
+
+        String loyaltyMessage = "You earned " + earnedPoints + " points";
+        if (redeemedPoints > 0) {
+            loyaltyMessage = "Redeemed " + redeemedPoints + " points and earned " + earnedPoints + " points";
+        }
+
+        return new PaymentResponse(
+                saved,
+                originalAmount,
+                redeemedPoints,
+                loyaltyDiscount,
+                earnedPoints,
+                loyaltyMessage
+        );
     }
 
     @Override
@@ -221,24 +280,18 @@ public class PaymentServiceImpl implements PaymentService {
                     "Only successful payments can be refunded"
             );
         }
+        Integer earnedPoints = payment.getEarnedPoints() != null ? payment.getEarnedPoints() : 0;
 
-
+        if (earnedPoints > 0) {
+            loyaltyService.adjustPoints(
+                    payment.getBooking().getUser().getId(),
+                    -earnedPoints,
+                    "Points reversed for refund on booking #" + payment.getBooking().getId()
+            );
+        }
 
         payment.setStatus(PaymentStatus.REFUNDED);
 
-        int pointsToDeduct = payment.getAmount()
-                .divide(BigDecimal.valueOf(20), RoundingMode.FLOOR)
-                .intValue();
-
-        if (pointsToDeduct > 0) {
-            try {
-                RedeemRequest deductRequest = new RedeemRequest();
-                deductRequest.setPoints(pointsToDeduct);
-                deductRequest.setNote("Points reversed for refund on booking #" + payment.getBooking().getId());
-
-                loyaltyService.redeem(payment.getBooking().getUser().getId(), deductRequest);
-            } catch (Exception ignored) {}
-        }
         Booking booking = payment.getBooking();
         if (booking != null && booking.getStatus() != BookingStatus.CANCELLED) {
             booking.setStatus(BookingStatus.CANCELLED);
