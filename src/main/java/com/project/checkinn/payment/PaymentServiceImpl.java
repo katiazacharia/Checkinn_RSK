@@ -69,8 +69,6 @@ import java.math.RoundingMode;
         if (method == null )
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "payment method is required");
 
-        PaymentMethod paymentMethod=method;
-
 
         if (paymentRepository.existsByBooking_Id(bookingId))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Payment already exists for this booking");
@@ -86,10 +84,16 @@ import java.math.RoundingMode;
         if (booking.getStatus() == BookingStatus.CONFIRMED)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Booking already confirmed");
 
-        if (booking.getTotalPrice() == null)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking total price is invalid");
+    if (booking.getOriginalTotalPrice() == null)
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking original total price is invalid");
 
-        booking.setStatus(BookingStatus.CONFIRMED);
+    if (pointsToRedeem == null)
+        pointsToRedeem = 0;
+
+    if (pointsToRedeem < 0)
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pointsToRedeem cannot be negative");
+
+
 
         BigDecimal originalAmount = booking.getOriginalTotalPrice();
         BigDecimal finalAmount = originalAmount;
@@ -138,7 +142,10 @@ import java.math.RoundingMode;
         int earnedPoints = calculateEarnedPoints(booking);
 
         payment.setEarnedPoints(earnedPoints);
-        Payment saved = paymentRepository.save(payment);
+
+    booking.setStatus(BookingStatus.CONFIRMED);
+
+    Payment saved = paymentRepository.save(payment);
 
         if (earnedPoints > 0) {
             EarnRequest earnRequest = new EarnRequest();
