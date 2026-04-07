@@ -19,13 +19,17 @@ public class PaymentMapper {
             BigDecimal originalAmount,
             BigDecimal loyaltyDiscount,
             Integer redeemedPoints,
-            Integer earnedPoints
+            Integer earnedPoints,
+            String loyaltyMessage
+
     ) {
         PaymentResponse response = new PaymentResponse(payment);
         response.setOriginalAmount(originalAmount);
         response.setLoyaltyDiscount(loyaltyDiscount);
         response.setRedeemedPoints(redeemedPoints);
         response.setEarnedPoints(earnedPoints);
+        response.setLoyaltyMessage(loyaltyMessage);
+
         return response;
     }
 

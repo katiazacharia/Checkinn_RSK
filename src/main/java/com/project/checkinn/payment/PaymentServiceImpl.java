@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import com.project.checkinn.loyalty.EarnRequest;
 import com.project.checkinn.loyalty.LoyaltyService;
@@ -104,7 +105,7 @@ import java.math.RoundingMode;
 
             loyaltyService.redeem(booking.getUser().getId(), redeemRequest);
 
-            BigDecimal discount = BigDecimal.valueOf(pointsToRedeem * 0.05);
+            BigDecimal discount = calculateRedeemDiscount(pointsToRedeem);
             BigDecimal maxDiscount = originalAmount.multiply(BigDecimal.valueOf(0.2));
 
             if (discount.compareTo(maxDiscount) > 0) {
@@ -114,6 +115,10 @@ import java.math.RoundingMode;
             loyaltyDiscount = discount;
             redeemedPoints = pointsToRedeem;
             finalAmount = originalAmount.subtract(discount);
+
+            if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
+                finalAmount = BigDecimal.ZERO;
+            }
         }
         CurrencyCode targetCurrency = booking.getCurrency();
         CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
@@ -130,9 +135,7 @@ import java.math.RoundingMode;
         payment.setStatus(PaymentStatus.PAID);
         payment.setPaidAt(LocalDateTime.now());
 
-        int earnedPoints = finalAmount
-                .divide(BigDecimal.valueOf(20), 0, RoundingMode.FLOOR)
-                .intValue();
+        int earnedPoints = calculateEarnedPoints(booking);
 
         payment.setEarnedPoints(earnedPoints);
         Payment saved = paymentRepository.save(payment);
@@ -302,6 +305,17 @@ import java.math.RoundingMode;
 
 
         return refund(bookingId);
+    }
+
+    private int calculateEarnedPoints(Booking booking) {
+        long nights = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
+        return (int) nights * 10;
+    }
+
+    private BigDecimal calculateRedeemDiscount(int points) {
+        return BigDecimal.valueOf(points)
+                .multiply(BigDecimal.valueOf(0.02))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 }
 

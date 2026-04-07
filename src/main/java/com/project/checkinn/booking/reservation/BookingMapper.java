@@ -7,6 +7,7 @@ import com.project.checkinn.catalog.room.Room;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.temporal.ChronoUnit;
 
 
 public class BookingMapper {
@@ -16,9 +17,11 @@ public class BookingMapper {
     public static BookingResponse toResponse(Booking booking) {
         if (booking == null) return null;
 
-        int expectedLoyaltyPoints = booking.getTotalPrice() != null
-                ? booking.getOriginalTotalPrice().divide(BigDecimal.TEN, 0, RoundingMode.DOWN).intValue()
-                : 0;
+        int expectedLoyaltyPoints = 0;
+        if (booking.getCheckInDate() != null && booking.getCheckOutDate() != null) {
+            long nights = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
+            expectedLoyaltyPoints = (int) nights * 10;
+        }
 
         String loyaltyMessage = "If you complete payment, you will earn " + expectedLoyaltyPoints + " loyalty points.";
 
@@ -44,10 +47,11 @@ public class BookingMapper {
                                              BigDecimal exchangeRate){
 
         if (booking == null) return null;
-
-        int expectedLoyaltyPoints = displayTotalPrice != null
-                ? displayTotalPrice.divide(BigDecimal.TEN, 0, RoundingMode.DOWN).intValue()
-                : 0;
+        int expectedLoyaltyPoints = 0;
+        if (booking.getCheckInDate() != null && booking.getCheckOutDate() != null) {
+            long nights = ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
+            expectedLoyaltyPoints = (int) nights * 10;
+        }
 
         String loyaltyMessage = "If you complete payment, you will earn " + expectedLoyaltyPoints + " loyalty points.";
 
