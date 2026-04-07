@@ -86,8 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/payments/**").hasRole("CUSTOMER")
-
+                        .requestMatchers(HttpMethod.POST, "/payments/**").hasAnyRole("CUSTOMER", "ADMIN", "MANAGER")
 
                         .requestMatchers(HttpMethod.GET, "/amenities/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/amenities/**").hasAnyRole("ADMIN", "MANAGER")
