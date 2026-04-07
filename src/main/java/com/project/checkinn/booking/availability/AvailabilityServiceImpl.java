@@ -42,7 +42,7 @@ public class AvailabilityServiceImpl  implements AvailabilityService{
                 );
 
         boolean available = conflicts==0;
-        return new AvailabilityResponse(in, out, available, conflicts);
+        return new AvailabilityResponse(in, out, available);
 
     }
 }
