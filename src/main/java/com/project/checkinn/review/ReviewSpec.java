@@ -46,4 +46,19 @@ public class ReviewSpec {
             );
         };
     }
+
+    public static Specification<Review> managerId(Long managerId) {
+        return (root, query, cb) -> {
+            if (managerId == null) return null;
+
+            return cb.equal(
+                    root.join("booking")
+                            .join("room")
+                            .join("hotel")
+                            .join("manager")
+                            .get("id"),
+                    managerId
+            );
+        };
+    }
 }

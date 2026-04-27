@@ -36,22 +36,25 @@ public class ReviewController {
             @RequestParam(required = false) Boolean hasComment,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
-            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable,
+            Authentication authentication
+
     ) {
-        return reviewService.search(userId, bookingId, rating, minRating, maxRating, hasComment, from, to, pageable)
+        return reviewService.search(userId, bookingId, rating, minRating, maxRating, hasComment, from, to, pageable,authentication)
                 .map(ReviewMapper::toResponse);
     }
 
     // GET /reviews/{id}
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or @authz.canManagerAccessReview(#id, authentication)")
     @GetMapping("/{id}")
-    public ReviewResponse one(@PathVariable Long id) {
+    public ReviewResponse one(@PathVariable Long id, Authentication authentication) {
+
         return ReviewMapper.toResponse(reviewService.getById(id));
     }
 
     // POST /reviews
 //    @PreAuthorize("(hasRole('CUSTOMER') and @authz.isUserOwner(#request.userId, authentication)) or hasAnyRole('ADMIN','MANAGER')")
-    @PreAuthorize("hasRole('CUSTOMER') or hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('CUSTOMER') and @authz.isBookingOwner(#request.bookingId, authentication)")
     @PostMapping
     public ResponseEntity<ReviewResponse> create(
           @Valid @RequestBody ReviewRequest request,
@@ -70,7 +73,7 @@ public class ReviewController {
     }
 
     // PUT /reviews/{id}
-    @PreAuthorize("@authz.isReviewOwner(#id, authentication) or hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("@authz.isReviewOwner(#id, authentication) or hasRole('ADMIN') or @authz.canManagerAccessReview(#id, authentication)")
     @PutMapping("/{id}")
     public ReviewResponse update(
             @PathVariable Long id,
@@ -82,24 +85,24 @@ public class ReviewController {
     // GET /reviews/user/{userId}
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @GetMapping("/user/{userId}")
-    public List<ReviewResponse> byUser(@PathVariable Long userId) {
-        return reviewService.getByUser(userId)
+    public List<ReviewResponse> byUser(@PathVariable Long userId, Authentication authentication) {
+        return reviewService.getByUser(userId,authentication)
                 .stream()
                 .map(ReviewMapper::toResponse)
                 .toList();
     }
 
     // GET /reviews/booking/{bookingId}
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN') or @authz.canManagerAccessBooking(#bookingId, authentication)")
     @GetMapping("/booking/{bookingId}")
-    public List<ReviewResponse> byBooking(@PathVariable Long bookingId) {
-        return reviewService.getByBooking(bookingId)
+    public List<ReviewResponse> byBooking(@PathVariable Long bookingId, Authentication authentication) {
+        return reviewService.getByBooking(bookingId,authentication)
                 .stream()
                 .map(ReviewMapper::toResponse)
                 .toList();
     }
 
-    @PreAuthorize("@authz.isReviewOwner(#id, authentication) or hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("@authz.isReviewOwner(#id, authentication) or hasRole('ADMIN') or @authz.canManagerAccessReview(#id, authentication)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         reviewService.delete(id);

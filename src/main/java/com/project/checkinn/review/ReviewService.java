@@ -22,13 +22,17 @@ public interface ReviewService {
             Boolean hasComment,
             java.time.LocalDateTime from,
             java.time.LocalDateTime to,
-            Pageable pageable
+            Pageable pageable,
+            Authentication authentication
+
     );
 
 
     List<Review> getAll();
-    List<Review> getByUser(Long userId);
-    List<Review> getByBooking(Long bookingId);
+    List<Review> getByUser(Long userId ,Authentication authentication
+    );
+    List<Review> getByBooking(Long bookingId, Authentication authentication
+    );
 
 
 }

@@ -22,6 +22,7 @@ import com.project.checkinn.user.profile.User;
 import com.project.checkinn.user.profile.UserRepo;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.Valid;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -49,6 +50,7 @@ public class BookingServiceImpl implements BookingService {
     private final ExchangeRateConfig exchangeRateConfig;
     private final LoyaltyService loyaltyService;
     private final CurrentUserService currentUserService;
+    private final UserRepo userRepo;
 
     public BookingServiceImpl(BookingRepository bookingRepository,
                               UserRepo userRepository,
@@ -56,7 +58,7 @@ public class BookingServiceImpl implements BookingService {
                               PromoCodeRepository promoCodeRepository,
                               NotificationService notificationService,
                               PricingService pricingService,
-                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig , LoyaltyService loyaltyService, CurrentUserService currentUserService) {
+                              ExperiencePlusService experiencePlusService, ExchangeRateService exchangeRateService, ExchangeRateConfig exchangeRateConfig , LoyaltyService loyaltyService, CurrentUserService currentUserService, UserRepo userRepo) {
         this.bookingRepository = bookingRepository;
         this.userRepository = userRepository;
         this.roomRepository = roomRepository;
@@ -68,6 +70,7 @@ public class BookingServiceImpl implements BookingService {
         this.exchangeRateConfig = exchangeRateConfig;
         this.loyaltyService = loyaltyService;
         this.currentUserService = currentUserService;
+        this.userRepo = userRepo;
     }
 
     @Override
@@ -287,4 +290,86 @@ public class BookingServiceImpl implements BookingService {
         return bookingRepository.findByUser_Id(currentUserId);
     }
 
+
+    @Override
+    public List<Booking> getByUserForManager(Long userId, Authentication authentication) {
+
+        userRepo.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isManager = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+
+        List<Booking> bookings = bookingRepository.findByUser_Id(userId);
+
+        if (isManager && !isAdmin) {
+            Long currentUserId = currentUserService.getCurrentUserId(authentication);
+
+            bookings = bookings.stream()
+                    .filter(b -> b.getRoom() != null
+                            && b.getRoom().getHotel() != null
+                            && b.getRoom().getHotel().getManager() != null
+                            && b.getRoom().getHotel().getManager().getId().equals(currentUserId))
+                    .toList();
+        }
+
+        if (bookings.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No bookings found for this user in this manager hotel"
+            );
+        }
+
+        return bookings;
+    }
+
+    @Override
+    public List<Booking> upcomingForManager(Long userId, Authentication authentication) {
+
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isManager = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+
+        List<Booking> bookings;
+
+        if (userId != null) {
+            userRepo.findById(userId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+            bookings = bookingRepository.findByUser_Id(userId);
+        } else {
+            bookings = bookingRepository.findAll();
+        }
+
+        LocalDate today = LocalDate.now();
+
+        bookings = bookings.stream()
+                .filter(b -> b.getCheckInDate() != null && !b.getCheckInDate().isBefore(today))
+                .toList();
+
+        if (isManager && !isAdmin) {
+            Long currentUserId = currentUserService.getCurrentUserId(authentication);
+
+            bookings = bookings.stream()
+                    .filter(b -> b.getRoom() != null
+                            && b.getRoom().getHotel() != null
+                            && b.getRoom().getHotel().getManager() != null
+                            && b.getRoom().getHotel().getManager().getId().equals(currentUserId))
+                    .toList();
+        }
+
+        if (userId != null && bookings.isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "No bookings found for this user in this manager hotel"
+            );
+        }
+
+        return bookings;
+    }
 }

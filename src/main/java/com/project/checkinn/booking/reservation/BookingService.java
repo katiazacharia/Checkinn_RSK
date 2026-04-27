@@ -25,4 +25,7 @@ public interface BookingService {
     List<Booking> search(BookingStatus status, Long userId, Long roomId, LocalDate from, LocalDate to);
     BookingPreviewResponse preview(BookingPreviewRequest request);
 
+    List<Booking> getByUserForManager(Long userId, Authentication authentication);
+    List<Booking> upcomingForManager(Long userId, Authentication authentication);
+
 }

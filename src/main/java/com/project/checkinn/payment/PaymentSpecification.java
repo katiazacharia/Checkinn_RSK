@@ -34,4 +34,19 @@ public class PaymentSpecification {
         return (root, query, cb) ->
                 id == null ? null : cb.equal(root.get("id"), id);
     }
+
+    public static Specification<Payment> hasManagerId(Long managerId) {
+        return (root, query, cb) -> {
+            if (managerId == null) return null;
+
+            return cb.equal(
+                    root.join("booking")
+                            .join("room")
+                            .join("hotel")
+                            .join("manager")
+                            .get("id"),
+                    managerId
+            );
+        };
+    }
 }

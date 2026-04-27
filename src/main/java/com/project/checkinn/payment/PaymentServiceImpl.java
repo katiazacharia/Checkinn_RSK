@@ -120,7 +120,6 @@ import java.math.RoundingMode;
             CurrencyCode targetCurrency = booking.getCurrency();
             CurrencyCode baseCurrency = exchangeRateConfig.getBaseCurrency();
 
-// 🔥 حول الخصم لنفس العملة
             BigDecimal discountConverted;
 
             if (targetCurrency == baseCurrency) {
@@ -129,7 +128,7 @@ import java.math.RoundingMode;
                 discountConverted = exchangeRateService.convert(discountBase, baseCurrency, targetCurrency);
             }
 
-// 🔥 حول السعر قبل الخصم
+//  حول السعر قبل الخصم
             BigDecimal amountBeforeDiscount;
 
             if (targetCurrency == baseCurrency) {
@@ -138,7 +137,7 @@ import java.math.RoundingMode;
                 amountBeforeDiscount = exchangeRateService.convert(originalAmount, baseCurrency, targetCurrency);
             }
 
-// 🔥 الخصم يصير على نفس العملة
+//  الخصم يصير على نفس العملة
              finalAmount = amountBeforeDiscount.subtract(discountConverted);
 
             if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
@@ -223,14 +222,29 @@ import java.math.RoundingMode;
     }
 
     @Override
-    public Page<Payment> search(Long bookingId, PaymentStatus status, PaymentMethod method, Pageable pageable) {
+    public Page<Payment> search(Long bookingId,
+                                PaymentStatus status,
+                                PaymentMethod method,
+                                Pageable pageable,
+                                Authentication authentication) {
+
         Specification<Payment> spec = Specification.where(PaymentSpecification.hasBookingId(bookingId))
                 .and(PaymentSpecification.hasStatus(status))
                 .and(PaymentSpecification.hasMethod(method));
 
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isManager = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+
+        if (isManager && !isAdmin) {
+            Long currentUserId = currentUserService.getCurrentUserId(authentication);
+            spec = spec.and(PaymentSpecification.hasManagerId(currentUserId));
+        }
+
         return paymentRepository.findAll(spec, pageable);
     }
-
     @Override
     public Payment getMyPaymentById(Long id, Authentication authentication) {
         Long currentUserId = currentUserService.getCurrentUserId(authentication);

@@ -25,7 +25,7 @@ public class LoyaltyController {
 
     // Account / Balance
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @GetMapping("/me")
     public LoyaltyAccountResponse myAccount(Authentication authentication) {
         return loyaltyService.getMyAccount(authentication);
@@ -47,7 +47,7 @@ public class LoyaltyController {
         return loyaltyService.getAccount(userId);
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @GetMapping("/me/balance")
     public LoyaltyAccountResponse myBalance(Authentication authentication) {
         return loyaltyService.getMyAccount(authentication);
@@ -63,7 +63,7 @@ public class LoyaltyController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
         return loyaltyService.history(userId);
     }
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
     @GetMapping("/me/history")
     public List<LoyaltyTransactionResponse> myHistory(Authentication authentication) {
         return loyaltyService.myHistory(authentication);

@@ -3,6 +3,7 @@ package com.project.checkinn.security;
 import com.project.checkinn.booking.reservation.BookingRepository;
 import com.project.checkinn.catalog.hotel.HotelRepo;
 import com.project.checkinn.catalog.room.RoomRepo;
+import com.project.checkinn.payment.PaymentRepo;
 import com.project.checkinn.review.ReviewRepo;
 import com.project.checkinn.user.favorite.FavoriteRepo;
 import org.springframework.security.core.Authentication;
@@ -17,18 +18,20 @@ public class AuthorizationService {
     private final FavoriteRepo favoriteRepo;
     private final HotelRepo hotelRepository;
     private final RoomRepo roomRepo;
+    private final PaymentRepo paymentRepo;
 
 
     public AuthorizationService(CurrentUserService currentUserService,
                                 BookingRepository bookingRepository,
                                 ReviewRepo reviewRepo,
-                                FavoriteRepo favoriteRepo, HotelRepo hotelRepository, RoomRepo roomRepo) {
+                                FavoriteRepo favoriteRepo, HotelRepo hotelRepository, RoomRepo roomRepo, PaymentRepo paymentRepo) {
         this.currentUserService = currentUserService;
         this.bookingRepository = bookingRepository;
         this.reviewRepo = reviewRepo;
         this.favoriteRepo = favoriteRepo;
         this.hotelRepository = hotelRepository;
         this.roomRepo = roomRepo;
+        this.paymentRepo = paymentRepo;
     }
 
     public boolean isSelfUser(Long userId, Authentication authentication) {
@@ -92,6 +95,50 @@ public class AuthorizationService {
                 .map(room -> room.getHotel() != null
                         && room.getHotel().getManager() != null
                         && room.getHotel().getManager().getId().equals(currentUserId))
+                .orElse(false);
+    }
+
+    public boolean canManagerAccessBooking(Long bookingId, Authentication authentication) {
+        if (bookingId == null) return false;
+
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        if (currentUserId == null) return false;
+
+        return bookingRepository.findById(bookingId)
+                .map(b -> b.getRoom() != null
+                        && b.getRoom().getHotel() != null
+                        && b.getRoom().getHotel().getManager() != null
+                        && b.getRoom().getHotel().getManager().getId().equals(currentUserId))
+                .orElse(false);
+    }
+
+    public boolean canManagerAccessPayment(Long paymentId, Authentication authentication) {
+        if (paymentId == null) return false;
+
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        if (currentUserId == null) return false;
+
+        return paymentRepo.findById(paymentId)
+                .map(payment -> payment.getBooking() != null
+                        && payment.getBooking().getRoom() != null
+                        && payment.getBooking().getRoom().getHotel() != null
+                        && payment.getBooking().getRoom().getHotel().getManager() != null
+                        && payment.getBooking().getRoom().getHotel().getManager().getId().equals(currentUserId))
+                .orElse(false);
+    }
+
+    public boolean canManagerAccessReview(Long reviewId, Authentication authentication) {
+        if (reviewId == null) return false;
+
+        Long currentUserId = currentUserService.getCurrentUserId(authentication);
+        if (currentUserId == null) return false;
+
+        return reviewRepo.findById(reviewId)
+                .map(review -> review.getBooking() != null
+                        && review.getBooking().getRoom() != null
+                        && review.getBooking().getRoom().getHotel() != null
+                        && review.getBooking().getRoom().getHotel().getManager() != null
+                        && review.getBooking().getRoom().getHotel().getManager().getId().equals(currentUserId))
                 .orElse(false);
     }
 }

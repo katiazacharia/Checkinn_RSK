@@ -11,7 +11,7 @@ public interface PaymentService {
 
     PaymentResponse create(Long bookingId, PaymentMethod method, Integer pointsToRedeem);
 
-    Payment getById(Long id);
+    Payment getById(Long id );
 
 
 
@@ -22,7 +22,9 @@ public interface PaymentService {
             Long bookingId,
             PaymentStatus status,
             PaymentMethod method,
-            Pageable pageable
+            Pageable pageable,
+            Authentication authentication
+
     );
 
     Payment getMyPaymentById(Long id, Authentication authentication);

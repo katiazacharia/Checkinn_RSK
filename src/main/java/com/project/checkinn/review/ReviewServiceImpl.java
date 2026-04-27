@@ -84,7 +84,9 @@ public class ReviewServiceImpl implements ReviewService {
             Boolean hasComment,
             LocalDateTime from,
             LocalDateTime to,
-            Pageable pageable
+            Pageable pageable,
+            Authentication authentication
+
     ) {
         if (minRating != null && (minRating < 1 || minRating > 5))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "minRating must be between 1 and 5");
@@ -101,6 +103,16 @@ public class ReviewServiceImpl implements ReviewService {
                 .and(ReviewSpec.createdFrom(from))
                 .and(ReviewSpec.createdTo(to));
 
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isManager = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+
+        if (isManager && !isAdmin) {
+            Long currentUserId = currentUserService.getCurrentUserId(authentication);
+            spec = spec.and(ReviewSpec.managerId(currentUserId));
+        }
         return reviewRepository.findAll(spec, pageable);
     }
 
@@ -111,12 +123,36 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<Review> getByUser(Long userId) {
-        return reviewRepository.findByUser_Id(userId);
+    public List<Review> getByUser(Long userId, Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isManager = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+
+        Specification<Review> spec = Specification.where(ReviewSpec.userId(userId));
+
+        if (isManager && !isAdmin) {
+            Long currentUserId = currentUserService.getCurrentUserId(authentication);
+            spec = spec.and(ReviewSpec.managerId(currentUserId));
+        }
+        return reviewRepository.findAll(spec);
     }
 
     @Override
-    public List<Review> getByBooking(Long bookingId) {
-        return reviewRepository.findByBooking_Id(bookingId);
+    public List<Review> getByBooking(Long bookingId, Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isManager = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_MANAGER"));
+
+        Specification<Review> spec = Specification.where(ReviewSpec.bookingId(bookingId));
+
+        if (isManager && !isAdmin) {
+            Long currentUserId = currentUserService.getCurrentUserId(authentication);
+            spec = spec.and(ReviewSpec.managerId(currentUserId));
+        }
+        return reviewRepository.findAll(spec);
     }
 }

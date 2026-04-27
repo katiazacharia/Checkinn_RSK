@@ -29,7 +29,7 @@ public class PromoCodeController {
         this.promoCodeService = promoCodeService;
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<PromoCodeResponse> create(
             @Valid @RequestBody PromoCodeRequest request,
@@ -47,7 +47,7 @@ public class PromoCodeController {
     }
 
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public Page<PromoCodeResponse> getAll(
             @RequestParam(required = false) Boolean active,
@@ -76,7 +76,7 @@ public class PromoCodeController {
                 .map(PromoCodeMapper::toResponse);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public PromoCodeResponse getById(@PathVariable Long id) {
         if (id == null)
@@ -85,7 +85,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(promoCodeService.getById(id));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping("/code/{code}")
     public PromoCodeResponse getByCode(@PathVariable String code) {
         if (code == null || code.isBlank())
@@ -94,7 +94,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(promoCodeService.getByCode(code));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/deactivate")
     public PromoCodeResponse deactivate(@PathVariable Long id) {
         if (id == null)
@@ -103,7 +103,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(promoCodeService.deactivate(id));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
     @GetMapping("/validate/{code}")
     public boolean validate(@PathVariable String code) {
         if (code == null || code.isBlank())
@@ -113,7 +113,7 @@ public class PromoCodeController {
 
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public PromoCodeResponse update(@PathVariable Long id, @Valid @RequestBody PromoCodeRequest request) {
         if (id == null)
@@ -134,7 +134,7 @@ public class PromoCodeController {
         return PromoCodeMapper.toResponse(saved);
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('CUSTOMER','ADMIN')")
     @GetMapping("/active")
     public List<PromoCodeResponse> getActive() {
         return promoCodeService.getActive()
@@ -143,7 +143,7 @@ public class PromoCodeController {
                 .toList();
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

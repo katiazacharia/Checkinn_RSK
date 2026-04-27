@@ -29,7 +29,7 @@ public class BookingController {
 
 //list with optional filters: status, userId, roomId, from, to
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public List<BookingResponse> all(@RequestParam(required = false) BookingStatus status,
                                      @RequestParam(required = false) Long userId,
                                      @RequestParam(required = false) Long roomId,
@@ -43,7 +43,7 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("@authz.isBookingOwner(#id, authentication) or hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("@authz.isBookingOwner(#id, authentication) or hasAnyRole('ADMIN') or @authz.canManagerAccessBooking(#id, authentication)")
     public BookingResponse one(@PathVariable Long id) {
 
         return BookingMapper.toResponse(bookingService.getById(id));
@@ -51,8 +51,8 @@ public class BookingController {
 
     @GetMapping("/users/{userId}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public List<BookingResponse> byUser(@PathVariable Long userId) {
-        return bookingService.getByUser(userId)
+    public List<BookingResponse> byUser(@PathVariable Long userId, Authentication authentication) {
+        return bookingService.getByUserForManager(userId, authentication)
                 .stream()
                 .map(BookingMapper::toResponse)
                 .toList();
@@ -61,9 +61,10 @@ public class BookingController {
     @GetMapping("/upcoming")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public List<BookingResponse> upcoming(
-            @RequestParam(required = false) Long userId
+            @RequestParam(required = false) Long userId,
+            Authentication authentication
     ) {
-        return bookingService.upcoming(userId)
+        return bookingService.upcomingForManager(userId, authentication)
                 .stream()
                 .map(BookingMapper::toResponse)
                 .toList();
@@ -88,7 +89,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("(hasRole('CUSTOMER') and @authz.isBookingOwner(#id, authentication)) or hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("(hasRole('CUSTOMER') and @authz.isBookingOwner(#id, authentication)) or hasRole('ADMIN') or @authz.canManagerAccessBooking(#id, authentication)")
     public ResponseEntity<BookingResponse> cancel(@PathVariable Long id) {
         Booking cancelled = bookingService.cancel(id);
         return ResponseEntity.ok(BookingMapper.toResponse(cancelled));

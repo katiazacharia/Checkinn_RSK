@@ -25,8 +25,8 @@ public class PaymentController {
             this.paymentService = paymentService;
         }
 
-        @PreAuthorize("(hasRole('CUSTOMER') and @authz.isBookingOwner(#request.bookingId, authentication)) or hasAnyRole('ADMIN','MANAGER')")
-        @PostMapping
+    @PreAuthorize("(hasRole('CUSTOMER') and @authz.isBookingOwner(#request.bookingId, authentication)) " )
+    @PostMapping
         @ResponseStatus(HttpStatus.CREATED)
         public PaymentResponse create(@Valid @RequestBody PaymentRequest request) {
             PaymentMethod method;
@@ -60,7 +60,7 @@ public class PaymentController {
     public PaymentResponse myPayemntById(@PathVariable Long id, Authentication authentication) {
         return PaymentMapper.toResponse(paymentService.getMyPaymentById(id, authentication));   }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN') or @authz.canManagerAccessPayment(#id, authentication)")
     @GetMapping("/{id}")
     public PaymentResponse getById(@PathVariable Long id) {
         return PaymentMapper.toResponse(paymentService.getById(id));
@@ -78,27 +78,29 @@ public class PaymentController {
             @RequestParam(required = false) Long bookingId,
             @RequestParam(required = false) PaymentStatus status,
             @RequestParam(required = false) PaymentMethod method,
-            @PageableDefault(size = 10) Pageable pageable
+            @PageableDefault(size = 10) Pageable pageable,
+            Authentication authentication
+
 
     ) {
-        return paymentService.search(bookingId, status, method,pageable)
+        return paymentService.search(bookingId, status, method,pageable,authentication)
                 .map(PaymentMapper::toResponse);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN')or @authz.canManagerAccessPayment(#id, authentication)")
     @PatchMapping("/{id}/status")
     public PaymentResponse updateStatus(
             @PathVariable Long id,
-            @RequestParam PaymentStatus status
+            @RequestParam PaymentStatus status,
+            Authentication authentication
+
     ) {
         return PaymentMapper.toResponse(paymentService.updateStatus(id, status));
     }
 
-
-    @PreAuthorize("@authz.isBookingOwner(#bookingId, authentication) or hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("@authz.isBookingOwner(#bookingId, authentication) or hasRole('ADMIN')")
     @PostMapping("/{bookingId}/refund")
     public PaymentResponse refund(@PathVariable Long bookingId) {
-
         Payment payment = paymentService.refund(bookingId);
 
         return PaymentMapper.toResponse(payment);

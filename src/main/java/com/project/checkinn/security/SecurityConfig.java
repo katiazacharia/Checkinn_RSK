@@ -19,9 +19,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.io.IOException;
@@ -65,8 +63,6 @@ public class SecurityConfig {
                                 "/Uploads/**"
                         ).permitAll()
 
-                        .requestMatchers("/hotels/**", "/rooms/**").permitAll()
-
                         .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/users/me").authenticated()
                         .requestMatchers("/users/**").hasRole("ADMIN")
@@ -83,10 +79,10 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/bookings/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/bookings/**").hasRole("CUSTOMER")
-                        .requestMatchers(HttpMethod.PATCH, "/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").hasAnyRole("CUSTOMER", "ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/bookings/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/bookings/**").authenticated()
 
-                        .requestMatchers(HttpMethod.POST, "/payments/**").hasAnyRole("CUSTOMER", "ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.POST, "/payments/**").authenticated()
 
                         .requestMatchers(HttpMethod.GET, "/amenities/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/amenities/**").hasAnyRole("ADMIN", "MANAGER")
@@ -181,13 +177,12 @@ public class SecurityConfig {
 
     @Bean
     public Converter<Jwt, ? extends AbstractAuthenticationToken> jwtAuthConverter() {
-
         return jwt -> {
             List<String> roles = jwt.getClaimAsStringList("roles");
             if (roles == null) roles = Collections.emptyList();
 
             Collection<GrantedAuthority> authorities = roles.stream()
-                    .map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase())) // force uppercase
+                    .map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase()))
                     .collect(Collectors.toList());
 
             return new JwtAuthenticationToken(jwt, authorities);
